@@ -1,0 +1,7 @@
+* Overview
+
+This is a port of various GNU utilities to work with or on an "architecture" based on the asm.js subset of JavaScript; the compiler used is GCC, which means C and C++ programs (and, in theory, programs in other languages) can be compiled to JavaScript code that can then be run in a web browser or JavaScript shell.
+
+It's quite slow, partly because of the design of the architecture.
+
+It was originally based on Emscripten, but no Emscripten code remains at this point; instead, GCC and glibc are used.
