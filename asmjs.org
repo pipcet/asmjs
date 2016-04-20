@@ -5,3 +5,14 @@ This is a port of various GNU utilities to work with or on an "architecture" bas
 It's quite slow, partly because of the design of the architecture.
 
 It was originally based on Emscripten, but no Emscripten code remains at this point; instead, GCC and glibc are used.
+
+* Pipeline
+The stages of building a JavaScript program are as follows:
+** GCC translates C/C++ code to "assembler" code
+** GNU as translates "assembler" code into an ELF object file
+** GNU ld links the ELF object files into an ELF executable
+** GNU objcopy extracts the raw data file
+** "hexify" turns the data file into a JSON array
+** GNU objcopy adds this array to the ELF executable as a new section
+** GNU ld creates a temporary ELF object with JavaScript support code and the ELF executable
+** GNU ld turns this temporary ELF object file into JavaScript
