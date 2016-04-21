@@ -32,3 +32,16 @@ $ ~/git/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$HOME/asmjs
 $ make
 $ make install
 
+** https://github.com/pipcet/gcc
+https://github.com/pipcet/gcc/tree/asmjs
+*** Build instructions
+**** Pre-glibc build
+Assuming that $HOME/git/gcc is where you want your cloned git tree to end up, $HOME/build/gcc is where you want to build it, and $HOME/asmjs-virtual-asmjs is the prefix to be used for installing programs and libraries:
+
+$ cd $HOME/git
+$ git clone https://github.com/pipcet/gcc -b asmjs
+$ mkdir $HOME/build/gcc
+$ cd $HOME/build/gcc
+$ ~/git/gcc/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --prefix=$HOME/asmjs-virtual-asmjs --disable-libssp
+$ make
+$ make install
