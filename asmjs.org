@@ -21,6 +21,7 @@ The stages of building a JavaScript program are as follows:
 ** https://github.com/pipcet/binutils-gdb
 https://github.com/pipcet/binutils-gdb/tree/asmjs
 *** Build instructions
+Assuming that $HOME/git/binutils-gdb is where you want your cloned git tree to end up, $HOME/build/binutils-gdb is where you want to build it, and $HOME/asmjs-virtual-asmjs is the prefix to be used for installing programs and libraries:
 
 $ cd $HOME/git
 $ git clone https://github.com/pipcet/binutils-gdb -b asmjs
