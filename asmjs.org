@@ -1,5 +1,4 @@
 * Overview
-
 This is a port of various GNU utilities to work with or on an "architecture" based on the asm.js subset of JavaScript; the compiler used is GCC, which means C and C++ programs (and, in theory, programs in other languages) can be compiled to JavaScript code that can then be run in a web browser or JavaScript shell.
 
 It's quite slow, partly because of the design of the architecture.
@@ -8,6 +7,7 @@ It was originally based on Emscripten, but no Emscripten code remains at this po
 
 * Pipeline
 The stages of building a JavaScript program are as follows:
+
 ** GCC translates C/C++ code to "assembler" code
 ** GNU as translates "assembler" code into an ELF object file
 ** GNU ld links the ELF object files into an ELF executable
@@ -20,6 +20,7 @@ The stages of building a JavaScript program are as follows:
 
 ** https://github.com/pipcet/binutils-gdb
 https://github.com/pipcet/binutils-gdb/tree/asmjs
+
 *** Build instructions
 Assuming that $HOME/git/binutils-gdb is where you want your cloned git tree to end up, $HOME/build/binutils-gdb is where you want to build it, and $HOME/asmjs-virtual-asmjs is the prefix to be used for installing programs and libraries:
 
@@ -34,6 +35,7 @@ $ make install
 
 ** https://github.com/pipcet/gcc
 https://github.com/pipcet/gcc/tree/asmjs
+
 *** Build instructions
 GCC needs to be built twice (at present); once before glibc is built, then again after glibc is built.
 
@@ -47,18 +49,24 @@ $ cd $HOME/build/gcc
 $ ~/git/gcc/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --prefix=$HOME/asmjs-virtual-asmjs --disable-libssp
 $ make
 $ make install
+
 * Design
 ** "Assembler" language
 Assembler input consists of the following kinds of line:
+
 ** Labels
 Labels appear on lines of their own; these lines do not begin with whitespace and end with a colon.
+
 ** Pseudo-op lines
 Lines beginning with whitespace followed by a period are treated as assembler pseudo-ops, or macro invocations (macros are thus defined to have names that begin with a period).
+
 ** JavaScript lines
 Lines beginning with whitespace followed by a non-period are treated as JavaScript code. They are written verbatim, to the object file as though the .ascii pseudo-op had been used.  If the last character of a JavaScript line is a dollar sign =$=, no line termination is added, not even a space character, so the line appears "pasted together" with the following line; otherwise, a newline character is added.
+
 *** FIXME: indentation of macros
 ** asm.js code
 An entire program is compiled into one asm.js module (see the asm.js spec), which consists of one asm.js function for each program function, in addition to a few functions of a more general nature.
+
 *** asm.js functions
 Each asm.js function has roughly the following general form:
 
@@ -80,14 +88,18 @@ mainloop:
 }
 
 All six arguments are 32-bit integers. There are two ways of calling an asm.js function:
+
 **** ordinary calls
 In an ordinary call, pc is set to the program counter assigned to the function, sp is set to the stack pointer at the beginning of the function, r0 and r1 are set to the first two integer arguments to the function, rpc is set to the return address for the function, and rfp is set to the previous function's frame pointer.
+
 **** continuation calls
 In a continuation call, pc is set to 0, sp is set to the current function's frame pointer, r0 and r1 are ignored, and rpc, rfp are set as above. In such a call, the function will jump to the default label in the master switch statement and restore all registers from a block of memory pointed to by the sp argument (which actually becomes the fp register; sp is restored to a different value by this code). The function then continues executing at the restored pc value, which is usually different from 0xXXX.
 
 Similarly, there are two ways of leaving an asm.js function:
+
 **** ordinary return
 In an ordinary return, the per-thread variable rv is set to the return value and the value that was passed as sp in the ordinary call that started this function is returned using a JavaScript return statement. Since sp is always aligned to a 32-bit boundary, its lower-order two bits are 0: sp & 3 == 0.
+
 **** special return
 In a special return, a value is returned whose lower-order two bits are not 0. In fact, those two bits are a tag specifying what should happen with the rest of the return value, which is turned into a pointer by ignoring the lower-order two bits.
 
@@ -102,7 +114,6 @@ If the tag value is 2, the function executed the equivalent of a longjmp: contro
 Tag value 3 is reserved.
 
 **** calling another asm.js function
-
 The JavaScript code to call another asm.js function is basically:
 
     rp = f_0xYYY(0xYY, sp-16, r0, r1, 0xXXX, fp);
@@ -112,7 +123,6 @@ The JavaScript code to call another asm.js function is basically:
 Thus, for ordinary calls resulting in an ordinary return, only the lower-most two bits of the asm.js function's return value are ever checked. For special returns, the return value is kept in the rp variable and handled by the code outside the main loop.
 
 **** basic blocks and labels
-
 The basic blocks that make up the main code for a function are generated by GCC; basic blocks are separated by labels, which represent potential points where control enters another basic block. The basic form of a basic block is thus:
 
     case 0xYYY:
@@ -137,13 +147,11 @@ A conditional branch corresponds to the JavaScript code:
 Note that both conditional branches and unconditional jumps are limited to targets within the same function. (This restriction results in a GCC test-suite failure).
 
 **** registers
-
 asm.js functions use special local or per-thread variables called "registers". These do not correspond to registers on the physical machine running the JavaScript VM. The idea is that this way an intermediate number of local variables is presented to the JavaScript VM's register allocator: enough so most code doesn't use stack locations to address values, but few enough that there should be relatively few conflicts between live virtual registers for most code. Ideally, it was hoped that the JavaScript VM's register allocator could be tricked into assigning one physical register to each of the asm.js registers, but this has not worked out so far.
 
 There are two kinds of registers:
 
 ***** local registers
-
 Local registers are variables local to an asm.js function. Unlike physical registers of a physical machine, which are often reused across function calls, all these registers are "call-saved": they retain their value across a function call, and stack space is assigned to saving and restoring them on the VM stack (but this stack space is not actually written to until a special return requires that it is).
 
 The local registers are named =r0= through =r7= and =i0= through =i7= for 32-bit integer registers (there is no longer any appreciable difference between the =rX= and =iX= registers), and =f0= through =f7= for 64-bit floating-point registers. There are also local variables =pc=, =sp=, and =fp= which behave much like local registers.
@@ -151,11 +159,9 @@ The local registers are named =r0= through =r7= and =i0= through =i7= for 32-bit
 =r0= and =r1= are also used for passing the first two arguments to asm.js functions.
 
 ***** per-thread registers
-
 Per-thread registers are variables shared between all asm.js functions executing on the same thread; as multi-threading is not yet implemented, they are effectively global to an asm.js module. As per-thread registers must be written to a global memory location, it is expected that they cannot be assigned to physical registers and access to them is thus appreciably slower than access to local registers. However, as per-thread registers are not preserved across function calls, they can be used to return values from functions. The per-thread registers are: =rv=, which is used to return an integer value from a function, and also as the static chain link register for nested functions; =a0= through =a3=, which are used to pass the third through sixth 32-bit integer arguments to asm.js functions (=r0= and =r1= are used for the first two registers); and =tp=, which is the thread pointer for thread-specific data (currently unimplemented).
 
 **** system calls
-
 In addition to ordinary function calls, in which an asm.js function calls another asm.js function, there is a mechanism for asm.js functions to call JavaScript code; by analogy to system calls used by operating systems, this is referred to as a system call or external call (syscall or extcall for short).
 
 The JavaScript code generated for a system call is:
@@ -175,21 +181,17 @@ The return value =rp= of =foreign_extcall= is interpreted very similarly to the 
 This design allows system calls to be effectively asynchronous: in terms of the JavaScript code, the ThinThin layer accepts as return values of the system call functions special JavaScript objects known as Promises, making it relatively easy to implement system calls that do not return a value immediately.
 
 ***** ThinThin
-
 The interface preliminarily called "ThinThin" implements a minimal system call interface based on the JavaScript functions made available to ordinary web pages by the current Firefox trunk build. While it's relatively easy to make the resulting code work on Chromium/Google Chrome browsers, this requires setting some flags and might not always work.
 
 ThinThin is deliberately kept quite minimal (that's what one of the "thin"s is for), though it is meant to be extended significantly from its current state. One significant difference between the web browser environment and traditional Unix/GNU environments is that there is no easy way to list all "files" in a "directory" that's really just an HTTP URL prefix. The approach taken by ThinThin is to pretend that only those files that ThinThin has been explicitly told about are presumed to exist in that case; directories are thinly-populated, which is what the second "thin" stands for.
 
 ***** =os.sys.call=
-
 There is a patch to the Firefox/SpiderMonkey source code that enables JavaScript code to directly call system calls of the underlying operating system. This can be used to implement asm.js system calls, but requires a translation layer (which has not been written) for architectures other than x86-64 Linux.
 
 ***** Emscripten library calls
-
 Development started out using the C library included with the Emscripten project to implement system calls. This is currently no longer supported; our code no longer depends on Emscripten in any way, and that won't change, but it also dropped all facilities to use Emscripten as an optional extension to the environment, and that will likely change with Emscripten support reenabled as an option.
 
 **** the VM stack
-
 JavaScript code, and asm.js code as a special case, is interpreted or compiled to code that makes use of the CPU stack to store local data, return addresses, and function arguments beyond those that can be passed in CPU registers. This stack is meant to be entirely opaque to JavaScript code and we thus make no assumptions about it.
 
 However, we implement a second stack, the VM stack, which is a region of a JavaScript ArrayBuffer reserved and potentially used to store values which cannot be stored in the asm.js function's registers; this can be either because there are no more availabble asm.js registers, or because the function is about to return, in which case the contents of the local asm.js registers are necessarily lost.
@@ -201,25 +203,20 @@ The price to pay for this is two-fold: in terms of performance, it requires all 
 In addition to allowing asynchronous operations, this stack design gives us the opportunity to inspect the VM stack of a running program (perhaps by first instructing the program to store its state on the VM stack rather than the JavaScript stack). This means a program can inspect its own VM stack, which is useful for printing backtraces, unwinding exception frames, and implementing the __builtin_return_address and __builtin_frame_address GCC macros, but it also means that we can use GDB on our asm.js code to interpret the contents of the VM stack.
 
 **** non-local returns: exception handling and longjmp
-
 It is sometimes necessary for a C function to return control not to the function which called it directly, but to one which called a chain of intermediate functions which eventually passed control to our function. Similarly, it is sometimes necessary for a C++ function to pass control on to an exception handler, which is special code emitted by a function which called our function directly or indirectly.
 
 In both cases, the asm.js function corresponding to the C or C++ function returns an =rp= value with a tag value of 2, and a pointer value corresponding to the code that is to be executed next.
 
 **** dynamic linking
-
 Dynamic linking/loading does not currently work.
 
 **** debugging
-
 Explicitly calling a gdb stub from C code to allow GDB to inspect data on the VM stack and modify it used to work. Breakpoints do not yet work, and are expected to require special build options and incur significant performance penalties when they do. Function calls made by GDB do not yet work.
 
 **** =__builtin_return_address=
-
 Currently broken, but relatively easy to fix.
 
 **** =__builtin_frame_address=
-
 Currently broken, but relatively easy to fix.
 
 ** ELF format
@@ -238,7 +235,6 @@ Currently, asm.js allows only for 32-bit integers, and the asm.js target uses th
 The entry point of the program is not specified by the relevant field of the ELF header but by the global symbol =__entry=.  This is because =ld -Obinary= provides no way of extracting the entry point address.
 
 *** section contents
-
 **** data sections
 Data sections contain binary data in 32-bit little-endian format. They use standard ELF relocations for pointers to data or code.
 
@@ -252,7 +248,6 @@ However, the address of a basic block's JavaScript source code does not correspo
 This is so that PC values of adjacent basic blocks (after a complication described below) are subsequent integers, which allows the switch statement that an asm.js function is based on to be executed at relatively high speed.
 
 **** text sections
-
 Text sections contain any number of 16-byte-aligned 16-byte structures each consisting of two 64-bit little-endian addresses, marking the beginning and end of JavaScript source code stored in a JavaScript section. Like JavaScript sections, text sections are not loaded into the ArrayBuffer visible to the asm.js program. Each 16-byte structure has a PC address which necessarily ends in the hexadecimal digit 0.
 
 There is a slight complication as the asm.js spec requires case labels to be densely packed: the =pc= local variable actually stores the result of right-shifting a PC address by four bits (equivalently, omitting the last hexadecimal digit). The convention we're trying to adhere to is that whenever a PC address is written to memory, it is left unshifted (or left-shifted if it has previously been right-shifted) and its last hexadecimal digit is necessarily 0.
