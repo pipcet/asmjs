@@ -9,10 +9,20 @@ It was originally based on Emscripten, but no Emscripten code remains at this po
 The stages of building a JavaScript program are as follows:
 
 ** GCC translates C/C++ code to "assembler" code
+This uses the standard GCC frontend, including full optimization, and a custom GCC backend that simply translates GCC's internal RTL expressions into asm.js code.
+
 ** GNU as translates "assembler" code into an ELF object file
+While, ultimately, JavaScript code is produced in a form that can be loaded by a web browser, we use the ELF format for intermediate files containing JavaScript code, binary data, and debugging information in the DWARF format.
+
 ** GNU ld links the ELF object files into an ELF executable
+During this stage, special "hexadecimal" relocations are used to patch hexadecimal addresses into the JavaScript source code stored in the ELF files.
+
 ** GNU objcopy extracts the raw data file
-** "hexify" turns the data file into a JSON array
+As JavaScript has no easy way of including binary data in a JavaScript source code file, all data is encoded in hexadecimal format for inclusion in the JavaScript code.
+
+** "hexify" turns the data file into a hex-encoded JavaScript array
+This simply replaces each byte by its hexadecimal expansion.
+
 ** GNU objcopy adds this array to the ELF executable as a new section
 ** GNU ld creates a temporary ELF object with JavaScript support code and the ELF executable
 ** GNU ld turns this temporary ELF object file into JavaScript
