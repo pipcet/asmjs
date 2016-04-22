@@ -1,0 +1,19 @@
+#!/bin/bash
+TMP1=$(mktemp);
+TMP2=$(mktemp);
+TMP3=$(mktemp);
+TMP4=$(mktemp);
+TMP5=$(mktemp);
+TMP6=$(mktemp);
+if [ x"$ASMJSDIR" = x ]; then
+    ASMJSDIR=$HOME/git/asmjs
+fi
+asmjs-virtual-asmjs-objcopy --dump-section .data=$TMP2 $1 $TMP1
+$ASMJSDIR/hexify/hexify < $TMP2 > $TMP3
+~/git/fauxsembler/hexify < $TMP2 > $TMP3
+asmjs-virtual-asmjs-objcopy --add-section .javascript.data=$TMP3 $1 $TMP4
+asmjs-virtual-asmjs-ld -T $ASMJSDIR/asmjs.lds $ASMJSDIR/asmjs.o $TMP4 -o $TMP5
+asmjs-virtual-asmjs-ld -T $ASMJSDIR/asmjs-js1ify.lds $ASMJSDIR/asmjs.o $TMP5 -o $TMP6
+rm $TMP1 $TMP2 $TMP3 $TMP4 $TMP5
+cat $TMP6
+rm $TMP6
