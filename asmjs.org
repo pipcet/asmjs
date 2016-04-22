@@ -222,3 +222,49 @@ Currently broken, but relatively easy to fix.
 
 Currently broken, but relatively easy to fix.
 
+** ELF format
+The asm.js target uses a variant of the ELF format for intermediate files, even though the files ultimately processed by the web browser or JavaScript shell are pure JavaScript.
+
+*** endianness
+The asm.js target currently requires a little-endian JavaScript VM, and the ELF format is little-endian.
+
+*** machine identifier
+The machine identifier used for the ELF files is 0x534a ("JS" in little-endian notation).
+
+*** 32-bit
+Currently, asm.js allows only for 32-bit integers, and the asm.js target uses the 32-bit ELF format.
+
+*** entry point
+The entry point of the program is not specified by the relevant field of the ELF header but by the global symbol =__entry=.  This is because =ld -Obinary= provides no way of extracting the entry point address.
+
+*** section contents
+
+**** data sections
+Data sections contain binary data in 32-bit little-endian format. They use standard ELF relocations for pointers to data or code.
+
+**** JavaScript sections
+JavaScript sections contain ASCII/UTF-8-encoded JavaScript source code, with some addresses left out and encoded as strings of 16 ASCII "0" characters. (Sometimes, only 15 or 13 characters are used). The (possibly unaligned) offsets of such strings then appear in special relocations which replace the strings by ASCII-encoded hexadecimal digits representing a symbol's address.
+
+While JavaScript sections are not copied to the ArrayBuffer visible to an executing asm.js program, they are assigned addresses in the same address space. This allows us to distinguish pointers to JavaScript source code from data pointers based on the high-order bits of the address value.
+
+However, the address of a basic block's JavaScript source code does not correspond to the case label, or the =pc= value, of the basic block. Instead, PC values live in a third part of the address space, which is also invisible to the running program and distinguishable from the other two parts by its high-order bits.
+
+This is so that PC values of adjacent basic blocks (after a complication described below) are subsequent integers, which allows the switch statement that an asm.js function is based on to be executed at relatively high speed.
+
+**** text sections
+
+Text sections contain any number of 16-byte-aligned 16-byte structures each consisting of two 64-bit little-endian addresses, marking the beginning and end of JavaScript source code stored in a JavaScript section. Like JavaScript sections, text sections are not loaded into the ArrayBuffer visible to the asm.js program. Each 16-byte structure has a PC address which necessarily ends in the hexadecimal digit 0.
+
+There is a slight complication as the asm.js spec requires case labels to be densely packed: the =pc= local variable actually stores the result of right-shifting a PC address by four bits (equivalently, omitting the last hexadecimal digit). The convention we're trying to adhere to is that whenever a PC address is written to memory, it is left unshifted (or left-shifted if it has previously been right-shifted) and its last hexadecimal digit is necessarily 0.
+
+As there is currently no 64-bit support, there are only 32-bit little-endian binary relocations in text sections.
+
+*** relocations
+As mentioned above, there are hexadecimal relocations specific to the asm.js "architecture" in addition to the binary relocations common to all ELF architectures:
+
+**** HEX16
+This relocation replaces 16 ASCII hex digits in the ELF section by the right number of hex digits to represent the value of the relocation, encoded as ASCII hex digits; the digits are preceded by space characters to keep the length of the resulting string at 16 bytes.
+**** HEX16R4
+Like HEX16, but only 15 ASCII hex digits are replaced, and the value is right-shifted by 4 bits; in other words, the last digit is omitted.
+**** HEX16R12
+Like HEX16R4, but the right shift is 12 bits, and the last three digits are omitted.
