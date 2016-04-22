@@ -1,0 +1,35 @@
+#!/bin/bash
+TMP1=$(mktemp);
+TMP2=$(mktemp);
+TMP3=$(mktemp);
+TMP4=$(mktemp);
+TMP5=$(mktemp);
+TMP6=$(mktemp);
+TMP7=$(mktemp);
+TMPD=$(mktemp -d);
+if [ x"$JS" = x ]; then
+    JS=$(which js)
+fi
+if [ x"$ASMJSDIR" = x ]; then
+    ASMJSDIR=$HOME/git/asmjs
+fi
+if [ x"$DELAY" = x ]; then
+    DELAY=1m
+fi
+asmjs-virtual-asmjs-objcopy --dump-section .data=$TMP2 $1 $TMP1
+$ASMJSDIR/hexify/hexify < $TMP2 > $TMP3
+asmjs-virtual-asmjs-objcopy --add-section .javascript.data=$TMP3 $1 $TMP4
+asmjs-virtual-asmjs-ld -T $ASMJSDIR/lds/asmjs.lds $ASMJSDIR/asmjs.o $TMP4 -o $TMP5
+asmjs-virtual-asmjs-ld -T $ASMJSDIR/lds/asmjs-js1ify.lds $ASMJSDIR/asmjs.o $TMP5 -o $TMP6
+cat $ASMJSDIR/asmjs-main.js $TMP6 > $TMP7
+rm $TMP1 $TMP2 $TMP3 $TMP4 $TMP5 $TMP6
+(sleep $DELAY && rm $TMP7) & disown
+chmod u+x $TMP7
+if [ x"$GDB" != x ]; then
+    mkfifo $TMPD/in
+    mkfifo $TMPD/out
+    (dd bs=1 if=$TMPD/out | nc -l -p 7777 | dd bs=1 of=$TMPD/in) &
+    exec $JS $JSFLAGS $TMP7 "$@" 3<$TMPD/in 4>$TMPD/out
+else
+    exec $JS $JSFLAGS $TMP7 "$@"
+fi
