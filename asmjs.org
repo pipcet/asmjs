@@ -75,7 +75,46 @@ Lines beginning with whitespace followed by a non-period are treated as JavaScri
 
 *** FIXME: indentation of macros
 ** asm.js code
-An entire program is compiled into one asm.js module (see the asm.js spec), which consists of one asm.js function for each program function, in addition to a few functions of a more general nature.
+An entire program is compiled into one asm.js module (see the asm.js spec), which consists of one asm.js function for each program function, in addition to a few functions of a more special nature.
+
+*** overall module design
+
+The asm.js module has roughly the following general form:
+
+#+begin_src javascript
+function (stdlib, foreign, heap) {
+    "use asm";
+
+    var HEAP8 = new stdlib.Int8Array(heap);
+    var HEAP16 = new stdlib.Int16Array(heap);
+    var HEAP32 = new stdlib.Int32Array(heap);
+    var HEAPU8 = new stdlib.Uint8Array(heap);
+    var HEAPU16 = new stdlib.Uint16Array(heap);
+    var HEAPU32 = new stdlib.Uint32Array(heap);
+    var HEAPF32 = new stdlib.Float32Array(heap);
+    var HEAPF64 = new stdlib.Float64Array(heap);
+
+    <further local definitions>
+
+    var foreign_extcall = foreign.extcall;
+
+    var rv = 0;
+    var a0 = 0;
+    var a1 = 0;
+    var a2 = 0;
+    var a3 = 0;
+
+    <asm.js functions>
+
+    return {
+        get_arg: get_arg,
+        <...>
+
+        f_0x40001000: f_0x40001000,
+        <...>
+    };
+}
+#+end_src
 
 *** asm.js functions
 Each asm.js function has roughly the following general form:
