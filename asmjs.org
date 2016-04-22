@@ -255,7 +255,7 @@ Development started out using the C library included with the Emscripten project
 **** the VM stack
 JavaScript code, and asm.js code as a special case, is interpreted or compiled to code that makes use of the CPU stack to store local data, return addresses, and function arguments beyond those that can be passed in CPU registers. This stack is meant to be entirely opaque to JavaScript code and we thus make no assumptions about it.
 
-However, we implement a second stack, the VM stack, which is a region of a JavaScript ArrayBuffer reserved and potentially used to store values which cannot be stored in the asm.js function's registers; this can be either because there are no more availabble asm.js registers, or because the function is about to return, in which case the contents of the local asm.js registers are necessarily lost.
+However, we implement a second stack, the VM stack, which is a region of a JavaScript ArrayBuffer reserved and potentially used to store values which cannot be stored in the asm.js function's registers; this can be either because there are no more available asm.js registers, or because the function is about to return, in which case the contents of the local asm.js registers are necessarily lost.
 
 The idea is thus that all relevant data can be saved to the VM stack based on the JavaScript stack, and execution can resume using only this data. This allows the JavaScript VM to return from all asm.js or JavaScript functions and wait for an event asynchronously to resume execution.
 
