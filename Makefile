@@ -1,7 +1,7 @@
-all: hexify/hexify asmjs.o
+all: bin/hexify lib/asmjs.o
 
-hexify/hexify: hexify/hexify.c
+bin/hexify: hexify/hexify.c
 	$(CC) $< -o $@
 
-asmjs.o: asmjs.S
+lib/asmjs.o: lib/asmjs.S
 	asmjs-virtual-asmjs-gcc -c $< -o $@
