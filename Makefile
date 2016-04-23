@@ -101,17 +101,17 @@ fetch: projects/gcc.fetch projects/glibc.fetch projects/binutils-gdb.fetch
 
 projects/gcc.fetch:
 	rm -f projects/gcc
-	(cd projects; git checkout https://github.com/pipcet/gcc -b asmjs)
+	(cd projects; git clone https://github.com/pipcet/gcc -b asmjs)
 	touch $@
 
 projects/glibc.fetch:
 	rm -f projects/glibc
-	(cd projects; git checkout https://github.com/pipcet/glibc -b asmjs)
+	(cd projects; git clone https://github.com/pipcet/glibc -b asmjs)
 	touch $@
 
 projects/binutils-gdb.fetch:
 	rm -f projects/binutils-gdb
-	(cd projects; git checkout https://github.com/pipcet/binutils-gdb -b asmjs)
+	(cd projects; git clone https://github.com/pipcet/binutils-gdb -b asmjs)
 	touch $@
 
 .PHONY: FORCE clean fetch
