@@ -36,7 +36,7 @@ Assuming that $HOME/git/binutils-gdb is where you want your cloned git tree to e
 
 $ cd $HOME/git
 $ git clone https://github.com/pipcet/binutils-gdb -b asmjs
-$ (cd binutils/gas; aclocal-1.11; AUTOCONF=autoconf2.64 automake-1.11))
+$ (cd binutils-gdb/gas; aclocal-1.11; AUTOCONF=autoconf2.64 automake-1.11))
 $ mkdir $HOME/build/binutils-gdb
 $ cd $HOME/build/binutils-gdb
 $ ~/git/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$HOME/asmjs-virtual-asmjs
