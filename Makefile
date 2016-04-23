@@ -62,6 +62,7 @@ build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir build/glibc.mak
 	touch $@
 
 build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
+	cp build/gcc-preliminary/gcc/libgcc.a build/gcc-final/gcc/libgcc_eh.a
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final install
 	touch $@
@@ -91,7 +92,7 @@ bin/hexify: hexify/hexify.c
 	$(CC) $< -o $@
 
 lib/asmjs.o: lib/asmjs.S build/gcc-final.make
-	asmjs-virtual-asmjs-gcc -c $< -o $@
+	asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -c $< -o $@
 
 clean:
 	rm -rf build src asmjs-virtual-asmjs
