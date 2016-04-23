@@ -1,6 +1,4 @@
 language: c
-compiler:
-    - gcc
 os:
     - linux
 addons:

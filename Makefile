@@ -53,8 +53,8 @@ build/glibc.configure: src/glibc.dir build/glibc.dir build/gcc-preliminary.make
 	touch $@
 
 build/glibc.make: build/glibc.dir build/glibc.configure
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/glibc
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/glibc install
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/glibc
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/glibc install
 	touch $@
 
 build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir build/glibc.make
@@ -62,6 +62,7 @@ build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir build/glibc.mak
 	touch $@
 
 build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
+	test -d build/gcc-final/gcc || $(MKDIR) build/gcc-final/gcc
 	cp build/gcc-preliminary/gcc/libgcc.a build/gcc-final/gcc/libgcc_eh.a
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final install
