@@ -11,6 +11,8 @@ addons:
             - automake
             - libtool
             - m4
+            - texinfo
+            - makeinfo
 script:
     - make -j3 fetch
     - make -kj3 all
