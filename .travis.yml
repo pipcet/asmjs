@@ -16,4 +16,5 @@ addons:
             - libmpc-dev
 script:
     - make -j3 fetch
+    - (make -kj3 build/glibc.make >/dev/null) || make -kj3 build/glibc.make
     - make -kj3 all
