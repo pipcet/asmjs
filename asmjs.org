@@ -385,7 +385,7 @@ In theory, we could do without the last argument for non-PIE code, and without t
 ** register save area
 *** pointer to rfp = . + length of register save area
 *** pc0
-*** dpc
+*** pc = pc0 + dpc
 *** sp
 *** bitmap if return fp not yet reached
 *** r0-r7 as indicated in bitmap
