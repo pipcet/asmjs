@@ -90,7 +90,7 @@ src/glibc.dir: src/.dir
 bin/hexify: hexify/hexify.c
 	$(CC) $< -o $@
 
-lib/asmjs.o: lib/asmjs.S
+lib/asmjs.o: lib/asmjs.S build/gcc-final.make
 	asmjs-virtual-asmjs-gcc -c $< -o $@
 
 # clean:

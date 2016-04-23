@@ -11,5 +11,5 @@ addons:
             - libtool
             - m4
 script:
-    - make fetch
-    - make all
+    - make -j3 fetch
+    - make -j3 all
