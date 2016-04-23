@@ -27,7 +27,7 @@ build/gcc-final.dir: build/.dir
 	touch $@
 
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
-	(cd src/binutils-gdb/gas; aclocal-1.11; AUTOCONF=autoconf2.64 automake-1.11)
+	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
@@ -93,9 +93,8 @@ bin/hexify: hexify/hexify.c
 lib/asmjs.o: lib/asmjs.S build/gcc-final.make
 	asmjs-virtual-asmjs-gcc -c $< -o $@
 
-# clean:
-# make clean by hand until I've fixed this.
-# $(RM) -rf build src asmjs-virtual-asmjs
+clean:
+	rm -rf build src asmjs-virtual-asmjs
 
 fetch: projects/gcc.fetch projects/glibc.fetch projects/binutils-gdb.fetch
 
