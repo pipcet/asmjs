@@ -74,19 +74,19 @@ src/.dir:
 
 src/binutils-gdb.dir: src/.dir
 	test -d src/binutils-gdb || mkdir src/binutils-gdb
-	(cd projects/binutils-gdb; tar c --exclude .git .) | (cd src/binutils-gdb; tar x)
+	(cd subrepos/binutils-gdb; tar c --exclude .git .) | (cd src/binutils-gdb; tar x)
 	touch $@
 
 src/gcc-preliminary.dir: src/.dir
-	test -L src/gcc-preliminary || ln -sf ../projects/gcc src/gcc-preliminary
+	test -L src/gcc-preliminary || ln -sf ../subrepos/gcc src/gcc-preliminary
 	touch $@
 
 src/gcc-final.dir: src/.dir
-	test -L src/gcc-final || ln -sf ../projects/gcc src/gcc-final
+	test -L src/gcc-final || ln -sf ../subrepos/gcc src/gcc-final
 	touch $@
 
 src/glibc.dir: src/.dir
-	test -L src/glibc || ln -sf ../projects/glibc src/glibc
+	test -L src/glibc || ln -sf ../subrepos/glibc src/glibc
 	touch $@
 
 bin/hexify: hexify/hexify.c
