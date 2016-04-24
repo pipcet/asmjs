@@ -226,8 +226,6 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
         fun = "sbrk";
     }
 
-    console.log("extcall " + mod + ":" + fun + " pc " + pc + " sp " + sp);
-
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
 
@@ -275,8 +273,6 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
     default:
         throw("giving up, pc " + pc.toString(16) + " fun " + funstr.toString(16) + " " + fun + " mod " + modstr.toString(16) + " " + mod);
     }
-
-    console.log("returned " + retv);
 
     if (typeof Promise !== "undefined" &&
         retv instanceof Promise) {
@@ -380,11 +376,8 @@ AsmJSThread.prototype.step = function ()
         if (!f)
             throw "no f for " + cpc.toString(16);
 
-        //console.log(f.name + " " + pc.toString(16) + "/" + cpc.toString(16) + "/" + sp.toString(16) + " returned to " + rp.toString(16) + "/" + this.HEAP32[rp+4>>2].toString(16));
-
         rp = f.code(pc, sp, 0, 0, rpc, rfp);
 
-        //console.log(f.name + " " + pc.toString(16) + "/" + cpc.toString(16) + "/" + sp.toString(16) + " returned to " + rp.toString(16) + "/" + this.HEAP32[rp+4>>2].toString(16));
         if (rp&3) {
             /* the function has saved its JS stack to the VM stack,
              * or it has aborted. */
@@ -394,10 +387,8 @@ AsmJSThread.prototype.step = function ()
         }
 
         if ((rp|3) >= (this.initsp()|3)) {
-            console.log("returned");
             /* the function has returned to top level */
             if (this.restartCode) {
-                console.log("restarting");
                 this.restartCode();
                 return rp&-4;
             }
@@ -498,7 +489,6 @@ function FrozenAsmJSThread(thread)
 
 FrozenAsmJSThread.prototype.thaw = function (process, module)
 {
-    console.log("thawing thread");
     var n = new AsmJSThread(process, module, this.threadpage);
 
     return n;
@@ -589,10 +579,7 @@ function FrozenAsmJSProcess(process)
 
 FrozenAsmJSProcess.prototype.thaw = function (system)
 {
-    console.log("thawing process");
     var n = new AsmJSProcess(system, this.heap);
-
-    //console.log(this);
 
     var fds = [];
     for (var i = 0; i < this.fds.length; i++) {
@@ -600,7 +587,6 @@ FrozenAsmJSProcess.prototype.thaw = function (system)
         fds[i] = FrozenThinThinFD.prototype.thaw.call(fd,
                                                       n,
                                                       function (x) { return global.postMessage(x) });
-        //console.log("unfroze fd " + i + " " + fds[i]);
     }
     n.fds = fds;
 
@@ -907,9 +893,10 @@ var Syscalls = {
     chdir:        new Syscall( 80, "ptr"),
     gettimeofday: new Syscall( 96, "ptr", "u64"),
     getdents:     new Syscall(217, "fd", "ptr", "u64"),
+    openat:       new Syscall(257, "fd", "ptr", "u64", "u64"),
     faccessat:    new Syscall(269, "fd", "ptr", "u64", "u64"),
     ppoll:        new Syscall(271, "ptr", "u64", "ptr", "ptr"),
-    execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64")
+    execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64"),
 };
 
 function InputPromise(fd, output = undefined)
@@ -1253,7 +1240,6 @@ FrozenThinThinFD.prototype.thaw = function (process, target)
 
 function ThinThinFetchFD(process, url, fdno = undefined)
 {
-    //console.log("fetching " + url);
     ThinThinFD.call(this, process, fdno);
     this.url = url;
     this.makeSeekable();
@@ -1273,7 +1259,6 @@ ThinThinFetchFD.prototype.inputPromise = function ()
     delete this.url;
 
     if (!url) {
-        //console.log("EOF");
         return Promise.resolve("");
     }
 
@@ -1713,6 +1698,7 @@ if (typeof(os) !== "undefined" &&
     ThinThin.read =         Syscalls.read;
     ThinThin.write =        Syscalls.write;
     ThinThin.open =         Syscalls.open;
+    ThinThin.openat =       Syscalls.openat;
     ThinThin.close =        Syscalls.close;
     ThinThin.stat =         Syscalls.stat;
     ThinThin.fstat =        Syscalls.fstat;
