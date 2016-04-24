@@ -893,9 +893,10 @@ var Syscalls = {
     chdir:        new Syscall( 80, "ptr"),
     gettimeofday: new Syscall( 96, "ptr", "u64"),
     getdents:     new Syscall(217, "fd", "ptr", "u64"),
+    openat:       new Syscall(257, "fd", "ptr", "u64", "u64"),
     faccessat:    new Syscall(269, "fd", "ptr", "u64", "u64"),
     ppoll:        new Syscall(271, "ptr", "u64", "ptr", "ptr"),
-    execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64")
+    execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64"),
 };
 
 function InputPromise(fd, output = undefined)
@@ -1697,6 +1698,7 @@ if (typeof(os) !== "undefined" &&
     ThinThin.read =         Syscalls.read;
     ThinThin.write =        Syscalls.write;
     ThinThin.open =         Syscalls.open;
+    ThinThin.openat =       Syscalls.openat;
     ThinThin.close =        Syscalls.close;
     ThinThin.stat =         Syscalls.stat;
     ThinThin.fstat =        Syscalls.fstat;
