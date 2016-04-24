@@ -12,4 +12,4 @@
 	branch = asmjs
 [submodule "subrepos/perl"]
 	path = subrepos/perl
-	url = https://github.com/pipcet/perl5
+	url = https://github.com/pipcet/perl
