@@ -14,7 +14,7 @@ if [ x"$ASMJSDIR" = x ]; then
     ASMJSDIR=$HOME/git/asmjs
 fi
 if [ x"$DELAY" = x ]; then
-    DELAY=1m
+    DELAY=1
 fi
 asmjs-virtual-asmjs-objcopy --dump-section .data=$TMP2 $1 $TMP1
 $ASMJSDIR/bin/hexify < $TMP2 > $TMP3
