@@ -764,6 +764,11 @@ ThinThin.sbrk = function (size)
     return ret;
 };
 
+ThinThin.brk = function (addr)
+{
+    return 0;
+};
+
 var data = {};
 var offsets = {};
 
