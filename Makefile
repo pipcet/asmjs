@@ -36,7 +36,7 @@ build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
 	$(MAKE) -C build/binutils-gdb install
 	touch $@
 
-build/gcc-preliminary.configure: src/gcc-preliminary.dir build/gcc-preliminary.dir build/binutils-gdb.make
+build/gcc-preliminary.configure: src/gcc-preliminary.dir build/gcc-preliminary.dir | build/binutils-gdb.make
 	(cd build/gcc-preliminary; ../../src/gcc-preliminary/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
@@ -48,8 +48,8 @@ build/gcc-preliminary.make: build/gcc-preliminary.dir build/gcc-preliminary.conf
 	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a
 	touch $@
 
-build/glibc.configure: src/glibc.dir build/glibc.dir build/gcc-preliminary.make
 	(cd build/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/glibc/configure --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+build/glibc.configure: src/glibc.dir build/glibc.dir | build/gcc-preliminary.make
 	touch $@
 
 build/glibc.make: build/glibc.dir build/glibc.configure
@@ -57,7 +57,7 @@ build/glibc.make: build/glibc.dir build/glibc.configure
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/glibc install
 	touch $@
 
-build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir build/glibc.make
+build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir | build/glibc.make
 	(cd build/gcc-final; ../../src/gcc-final/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
