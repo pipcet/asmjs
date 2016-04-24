@@ -10,6 +10,6 @@
 	path = subrepos/gcc
 	url = https://github.com/pipcet/gcc
 	branch = asmjs
-[submodule "subrepos/perl5"]
-	path = subrepos/perl5
+[submodule "subrepos/perl"]
+	path = subrepos/perl
 	url = https://github.com/pipcet/perl5
