@@ -350,6 +350,9 @@ Like HEX16, but only 15 ASCII hex digits are replaced, and the value is right-sh
 **** HEX16R12
 Like HEX16R4, but the right shift is 12 bits, and the last three digits are omitted.
 
+** signals
+Signals are not yet supported, but the basic design should allow for them.
+
 * Future design
 ** asm.js calling convention
 I think the best calling convention to use is:
