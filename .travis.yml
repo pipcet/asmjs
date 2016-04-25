@@ -4,6 +4,8 @@ os:
 compiler:
     - gcc
 sudo: required
+git:
+    submodules: false
 addons:
     apt:
         packages:
@@ -19,6 +21,8 @@ addons:
             - libgmp-dev
             - libmpfr-dev
             - libmpc-dev
+before_install:
+    - git submodule update --init --recursive --depth=1
 script:
     - sudo apt-get install autoconf2.13
     - CC=clang make -kj3 build/spidermonkey.make
