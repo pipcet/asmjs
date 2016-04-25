@@ -26,6 +26,10 @@ build/gcc-final.dir: build/.dir
 	test -d build/gcc-final || $(MKDIR) build/gcc-final
 	touch $@
 
+build/ncurses.dir: build/.dir
+	test -d build/ncurses || $(MKDIR) build/ncurses
+	touch $@
+
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
@@ -68,6 +72,14 @@ build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final install
 	touch $@
 
+build/ncurses.configure: src/ncurses.dir build/ncurses.dir | build/gcc-final.make
+	(cd build/ncurses; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/ncurses/configure --host=asmjs-virtual-asmjs)
+	touch $@
+
+build/ncurses.make: build/ncurses.configure
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/ncurses
+	touch $@
+
 src/.dir:
 	test -d src || $(MKDIR) src
 	touch $@
@@ -87,6 +99,10 @@ src/gcc-final.dir: src/.dir
 
 src/glibc.dir: src/.dir
 	test -L src/glibc || ln -sf ../subrepos/glibc src/glibc
+	touch $@
+
+src/ncurses.dir: src/.dir
+	test -L src/ncurses || ln -sf ../subrepos/ncurses src/ncurses
 	touch $@
 
 bin/hexify: hexify/hexify.c
