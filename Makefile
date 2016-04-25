@@ -83,6 +83,15 @@ build/spidermonkey.make: build/spidermonkey.configure
 	test -L $(PWD)/asmjs-virtual-asmjs/bin/js || ($(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/bin; ln -sf ../spidermonkey/bin/js $(PWD)/asmjs-virtual-asmjs/bin/js)
 	touch $@
 
+build/spidermonkey.clean:
+	rm -f build/spidermonkey.make
+	rm -f build/spidermonkey.configure
+	rm -f build/spidermonkey.dir
+	rm -f src/spidermonkey.dir
+	rm -rf build/spidermonkey
+	rm -rf src/spidermonkey
+	touch $@
+
 src/.dir:
 	test -d src || $(MKDIR) src
 	touch $@

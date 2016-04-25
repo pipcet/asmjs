@@ -21,6 +21,7 @@ addons:
             - libmpc-dev
 script:
     - make -kj3 build/spidermonkey.make
+    - make -kj3 build/spidermonkey.clean
     - (make -kj3 build/binutils-gdb.make >/dev/null 2>/dev/null) || make -kj3 build/binutils-gdb.make
     - (make -kj3 build/gcc-preliminary.make >/dev/null 2>/dev/null) || make -kj3 build/gcc-preliminary.make
     - (make -kj3 build/glibc.make >/dev/null 2>/dev/null) || make -kj3 build/glibc.make
