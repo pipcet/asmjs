@@ -105,7 +105,7 @@ build/emacs.make: build/emacs.configure build/ncurses.make
 	touch $@
 
 build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
-	test -f src/spidermonkey/js/src/configure || (cd src/spidermonkey/js/src; autoconf2.13)
+	(cd src/spidermonkey/js/src; autoconf2.13)
 	(cd build/spidermonkey; ../../src/spidermonkey/js/src/configure --disable-debug --disable-tests --prefix=$(PWD)/asmjs-virtual-asmjs/spidermonkey --without-system-zlib)
 	touch $@
 
