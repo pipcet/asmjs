@@ -10,3 +10,11 @@
 	path = subrepos/gcc
 	url = https://github.com/pipcet/gcc
 	branch = asmjs
+[submodule "subrepos/emacs"]
+	path = subrepos/emacs
+	url = https://github.com/pipcet/emacs
+        branch = asmjs
+[submodule "subrepos/ncurses"]
+	path = subrepos/ncurses
+	url = https://github.com/pipcet/ncurses
+        branch = asmjs
