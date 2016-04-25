@@ -26,7 +26,7 @@ build/gcc-final.dir: build/.dir
 	test -d build/gcc-final || $(MKDIR) build/gcc-final
 	touch $@
 
-build/perl.dir: build/.dir
+build/perl.dir: src/perl.dir build/.dir
 	test -d build/perl || $(MKDIR) build/perl && (cd src/perl; tar c .)|(cd build/perl; tar x)
 	touch $@
 
