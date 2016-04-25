@@ -2,7 +2,7 @@ language: c
 os:
     - linux
 compiler:
-    - clang
+    - gcc
 sudo: required
 addons:
     apt:
@@ -11,6 +11,7 @@ addons:
             - autoconf2.13
             - autoconf2.64
             - automake
+            - clang
             - libtool
             - m4
             - texinfo
@@ -20,7 +21,7 @@ addons:
             - libmpc-dev
 script:
     - sudo apt-get install autoconf2.13
-    - make -kj3 build/spidermonkey.make
+    - CC=clang make -kj3 build/spidermonkey.make
     - make -kj3 build/spidermonkey.clean
     - (make -kj3 build/binutils-gdb.make >/dev/null 2>/dev/null) || make -kj3 build/binutils-gdb.make
     - (make -kj3 build/gcc-preliminary.make >/dev/null 2>/dev/null) || make -kj3 build/gcc-preliminary.make
