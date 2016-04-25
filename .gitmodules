@@ -10,3 +10,7 @@
 	path = subrepos/gcc
 	url = https://github.com/pipcet/gcc
 	branch = asmjs
+[submodule "subrepos/mozilla"]
+	path = subrepos/mozilla
+	url = https://github.com/pipcet/mozilla
+        branch = asmjs
