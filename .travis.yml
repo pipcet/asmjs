@@ -3,6 +3,8 @@ os:
     - linux
 compiler:
     - clang
+sudo:
+    true
 addons:
     apt:
         packages:
