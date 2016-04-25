@@ -30,6 +30,10 @@ build/ncurses.dir: build/.dir
 	test -d build/ncurses || $(MKDIR) build/ncurses
 	touch $@
 
+build/emacs.dir: build/.dir
+	test -d build/emacs || $(MKDIR) build/emacs
+	touch $@
+
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
@@ -82,6 +86,21 @@ build/ncurses.make: build/ncurses.configure
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/ncurses install
 	touch $@
 
+build/emacs.configure: src/emacs.dir build/emacs.dir | build/ncurses.make
+	(cd src/emacs; autoreconf -ivf)
+	cp config/config.sub src/emacs/build-aux
+	(cd build/emacs; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/emacs/configure --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	touch $@
+
+build/emacs.make: build/emacs.configure build/ncurses.make
+	$(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet
+	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa/inet.h
+	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netdb.h
+	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet/in.h
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/emacs
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/emacs install
+	touch $@
+
 src/.dir:
 	test -d src || $(MKDIR) src
 	touch $@
@@ -105,6 +124,11 @@ src/glibc.dir: src/.dir
 
 src/ncurses.dir: src/.dir
 	test -L src/ncurses || ln -sf ../subrepos/ncurses src/ncurses
+	touch $@
+
+src/emacs.dir: src/.dir
+	test -d src/emacs || mkdir src/emacs
+	(cd subrepos/emacs; tar c --exclude .git .) | (cd src/emacs; tar x)
 	touch $@
 
 bin/hexify: hexify/hexify.c
