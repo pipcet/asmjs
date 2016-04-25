@@ -26,6 +26,10 @@ build/gcc-final.dir: build/.dir
 	test -d build/gcc-final || $(MKDIR) build/gcc-final
 	touch $@
 
+build/spidermonkey.dir: build/.dir
+	test -d build/spidermonkey || $(MKDIR) build/spidermonkey
+	touch $@
+
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
@@ -68,6 +72,18 @@ build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final install
 	touch $@
 
+build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
+	(cd src/spidermonkey; autoconf2.13)
+	(cd src/spidermonkey/js/src; autoconf2.13)
+	(cd build/spidermonkey; ../../src/spidermonkey/js/src/configure --disable-debug --disable-tests --prefix=$(PWD)/asmjs-virtual-asmjs/spidermonkey --without-system-zlib)
+	touch $@
+
+build/spidermonkey.make: build/spidermonkey.configure
+	$(MAKE) -C build/spidermonkey
+	$(MAKE) -C build/spidermonkey install
+	test -L $(PWD)/asmjs-virtual-asmjs/bin/js || ln -sf ../spidermonkey/bin/js $(PWD)/asmjs-virtual-asmjs/bin/js
+	touch $@
+
 src/.dir:
 	test -d src || $(MKDIR) src
 	touch $@
@@ -87,6 +103,11 @@ src/gcc-final.dir: src/.dir
 
 src/glibc.dir: src/.dir
 	test -L src/glibc || ln -sf ../subrepos/glibc src/glibc
+	touch $@
+
+src/spidermonkey.dir: src/.dir
+	test -d src/spidermonkey || mkdir src/spidermonkey
+	(cd subrepos/mozilla; tar c --exclude .git .) | (cd src/spidermonkey; tar x)
 	touch $@
 
 bin/hexify: hexify/hexify.c
