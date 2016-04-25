@@ -50,6 +50,7 @@ build/gcc-preliminary.make: build/gcc-preliminary.dir build/gcc-preliminary.conf
 	$(MAKE) -C build/gcc-preliminary
 	$(MAKE) -C build/gcc-preliminary install
 	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a
+	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_s.a
 	touch $@
 
 build/glibc.configure: src/glibc.dir build/glibc.dir | build/gcc-preliminary.make
