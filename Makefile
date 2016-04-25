@@ -80,7 +80,7 @@ build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
 build/spidermonkey.make: build/spidermonkey.configure
 	$(MAKE) -C build/spidermonkey
 	$(MAKE) -C build/spidermonkey install
-	test -L $(PWD)/asmjs-virtual-asmjs/bin/js || ($MKDIR -p $(PWD)/asmjs-virtual-asmjs/bin; ln -sf ../spidermonkey/bin/js $(PWD)/asmjs-virtual-asmjs/bin/js)
+	test -L $(PWD)/asmjs-virtual-asmjs/bin/js || ($(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/bin; ln -sf ../spidermonkey/bin/js $(PWD)/asmjs-virtual-asmjs/bin/js)
 	touch $@
 
 src/.dir:
