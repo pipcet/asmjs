@@ -1,4 +1,4 @@
-all: bin/hexify lib/asmjs.o build/gcc-final.make
+all: bin/hexify lib/asmjs.o build/gcc-final.make build/perl.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -24,6 +24,10 @@ build/glibc.dir: build/.dir
 
 build/gcc-final.dir: build/.dir
 	test -d build/gcc-final || $(MKDIR) build/gcc-final
+	touch $@
+
+build/perl.dir: build/.dir
+	test -d build/perl || $(MKDIR) build/perl && (cd src/perl; tar c .)|(cd build/perl; tar x)
 	touch $@
 
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
@@ -68,6 +72,16 @@ build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final install
 	touch $@
 
+build/perl.configure: build/perl.dir | build/gcc-final.make
+	mv build/perl/config.sh build/perl/config.sh.old
+	touch build/perl/config.sh
+	(cd build/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ')
+	touch $@
+
+build/perl.make: build/perl.dir build/perl.configure
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/perl
+	touch $@
+
 src/.dir:
 	test -d src || $(MKDIR) src
 	touch $@
@@ -87,6 +101,10 @@ src/gcc-final.dir: src/.dir
 
 src/glibc.dir: src/.dir
 	test -L src/glibc || ln -sf ../subrepos/glibc src/glibc
+	touch $@
+
+src/perl.dir: src/.dir
+	test -L src/perl || ln -sf ../subrepos/perl src/perl
 	touch $@
 
 bin/hexify: hexify/hexify.c
