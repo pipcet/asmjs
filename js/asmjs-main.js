@@ -882,7 +882,7 @@ var Syscalls = {
     exit:         new Syscall( 60, "u64"),
     wait4:        new Syscall( 61, "u64", "ptr", "u64", "ptr"),
     kill:         new Syscall( 62, "u64", "u64"),
-    getcwd:       new Syscall( 79, "ptr", "u64?"),
+    getcwd:       new Syscall( 79, "ptr", "u64"),
     chdir:        new Syscall( 80, "ptr"),
     fchdir:       new Syscall( 81, "u64"),
     rename:       new Syscall( 82, "ptr", "ptr"),
@@ -1051,6 +1051,7 @@ var Linux = {
     EBADF: 9,
     ENOMEM: 12,
     EINVAL: 22,
+    ERANGE: 34,
     FIONREAD: 0x541b,
     POLLIN: 1,
     POLLPRI: 2,
@@ -1716,6 +1717,7 @@ if (typeof(os) !== "undefined" &&
     ThinThin.unlink =       Syscalls.unlink;
     ThinThin.rename =       Syscalls.rename;
     ThinThin.chdir =        Syscalls.chdir;
+    ThinThin.getcwd =       Syscalls.getcwd;
     ThinThin.gettimeofday = Syscalls.gettimeofday;
     ThinThin.gethostname = function (addr, len) {
         this.HEAP8[addr] = 0;
