@@ -73,15 +73,14 @@ build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
 	touch $@
 
 build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
-	(cd src/spidermonkey; autoconf)
-	(cd src/spidermonkey/js/src; autoconf)
+	test -f src/spidermonkey/js/src/configure || (cd src/spidermonkey/js/src; autoconf2.13)
 	(cd build/spidermonkey; ../../src/spidermonkey/js/src/configure --disable-debug --disable-tests --prefix=$(PWD)/asmjs-virtual-asmjs/spidermonkey --without-system-zlib)
 	touch $@
 
 build/spidermonkey.make: build/spidermonkey.configure
 	$(MAKE) -C build/spidermonkey
 	$(MAKE) -C build/spidermonkey install
-	test -L $(PWD)/asmjs-virtual-asmjs/bin/js || ($(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/bin; ln -sf ../spidermonkey/bin/js $(PWD)/asmjs-virtual-asmjs/bin/js)
+	test -L $(PWD)/asmjs-virtual-asmjs/bin/js || ($MKDIR -p $(PWD)/asmjs-virtual-asmjs/bin; ln -sf ../spidermonkey/bin/js $(PWD)/asmjs-virtual-asmjs/bin/js)
 	touch $@
 
 src/.dir:
