@@ -23,3 +23,4 @@ script:
     - (sleep 15m && echo "I'm not done yet") &
     - (sleep 20m && echo "I'm not done yet") &
     - (make -kj3 build/gcc-final.make >/dev/null 2>/dev/null) || make -kj3 build/gcc-final.make
+    - make -kj3 build/ncurses.make
