@@ -22,7 +22,7 @@ addons:
             - libmpfr-dev
             - libmpc-dev
 before_install:
-    - git submodule update --init --recursive --depth=1
+    - git submodule update --init --recursive --depth=50
 script:
     - sudo apt-get install autoconf2.13
     - CC=clang make -kj3 build/spidermonkey.make
