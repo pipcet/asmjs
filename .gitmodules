@@ -18,3 +18,7 @@
 	path = subrepos/ncurses
 	url = https://github.com/pipcet/ncurses
         branch = asmjs
+[submodule "subrepos/mozilla"]
+	path = subrepos/mozilla
+	url = https://github.com/pipcet/mozilla
+        branch = asmjs

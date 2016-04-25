@@ -34,6 +34,10 @@ build/emacs.dir: build/.dir
 	test -d build/emacs || $(MKDIR) build/emacs
 	touch $@
 
+build/spidermonkey.dir: build/.dir
+	test -d build/spidermonkey || $(MKDIR) build/spidermonkey
+	touch $@
+
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
@@ -100,6 +104,26 @@ build/emacs.make: build/emacs.configure build/ncurses.make
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/emacs src/temacs
 	touch $@
 
+build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
+	test -f src/spidermonkey/js/src/configure || (cd src/spidermonkey/js/src; autoconf2.13)
+	(cd build/spidermonkey; ../../src/spidermonkey/js/src/configure --disable-debug --disable-tests --prefix=$(PWD)/asmjs-virtual-asmjs/spidermonkey --without-system-zlib)
+	touch $@
+
+build/spidermonkey.make: build/spidermonkey.configure
+	$(MAKE) -C build/spidermonkey
+	$(MAKE) -C build/spidermonkey install
+	test -L $(PWD)/asmjs-virtual-asmjs/bin/js || ($(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/bin; ln -sf ../spidermonkey/bin/js $(PWD)/asmjs-virtual-asmjs/bin/js)
+	touch $@
+
+build/spidermonkey.clean:
+	rm -f build/spidermonkey.make
+	rm -f build/spidermonkey.configure
+	rm -f build/spidermonkey.dir
+	rm -f src/spidermonkey.dir
+	rm -rf build/spidermonkey
+	rm -rf src/spidermonkey
+	touch $@
+
 src/.dir:
 	test -d src || $(MKDIR) src
 	touch $@
@@ -128,6 +152,11 @@ src/ncurses.dir: src/.dir
 src/emacs.dir: src/.dir
 	test -d src/emacs || mkdir src/emacs
 	(cd subrepos/emacs; tar c --exclude .git .) | (cd src/emacs; tar x)
+	touch $@
+
+src/spidermonkey.dir: src/.dir
+	test -d src/spidermonkey || mkdir src/spidermonkey
+	(cd subrepos/mozilla; tar c --exclude .git .) | (cd src/spidermonkey; tar x)
 	touch $@
 
 bin/hexify: hexify/hexify.c
