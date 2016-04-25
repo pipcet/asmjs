@@ -8,7 +8,8 @@ addons:
             - autoconf2.13
             - autoconf2.64
             - automake
-            - gcc5
+            - gcc-5
+            - g++-5
             - libtool
             - m4
             - texinfo
