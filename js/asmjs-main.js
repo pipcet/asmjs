@@ -2108,7 +2108,7 @@ var worker;
 function newAsmJSModule(mod)
 {
     sys = new AsmJSSystem();
-    sys.instantiate(mod, args, []);
+    sys.instantiate(mod, args, ["EMACSLOADPATH=../../../src/emacs/lisp"]);
 
     while (sys.runqueue.length)
         sys.step();
