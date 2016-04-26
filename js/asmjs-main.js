@@ -295,6 +295,29 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
         throw "cannot resolve " + mod + ":" + fun;
     }
 
+    /*
+    console.log('extcall ' + fun + ' returned ' + retv);
+
+    if (fun == "stat" || fun == "fstat") {
+        console.log('stat buffer 0 '+this.HEAP32[args[1]+0>>2].toString(16));
+        console.log('stat buffer 1 '+this.HEAP32[args[1]+4>>2].toString(16));
+        console.log('stat buffer 2 '+this.HEAP32[args[1]+8>>2].toString(16));
+        console.log('stat buffer 3 '+this.HEAP32[args[1]+12>>2].toString(16));
+        console.log('stat buffer 4 '+this.HEAP32[args[1]+16>>2].toString(16));
+        console.log('stat buffer 5 '+this.HEAP32[args[1]+20>>2].toString(16));
+        console.log('stat buffer 6 '+this.HEAP32[args[1]+24>>2].toString(16));
+        console.log('stat buffer 7 '+this.HEAP32[args[1]+28>>2].toString(16));
+        console.log('stat buffer 8 '+this.HEAP32[args[1]+32>>2].toString(16));
+        console.log('stat buffer 9 '+this.HEAP32[args[1]+36>>2].toString(16));
+        console.log('stat buffer a '+this.HEAP32[args[1]+40>>2].toString(16));
+        console.log('stat buffer b '+this.HEAP32[args[1]+44>>2].toString(16));
+        console.log('stat buffer c '+this.HEAP32[args[1]+48>>2].toString(16));
+        console.log('stat buffer d '+this.HEAP32[args[1]+52>>2].toString(16));
+        console.log('stat buffer e '+this.HEAP32[args[1]+56>>2].toString(16));
+        console.log('stat buffer f '+this.HEAP32[args[1]+60>>2].toString(16));
+    }
+    */
+
     return sp;
 };
 
@@ -850,8 +873,9 @@ function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
             var spec = argspecs[i];
             if (spec == "ptr") {
                 rargs.push(this.HEAPU8);
+                //console.log('string arg ' + CStringAt(this.HEAPU8, args[i]));
             } else {
-                //print(args[i].toString(16));
+                //console.log('integer arg ' + args[i].toString(16));
             }
             rargs.push(args[i]);
         }
