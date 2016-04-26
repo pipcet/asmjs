@@ -20,7 +20,7 @@ addons:
             - libmpfr-dev
             - libmpc-dev
 script:
-    - sudo apt-get install autoconf2.13
+    - sudo apt-get install autoconf2.13 yasm
     - CC=clang make -kj3 build/spidermonkey.make
     - make -kj3 build/spidermonkey.clean
     - (make -kj3 build/binutils-gdb.make >/dev/null 2>/dev/null) || make -kj3 build/binutils-gdb.make
