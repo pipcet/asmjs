@@ -921,6 +921,7 @@ var Syscalls = {
     gettimeofday: new Syscall( 96, "ptr", "u64"),
     getdents:     new Syscall(217, "fd", "ptr", "u64"),
     openat:       new Syscall(257, "fd", "ptr", "u64", "u64"),
+    linkat:       new Syscall(265, "ft", "ptr", "fd", "ptr", "u64"),
     faccessat:    new Syscall(269, "fd", "ptr", "u64", "u64"),
     ppoll:        new Syscall(271, "ptr", "u64", "ptr", "ptr"),
     execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64"),
@@ -1727,6 +1728,7 @@ if (typeof(os) !== "undefined" &&
     ThinThin.write =        Syscalls.write;
     ThinThin.open =         Syscalls.open;
     ThinThin.openat =       Syscalls.openat;
+    ThinThin.linkat =       Syscalls.linkat;
     ThinThin.close =        function (fd) {
         if (fd > 2)
             return Syscalls.close(fd);
