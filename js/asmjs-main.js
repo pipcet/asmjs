@@ -908,6 +908,7 @@ var Syscalls = {
     kill:         new Syscall( 62, "u64", "u64"),
     fcntl_v:      new Syscall( 72, "u64", "u64"),
     fcntl_i:      new Syscall( 72, "u64", "u64", "u64"),
+    ftruncate:    new Syscall( 77, "u64", "u64"),
     getcwd:       new Syscall( 79, "ptr", "u64"),
     chdir:        new Syscall( 80, "ptr"),
     fchdir:       new Syscall( 81, "u64"),
@@ -1745,6 +1746,7 @@ if (typeof(os) !== "undefined" &&
     ThinThin.chdir =        Syscalls.chdir;
     ThinThin.fcntl_v =      Syscalls.fcntl_v;
     ThinThin.fcntl_i =      Syscalls.fcntl_i;
+    ThinThin.ftruncate =    Syscalls.ftruncate;
     ThinThin.getcwd =       Syscalls.getcwd;
     ThinThin.gettimeofday = Syscalls.gettimeofday;
     ThinThin.gethostname = function (addr, len) {
