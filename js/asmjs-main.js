@@ -1727,7 +1727,12 @@ if (typeof(os) !== "undefined" &&
     ThinThin.write =        Syscalls.write;
     ThinThin.open =         Syscalls.open;
     ThinThin.openat =       Syscalls.openat;
-    ThinThin.close =        Syscalls.close;
+    ThinThin.close =        function (fd) {
+        if (fd > 2)
+            return Syscalls.close(fd);
+
+        return 0;
+    };
     ThinThin.stat =         Syscalls.stat;
     ThinThin.fstat =        Syscalls.fstat;
     ThinThin.lseek =        Syscalls.lseek;
