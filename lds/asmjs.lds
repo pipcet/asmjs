@@ -27,6 +27,5 @@ SECTIONS {
   . = __start_of_data;
   .data : { *(.data*) }
   PROVIDE(__end_of_data = .);
-  ASSERT(SIZEOF(.data) < 16*1024*1024, ".data section too large")
   /DISCARD/ : { *(*) }
 }
