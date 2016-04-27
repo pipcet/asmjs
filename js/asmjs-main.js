@@ -295,6 +295,29 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
         throw "cannot resolve " + mod + ":" + fun;
     }
 
+    /*
+    console.log('extcall ' + fun + ' returned ' + retv);
+
+    if (fun == "stat" || fun == "fstat") {
+        console.log('stat buffer 0 '+this.HEAP32[args[1]+0>>2].toString(16));
+        console.log('stat buffer 1 '+this.HEAP32[args[1]+4>>2].toString(16));
+        console.log('stat buffer 2 '+this.HEAP32[args[1]+8>>2].toString(16));
+        console.log('stat buffer 3 '+this.HEAP32[args[1]+12>>2].toString(16));
+        console.log('stat buffer 4 '+this.HEAP32[args[1]+16>>2].toString(16));
+        console.log('stat buffer 5 '+this.HEAP32[args[1]+20>>2].toString(16));
+        console.log('stat buffer 6 '+this.HEAP32[args[1]+24>>2].toString(16));
+        console.log('stat buffer 7 '+this.HEAP32[args[1]+28>>2].toString(16));
+        console.log('stat buffer 8 '+this.HEAP32[args[1]+32>>2].toString(16));
+        console.log('stat buffer 9 '+this.HEAP32[args[1]+36>>2].toString(16));
+        console.log('stat buffer a '+this.HEAP32[args[1]+40>>2].toString(16));
+        console.log('stat buffer b '+this.HEAP32[args[1]+44>>2].toString(16));
+        console.log('stat buffer c '+this.HEAP32[args[1]+48>>2].toString(16));
+        console.log('stat buffer d '+this.HEAP32[args[1]+52>>2].toString(16));
+        console.log('stat buffer e '+this.HEAP32[args[1]+56>>2].toString(16));
+        console.log('stat buffer f '+this.HEAP32[args[1]+60>>2].toString(16));
+    }
+    */
+
     return sp;
 };
 
@@ -850,8 +873,9 @@ function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
             var spec = argspecs[i];
             if (spec == "ptr") {
                 rargs.push(this.HEAPU8);
+                //console.log('string arg ' + CStringAt(this.HEAPU8, args[i]));
             } else {
-                //print(args[i].toString(16));
+                //console.log('integer arg ' + args[i].toString(16));
             }
             rargs.push(args[i]);
         }
@@ -882,7 +906,10 @@ var Syscalls = {
     exit:         new Syscall( 60, "u64"),
     wait4:        new Syscall( 61, "u64", "ptr", "u64", "ptr"),
     kill:         new Syscall( 62, "u64", "u64"),
-    getcwd:       new Syscall( 79, "ptr", "u64?"),
+    fcntl_v:      new Syscall( 72, "u64", "u64"),
+    fcntl_i:      new Syscall( 72, "u64", "u64", "u64"),
+    ftruncate:    new Syscall( 77, "u64", "u64"),
+    getcwd:       new Syscall( 79, "ptr", "u64"),
     chdir:        new Syscall( 80, "ptr"),
     fchdir:       new Syscall( 81, "u64"),
     rename:       new Syscall( 82, "ptr", "ptr"),
@@ -894,6 +921,7 @@ var Syscalls = {
     gettimeofday: new Syscall( 96, "ptr", "u64"),
     getdents:     new Syscall(217, "fd", "ptr", "u64"),
     openat:       new Syscall(257, "fd", "ptr", "u64", "u64"),
+    linkat:       new Syscall(265, "ft", "ptr", "fd", "ptr", "u64"),
     faccessat:    new Syscall(269, "fd", "ptr", "u64", "u64"),
     ppoll:        new Syscall(271, "ptr", "u64", "ptr", "ptr"),
     execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64"),
@@ -1051,6 +1079,7 @@ var Linux = {
     EBADF: 9,
     ENOMEM: 12,
     EINVAL: 22,
+    ERANGE: 34,
     FIONREAD: 0x541b,
     POLLIN: 1,
     POLLPRI: 2,
@@ -1699,7 +1728,13 @@ if (typeof(os) !== "undefined" &&
     ThinThin.write =        Syscalls.write;
     ThinThin.open =         Syscalls.open;
     ThinThin.openat =       Syscalls.openat;
-    ThinThin.close =        Syscalls.close;
+    ThinThin.linkat =       Syscalls.linkat;
+    ThinThin.close =        function (fd) {
+        if (fd > 2)
+            return Syscalls.close(fd);
+
+        return 0;
+    };
     ThinThin.stat =         Syscalls.stat;
     ThinThin.fstat =        Syscalls.fstat;
     ThinThin.lseek =        Syscalls.lseek;
@@ -1716,6 +1751,10 @@ if (typeof(os) !== "undefined" &&
     ThinThin.unlink =       Syscalls.unlink;
     ThinThin.rename =       Syscalls.rename;
     ThinThin.chdir =        Syscalls.chdir;
+    ThinThin.fcntl_v =      Syscalls.fcntl_v;
+    ThinThin.fcntl_i =      Syscalls.fcntl_i;
+    ThinThin.ftruncate =    Syscalls.ftruncate;
+    ThinThin.getcwd =       Syscalls.getcwd;
     ThinThin.gettimeofday = Syscalls.gettimeofday;
     ThinThin.gethostname = function (addr, len) {
         this.HEAP8[addr] = 0;
@@ -2078,7 +2117,11 @@ var worker;
 function newAsmJSModule(mod)
 {
     sys = new AsmJSSystem();
-    sys.instantiate(mod, args, []);
+    var env = [];
+
+    if (os.getenv("EMACS_LOADPATH") !== undefined)
+        env.push("EMACS_LOADPATH=" + os.getenv("EMACS_LOADPATH"));
+    sys.instantiate(mod, args, env);
 
     while (sys.runqueue.length)
         sys.step();
