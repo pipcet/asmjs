@@ -2119,8 +2119,11 @@ function newAsmJSModule(mod)
     sys = new AsmJSSystem();
     var env = [];
 
+    if (os.getenv("EMACSLOADPATH") !== undefined)
+        env.push("EMACSLOADPATH=" + os.getenv("EMACSLOADPATH"));
     if (os.getenv("EMACS_LOADPATH") !== undefined)
         env.push("EMACS_LOADPATH=" + os.getenv("EMACS_LOADPATH"));
+    env.push("TERM=vt100");
     sys.instantiate(mod, args, env);
 
     while (sys.runqueue.length)
