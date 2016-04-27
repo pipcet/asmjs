@@ -36,8 +36,8 @@ build/gcc-preliminary.configure: src/gcc-preliminary.dir build/gcc-preliminary.d
 # test -L asmjs-virtual-asmjs/asmjs-virtual-asmjs || ln -sf . asmjs-virtual-asmjs/asmjs-virtual-asmjs
 
 build/gcc-preliminary.make: build/gcc-preliminary.dir build/gcc-preliminary.configure
-	$(MAKE) -C build/gcc-preliminary
-	$(MAKE) -C build/gcc-preliminary install
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-preliminary
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-preliminary install
 	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a
 	touch $@
 
