@@ -40,7 +40,7 @@ build/spidermonkey.dir: build/.dir
 
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
+	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --host=x86_64-pc-linux-gnu --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
 build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
