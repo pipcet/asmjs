@@ -3,7 +3,7 @@ os:
     - linux
 sudo: required
 addons:
-    apt:
+    - apt:
         packages:
             - autoconf
             - autoconf2.64
