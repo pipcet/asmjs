@@ -1,4 +1,4 @@
-all: bin/hexify lib/asmjs.o build/gcc-final.make
+all: bin/hexify lib/asmjs.o build/gcc-preliminary.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -16,14 +16,6 @@ build/binutils-gdb.dir: build/.dir
 
 build/gcc-preliminary.dir: build/.dir
 	test -d build/gcc-preliminary || $(MKDIR) build/gcc-preliminary
-	touch $@
-
-build/glibc.dir: build/.dir
-	test -d build/glibc || $(MKDIR) build/glibc
-	touch $@
-
-build/gcc-final.dir: build/.dir
-	test -d build/gcc-final || $(MKDIR) build/gcc-final
 	touch $@
 
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
@@ -49,26 +41,6 @@ build/gcc-preliminary.make: build/gcc-preliminary.dir build/gcc-preliminary.conf
 	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a
 	touch $@
 
-build/glibc.configure: src/glibc.dir build/glibc.dir | build/gcc-preliminary.make
-	(cd build/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/glibc/configure --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
-	touch $@
-
-build/glibc.make: build/glibc.dir build/glibc.configure
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/glibc
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/glibc install
-	touch $@
-
-build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir | build/glibc.make
-	(cd build/gcc-final; ../../src/gcc-final/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
-	touch $@
-
-build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
-	test -d build/gcc-final/gcc || $(MKDIR) build/gcc-final/gcc
-	cp build/gcc-preliminary/gcc/libgcc.a build/gcc-final/gcc/libgcc_eh.a
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final install
-	touch $@
-
 src/.dir:
 	test -d src || $(MKDIR) src
 	touch $@
@@ -80,14 +52,6 @@ src/binutils-gdb.dir: src/.dir
 
 src/gcc-preliminary.dir: src/.dir
 	test -L src/gcc-preliminary || ln -sf ../subrepos/gcc src/gcc-preliminary
-	touch $@
-
-src/gcc-final.dir: src/.dir
-	test -L src/gcc-final || ln -sf ../subrepos/gcc src/gcc-final
-	touch $@
-
-src/glibc.dir: src/.dir
-	test -L src/glibc || ln -sf ../subrepos/glibc src/glibc
 	touch $@
 
 bin/hexify: hexify/hexify.c

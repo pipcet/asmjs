@@ -2,10 +2,6 @@
 	path = subrepos/binutils-gdb
 	url = https://github.com/pipcet/binutils-gdb
 	branch = asmjs
-[submodule "subrepos/glibc"]
-	path = subrepos/glibc
-	url = https://github.com/pipcet/glibc
-	branch = asmjs
 [submodule "subrepos/gcc"]
 	path = subrepos/gcc
 	url = https://github.com/pipcet/gcc
