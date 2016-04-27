@@ -4,7 +4,7 @@ os:
 compiler:
     - clang
 sudo:
-    true
+    required
 addons:
     apt:
         packages:

@@ -38,6 +38,7 @@ build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
 	$(MAKE) -C build/binutils-gdb
 	$(MAKE) -C build/binutils-gdb install
+	rm -f asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/as asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/ld asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/nm asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/objdump
 	touch $@
 
 build/gcc-preliminary.configure: src/gcc-preliminary.dir build/gcc-preliminary.dir | build/binutils-gdb.make
