@@ -2,6 +2,8 @@ all: bin/hexify lib/asmjs.o build/gcc-final.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
+OPT_NATIVE ?= "-O0 -g0"
+OPT_ASMJS ?= "-O2"
 
 # asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a: asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a
 #	cp $< $@
@@ -40,7 +42,7 @@ build/spidermonkey.dir: build/.dir
 
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
+	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
 build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
@@ -49,7 +51,7 @@ build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
 	touch $@
 
 build/gcc-preliminary.configure: src/gcc-preliminary.dir build/gcc-preliminary.dir | build/binutils-gdb.make
-	(cd build/gcc-preliminary; ../../src/gcc-preliminary/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
+	(cd build/gcc-preliminary; ../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
 # test -L asmjs-virtual-asmjs/asmjs-virtual-asmjs || ln -sf . asmjs-virtual-asmjs/asmjs-virtual-asmjs
@@ -62,7 +64,7 @@ build/gcc-preliminary.make: build/gcc-preliminary.dir build/gcc-preliminary.conf
 	touch $@
 
 build/glibc.configure: src/glibc.dir build/glibc.dir | build/gcc-preliminary.make
-	(cd build/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/glibc/configure --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
 
 build/glibc.make: build/glibc.dir build/glibc.configure
@@ -71,7 +73,7 @@ build/glibc.make: build/glibc.dir build/glibc.configure
 	touch $@
 
 build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir | build/glibc.make
-	(cd build/gcc-final; ../../src/gcc-final/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
+	(cd build/gcc-final; ../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
 build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
@@ -82,7 +84,7 @@ build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
 	touch $@
 
 build/ncurses.configure: src/ncurses.dir build/ncurses.dir | build/gcc-final.make
-	(cd build/ncurses; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/ncurses/configure --build=x86_64-pc-linux-gnu --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/ncurses; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
 
 build/ncurses.make: build/ncurses.configure
@@ -93,10 +95,10 @@ build/ncurses.make: build/ncurses.configure
 build/emacs.configure: src/emacs.dir build/emacs.dir | build/ncurses.make
 	(cd src/emacs; autoreconf -ivf)
 	cp config/config.sub src/emacs/build-aux
-	(cd build/emacs; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/emacs/configure --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/emacs; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
 
-build/emacs.make: build/emacs.configure build/ncurses.make
+build/emacs.make: build/emacs.configure build/ncurses.make | build/binfmt_misc.install
 	$(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet
 	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa/inet.h
 	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netdb.h
@@ -106,7 +108,7 @@ build/emacs.make: build/emacs.configure build/ncurses.make
 
 build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
 	(cd src/spidermonkey/js/src; autoconf2.13)
-	(cd build/spidermonkey; ../../src/spidermonkey/js/src/configure --disable-debug --disable-tests --prefix=$(PWD)/asmjs-virtual-asmjs/spidermonkey --without-system-zlib)
+	(cd build/spidermonkey; ../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/asmjs-virtual-asmjs/spidermonkey --without-system-zlib)
 	touch $@
 
 build/spidermonkey.make: build/spidermonkey.configure
@@ -115,13 +117,21 @@ build/spidermonkey.make: build/spidermonkey.configure
 	test -L $(PWD)/asmjs-virtual-asmjs/bin/js || ($(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/bin; ln -sf ../spidermonkey/bin/js $(PWD)/asmjs-virtual-asmjs/bin/js)
 	touch $@
 
-build/spidermonkey.clean:
+build/spidermonkey.clean: build/spidermonkey.make
 	rm -f build/spidermonkey.make
 	rm -f build/spidermonkey.configure
 	rm -f build/spidermonkey.dir
 	rm -f src/spidermonkey.dir
 	rm -rf build/spidermonkey
 	rm -rf src/spidermonkey
+	touch $@
+
+build/binfmt_misc.install:
+	sudo ./binfmt_misc/binfmt_misc $(shell realpath ./bin/interpreter) || true
+	touch $@
+
+build/binfmt_misc-caching.install:
+	sudo ./binfmt_misc/binfmt_misc $(shell realpath ./bin/caching-interpreter) || true
 	touch $@
 
 src/.dir:
