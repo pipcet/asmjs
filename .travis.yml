@@ -1,8 +1,6 @@
 language: c
 os:
     - linux
-compiler:
-    - clang
 sudo:
     required
 addons:
@@ -21,7 +19,7 @@ addons:
             - libmpc-dev
 script:
     - sudo apt-get install autoconf2.13 automake clang libtool m4 texinfo libgmp-dev libmpfr-dev libmpc-dev binutils yasm
-    - make -kj3 build/spidermonkey.make
+    - (CC=clang make -kj3 build/spidermonkey.make >/dev/null 2>/dev/null) || CC=clang make -kj3 build/spidermonkey.make
     - make -kj3 build/spidermonkey.clean
     - (sleep 5m && echo "I'm not done yet") &
     - (sleep 10m && echo "I'm not done yet") &
