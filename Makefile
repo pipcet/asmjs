@@ -97,7 +97,7 @@ lib/asmjs.o: lib/asmjs.S build/gcc-final.make
 	asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -c $< -o $@
 
 clean:
-	rm -rf build src asmjs-virtual-asmjs
+	rm -rf asmjs-virtual-asmjs build cache src
 
 fetch: projects/gcc.fetch projects/glibc.fetch projects/binutils-gdb.fetch
 
