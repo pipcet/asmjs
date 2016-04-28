@@ -20,13 +20,14 @@ addons:
             - libmpfr-dev
             - libmpc-dev
 script:
+    - sudo apt-get install autoconf2.13 automake clang libtool m4 texinfo libgmp-dev libmpfr-dev libmpc-dev binutils yasm
     - make -kj3 build/spidermonkey.make
     - make -kj3 build/spidermonkey.clean
-    - (make -kj3 build/binutils-gdb.make >/dev/null 2>/dev/null) || make -kj3 build/binutils-gdb.make
-    - (make -kj3 build/gcc-preliminary.make >/dev/null 2>/dev/null) || make -kj3 build/gcc-preliminary.make
-    - (make -kj3 build/glibc.make >/dev/null 2>/dev/null) || make -kj3 build/glibc.make
     - (sleep 5m && echo "I'm not done yet") &
     - (sleep 10m && echo "I'm not done yet") &
     - (sleep 15m && echo "I'm not done yet") &
     - (sleep 20m && echo "I'm not done yet") &
-    - (make -kj3 build/gcc-final.make >/dev/null 2>/dev/null) || make -kj3 build/gcc-final.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make
