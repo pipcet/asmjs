@@ -1,0 +1,39 @@
+#!/bin/bash
+TMP1=$(mktemp);
+TMP2=$(mktemp);
+TMP3=$(mktemp);
+TMP4=$(mktemp);
+TMP5=$(mktemp);
+TMP6=$(mktemp);
+TMPD=$(mktemp -d);
+if [ x"$JS" = x ]; then
+    JS=$(which js)
+fi
+if [ x"$ASMJSDIR" = x ]; then
+    ASMJSDIR=$HOME/git/asmjs
+fi
+if [ x"$DELAY" = x ]; then
+    DELAY=1
+fi
+REALPATH=$(realpath -- $1)
+mkdir -p $ASMJSDIR/cache/$REALPATH
+if test $ASMJSDIR/cache/$REALPATH/js -nt $1; then
+    exec $JS $JSFLAGS $ASMJSDIR/cache/$REALPATH/js "$@"
+fi
+asmjs-virtual-asmjs-objcopy --dump-section .data=$TMP2 $1 $TMP1
+$ASMJSDIR/bin/hexify < $TMP2 > $TMP3
+asmjs-virtual-asmjs-objcopy --add-section .javascript.data=$TMP3 $1 $TMP4
+asmjs-virtual-asmjs-ld -T $ASMJSDIR/lds/asmjs.lds $ASMJSDIR/lib/asmjs.o $TMP4 -o $TMP5
+asmjs-virtual-asmjs-ld -T $ASMJSDIR/lds/asmjs-js1ify.lds $ASMJSDIR/lib/asmjs.o $TMP5 -o $TMP6
+cat $ASMJSDIR/js/asmjs-main.js $TMP6 > $ASMJSDIR/cache/$REALPATH/js.new
+chmod u+x $ASMJSDIR/cache/$REALPATH/js.new
+mv $ASMJSDIR/cache/$REALPATH/js.new $ASMJSDIR/cache/$REALPATH/js
+rm $TMP1 $TMP2 $TMP3 $TMP4 $TMP5 $TMP6
+if [ x"$GDB" != x ]; then
+    mkfifo $TMPD/in
+    mkfifo $TMPD/out
+    (dd bs=1 if=$TMPD/out | nc -l -p 7777 | dd bs=1 of=$TMPD/in) &
+    exec $JS $JSFLAGS $ASMJSDIR/cache/$REALPATH/js "$@" 3<$TMPD/in 4>$TMPD/out
+else
+    exec $JS $JSFLAGS $ASMJSDIR/cache/$REALPATH/js "$@"
+fi
