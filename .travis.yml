@@ -19,7 +19,7 @@ addons:
             - libmpc-dev
 script:
     - sudo apt-get install autoconf2.13 automake clang libtool m4 texinfo libgmp-dev libmpfr-dev libmpc-dev binutils yasm
-    - make -kj3 build/spidermonkey.make
+    - (CC=clang make -kj3 build/spidermonkey.make >/dev/null 2>/dev/null) || CC=clang make -kj3 build/spidermonkey.make
     - make -kj3 build/spidermonkey.clean
     - (sleep 5m && echo "I'm not done yet") &
     - (sleep 10m && echo "I'm not done yet") &
@@ -29,3 +29,5 @@ script:
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make
+    - make -kj3 build/ncurses.make
+    - make -kj3 build/emacs.make
