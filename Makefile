@@ -2,6 +2,8 @@ all: bin/hexify lib/asmjs.o build/gcc-final.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
+OPT_NATIVE ?= "-O0 -g0"
+OPT_ASMJS ?= "-O2"
 
 # asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a: asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a
 #	cp $< $@
@@ -28,7 +30,7 @@ build/gcc-final.dir: build/.dir
 
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
+	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
 build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
@@ -37,7 +39,7 @@ build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
 	touch $@
 
 build/gcc-preliminary.configure: src/gcc-preliminary.dir build/gcc-preliminary.dir | build/binutils-gdb.make
-	(cd build/gcc-preliminary; ../../src/gcc-preliminary/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
+	(cd build/gcc-preliminary; ../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
 # test -L asmjs-virtual-asmjs/asmjs-virtual-asmjs || ln -sf . asmjs-virtual-asmjs/asmjs-virtual-asmjs
@@ -49,7 +51,7 @@ build/gcc-preliminary.make: build/gcc-preliminary.dir build/gcc-preliminary.conf
 	touch $@
 
 build/glibc.configure: src/glibc.dir build/glibc.dir | build/gcc-preliminary.make
-	(cd build/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/glibc/configure --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
 
 build/glibc.make: build/glibc.dir build/glibc.configure
@@ -58,7 +60,7 @@ build/glibc.make: build/glibc.dir build/glibc.configure
 	touch $@
 
 build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir | build/glibc.make
-	(cd build/gcc-final; ../../src/gcc-final/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
+	(cd build/gcc-final; ../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
 build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
