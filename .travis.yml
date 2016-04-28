@@ -3,11 +3,6 @@ os:
     - linux
 sudo: required
 script:
-    - echo $PATH
     - sudo apt-get install autoconf2.13 automake clang libtool m4 texinfo libgmp-dev libmpfr-dev libmpc-dev binutils
-    - which as
-    - echo $PATH
-    - make -kj3 build/binutils-gdb.make
-    - which as
-    - echo $PATH
-    - make -kj3 build/gcc-preliminary.make
+    - PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make
+    - PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make
