@@ -8,6 +8,8 @@ script:
     - (sleep 10m && echo "I'm not done yet") &
     - (sleep 15m && echo "I'm not done yet") &
     - (sleep 20m && echo "I'm not done yet") &
+    - (sleep 25m && echo "I'm not done yet") &
+    - (sleep 30m && echo "I'm not done yet") &
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make
