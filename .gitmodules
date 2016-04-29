@@ -13,3 +13,7 @@
 [submodule "subrepos/perl"]
 	path = subrepos/perl
 	url = https://github.com/pipcet/perl
+[submodule "subrepos/mozilla"]
+	path = subrepos/mozilla
+	url = https://github.com/pipcet/mozilla
+        branch = asmjs
