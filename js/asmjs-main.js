@@ -2159,16 +2159,25 @@ if (typeof window !== "undefined") {
 var sys;
 var worker;
 
+var copyvars = ["HOME", "MAKE", "LIBPERL_A", "PERL_CORE", "PATH", "EMACSLOADPATH", "EMACS_LOADPATH", "PERL_MM_USE_DEFAULT", "INSTALLDIRS"];
+
 function newAsmJSModule(mod)
 {
     sys = new AsmJSSystem();
     var env = [];
 
-    if (os.getenv("EMACSLOADPATH") !== undefined)
-        env.push("EMACSLOADPATH=" + os.getenv("EMACSLOADPATH"));
-    if (os.getenv("EMACS_LOADPATH") !== undefined)
-        env.push("EMACS_LOADPATH=" + os.getenv("EMACS_LOADPATH"));
-    env.push("TERM=vt100");
+    if ("getenvironment" in os) {
+        env = os.getenvironment();
+    } else {
+        for (var i = 0; i < copyvars.length; i++) {
+            var copyvar = copyvars[i];
+            var value = os.getenv(copyvar);
+
+            if (value !== undefined)
+                env.push(copyvar + "=" + value);
+        }
+        env.push("TERM=vt100");
+    }
     sys.instantiate(mod, args, env);
 
     while (sys.runqueue.length)
