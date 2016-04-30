@@ -966,6 +966,7 @@ var Syscalls = {
     kill:         new Syscall( 62, "u64", "u64"),
     fcntl_v:      new Syscall( 72, "u64", "u64"),
     fcntl_i:      new Syscall( 72, "u64", "u64", "u64"),
+    fcntl_p:      new Syscall( 72, "u64", "u64", "ptr"),
     ftruncate:    new Syscall( 77, "u64", "u64"),
     getcwd:       new Syscall( 79, "ptr", "u64"),
     chdir:        new Syscall( 80, "ptr"),
