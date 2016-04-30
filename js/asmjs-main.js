@@ -958,7 +958,8 @@ var Syscalls = {
     dup2:         new Syscall( 33, "u64", "u64"),
     getpid:       new Syscall( 39),
     clone:        new Syscall( 56, "u64", "ptr", "ptr", "ptr", "ptr"),
-    execve:       new Syscall( 59, "ptr", "aptr", "aptr"),
+    fork:         new Syscall( 57),
+    execve:       new Syscall64( 59, "path", "strs", "strs"),
     exit:         new Syscall( 60, "u64"),
     wait4:        new Syscall( 61, "u64", "ptr", "u64", "ptr"),
     kill:         new Syscall( 62, "u64", "u64"),
@@ -980,6 +981,7 @@ var Syscalls = {
     linkat:       new Syscall(265, "ft", "ptr", "fd", "ptr", "u64"),
     faccessat:    new Syscall(269, "fd", "ptr", "u64", "u64"),
     ppoll:        new Syscall(271, "ptr", "u64", "ptr", "ptr"),
+    pipe2:        new Syscall(293, "ptr", "u64"),
     execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64"),
 };
 
