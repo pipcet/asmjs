@@ -885,6 +885,62 @@ function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
     };
 }
 
+function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
+                   argspec4, argspec5)
+{
+    var argspecs = [];
+    if (argspec0 !== undefined) argspecs.push(argspec0);
+    if (argspec1 !== undefined) argspecs.push(argspec1);
+    if (argspec2 !== undefined) argspecs.push(argspec2);
+    if (argspec3 !== undefined) argspecs.push(argspec3);
+    if (argspec4 !== undefined) argspecs.push(argspec4);
+    if (argspec5 !== undefined) argspecs.push(argspec5);
+    return function(arg0, arg1, arg2, arg3, arg4, arg5) {
+        var args = [arg0, arg1, arg2, arg3, arg4, arg5];
+        var rargs = [number, 0];
+        var i;
+        var ret;
+        for (i = 0; i < argspecs.length; i++) {
+            var spec = argspecs[i];
+            switch (spec) {
+            case "fd":
+            case "u64":
+                rargs.push(args[i]);
+                rargs.push(0);
+                break;
+
+            case "ptr":
+            case "str":
+            case "path":
+                rargs.push(this.HEAPU8);
+                rargs.push(args[i]);
+                break;
+
+            case "ptrs":
+            case "strs":
+                var arg = [];
+                var j;
+
+                for (j = 0; this.HEAP32[args[i]+4*j>>2]; j++) {
+                    arg.push(this.HEAPU8);
+                    arg.push(this.HEAP32[args[i]+4*j>>2]);
+                }
+                arg.push(0);
+                arg.push(0);
+
+                console.log(arg);
+                rargs.push(arg);
+            }
+        }
+        console.log(argspecs);
+        console.log(args);
+        console.log(rargs);
+        ret = os.sys.call64.call(undefined, rargs);
+        print("syscall " + number + " ret " + ret);
+        return ret;
+    };
+}
+
 var Syscalls = {
     read:         new Syscall(  0, "fd", "ptr", "u64"),
     write:        new Syscall(  1, "fd", "ptr", "u64"),
