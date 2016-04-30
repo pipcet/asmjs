@@ -117,4 +117,7 @@ projects/binutils-gdb.fetch:
 	(cd projects; git clone https://github.com/pipcet/binutils-gdb -b asmjs)
 	touch $@
 
+tests/%.c.s: tests/%.c build/gcc-preliminary.make
+	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -S $< -o $@
+
 .PHONY: FORCE clean fetch
