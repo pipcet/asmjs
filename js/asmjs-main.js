@@ -1724,23 +1724,14 @@ VT100FD.prototype.outputPromise = function (heap, ptr, len)
 
 if (typeof(os) !== "undefined" &&
     typeof(os.sys) !== "undefined") {
-    ThinThin.read =         Syscalls.read;
-    ThinThin.write =        Syscalls.write;
-    ThinThin.open =         Syscalls.open;
-    ThinThin.openat =       Syscalls.openat;
-    ThinThin.linkat =       Syscalls.linkat;
+    for (var syscall in Syscalls)
+        ThinThin[syscall] = Syscalls[syscall];
     ThinThin.close =        function (fd) {
         if (fd > 2)
             return Syscalls.close(fd);
 
         return 0;
     };
-    ThinThin.stat =         Syscalls.stat;
-    ThinThin.fstat =        Syscalls.fstat;
-    ThinThin.lseek =        Syscalls.lseek;
-    ThinThin.access =       Syscalls.access;
-    ThinThin.select =       Syscalls.select;
-    ThinThin.ioctl_p =      Syscalls.ioctl_p;
     ThinThin.exit =         function (code) {
         quit(code);
         if (code != 0 && code !== undefined)
@@ -1748,28 +1739,17 @@ if (typeof(os) !== "undefined" &&
         else
             throw new SuccessException();
     };
-    ThinThin.unlink =       Syscalls.unlink;
-    ThinThin.rename =       Syscalls.rename;
-    ThinThin.chdir =        Syscalls.chdir;
-    ThinThin.fcntl_v =      Syscalls.fcntl_v;
-    ThinThin.fcntl_i =      Syscalls.fcntl_i;
-    ThinThin.ftruncate =    Syscalls.ftruncate;
-    ThinThin.getcwd =       Syscalls.getcwd;
-    ThinThin.gettimeofday = Syscalls.gettimeofday;
     ThinThin.gethostname = function (addr, len) {
         this.HEAP8[addr] = 0;
 
         return 0;
     };
-    ThinThin.faccessat =   Syscalls.faccessat;
-    ThinThin.getdents =    Syscalls.getdents;
     //Syscalls.gettimeofday;
     ThinThin.isatty = function () { return 1 };
     ThinThin.restart = function (dst, src, len, entry)
     {
         return this.restart(dst, src, len, entry);
     };
-    ThinThin.ppoll =       Syscalls.ppoll;
 } else {
     ThinThin.isatty = function (fdno) {
         return fdno <= 2 ? 1 : 0;
