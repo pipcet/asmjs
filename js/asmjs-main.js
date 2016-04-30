@@ -885,6 +885,64 @@ function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
     };
 }
 
+function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
+                   argspec4, argspec5)
+{
+    var argspecs = [];
+    if (argspec0 !== undefined) argspecs.push(argspec0);
+    if (argspec1 !== undefined) argspecs.push(argspec1);
+    if (argspec2 !== undefined) argspecs.push(argspec2);
+    if (argspec3 !== undefined) argspecs.push(argspec3);
+    if (argspec4 !== undefined) argspecs.push(argspec4);
+    if (argspec5 !== undefined) argspecs.push(argspec5);
+    return function(arg0, arg1, arg2, arg3, arg4, arg5) {
+        var args = [arg0, arg1, arg2, arg3, arg4, arg5];
+        var rargs = [number, 0];
+        var i;
+        var ret;
+        for (i = 0; i < argspecs.length; i++) {
+            var spec = argspecs[i];
+            switch (spec) {
+            case "fd":
+            case "u64":
+                rargs.push(args[i]);
+                rargs.push(0);
+                break;
+
+            case "ptr":
+            case "str":
+            case "path":
+                rargs.push(this.HEAPU8);
+                rargs.push(args[i]);
+                //console.log('str arg ' + CStringAt(this.HEAPU8, args[i]));
+                break;
+
+            case "ptrs":
+            case "strs":
+                var arg = [];
+                var j;
+
+                for (j = 0; this.HEAP32[args[i]+4*j>>2]; j++) {
+                    arg.push(this.HEAPU8);
+                    arg.push(this.HEAP32[args[i]+4*j>>2]);
+                    //console.log('strs arg ' + CStringAt(this.HEAPU8, this.HEAP32[args[i]+4*j>>2]));
+                }
+                arg.push(0);
+                arg.push(0);
+
+                //console.log(arg);
+                rargs.push(arg);
+            }
+        }
+        //console.log(argspecs);
+        //console.log(args);
+        //console.log(rargs);
+        ret = os.sys.call64.call(undefined, rargs);
+        //print("syscall " + number + " ret " + ret);
+        return ret;
+    };
+}
+
 var Syscalls = {
     read:         new Syscall(  0, "fd", "ptr", "u64"),
     write:        new Syscall(  1, "fd", "ptr", "u64"),
@@ -895,19 +953,20 @@ var Syscalls = {
     lseek:        new Syscall(  8, "u64", "u64", "u64"),
     ioctl_p:      new Syscall( 16, "u64", "u64", "ptr"),
     access:       new Syscall( 21, "ptr", "u64"),
-    pipe2:        new Syscall(293, "ptr", "u64"),
     select:       new Syscall( 23, "u64", "ptr", "ptr", "ptr", "ptr"),
     sched_yield:  new Syscall( 24),
     dup:          new Syscall( 32, "u64"),
     dup2:         new Syscall( 33, "u64", "u64"),
     getpid:       new Syscall( 39),
     clone:        new Syscall( 56, "u64", "ptr", "ptr", "ptr", "ptr"),
-    execve:       new Syscall( 59, "ptr", "aptr", "aptr"),
+    fork:         new Syscall( 57),
+    execve:       new Syscall64( 59, "path", "strs", "strs"),
     exit:         new Syscall( 60, "u64"),
     wait4:        new Syscall( 61, "u64", "ptr", "u64", "ptr"),
     kill:         new Syscall( 62, "u64", "u64"),
     fcntl_v:      new Syscall( 72, "u64", "u64"),
     fcntl_i:      new Syscall( 72, "u64", "u64", "u64"),
+    fcntl_p:      new Syscall( 72, "u64", "u64", "ptr"),
     ftruncate:    new Syscall( 77, "u64", "u64"),
     getcwd:       new Syscall( 79, "ptr", "u64"),
     chdir:        new Syscall( 80, "ptr"),
@@ -921,9 +980,16 @@ var Syscalls = {
     gettimeofday: new Syscall( 96, "ptr", "u64"),
     getdents:     new Syscall(217, "fd", "ptr", "u64"),
     openat:       new Syscall(257, "fd", "ptr", "u64", "u64"),
-    linkat:       new Syscall(265, "ft", "ptr", "fd", "ptr", "u64"),
+    mkdirat:      new Syscall(258, "fd", "ptr", "u64"),
+    unlinkat:     new Syscall(263, "fd", "ptr", "u64"),
+    linkat:       new Syscall(265, "fd", "ptr", "fd", "ptr", "u64"),
+    readlinkat:   new Syscall(267, "fd", "ptr", "ptr", "u64"),
+    fchmodat:     new Syscall(268, "fd", "ptr", "u64", "u64"),
     faccessat:    new Syscall(269, "fd", "ptr", "u64", "u64"),
     ppoll:        new Syscall(271, "ptr", "u64", "ptr", "ptr"),
+    utimensat:    new Syscall(280, "fd", "ptr", "ptr", "u64"),
+    pipe2:        new Syscall(293, "ptr", "u64"),
+    renameat2:    new Syscall(316, "fd", "ptr", "fd", "ptr", "u64"),
     execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64"),
 };
 
@@ -1724,23 +1790,14 @@ VT100FD.prototype.outputPromise = function (heap, ptr, len)
 
 if (typeof(os) !== "undefined" &&
     typeof(os.sys) !== "undefined") {
-    ThinThin.read =         Syscalls.read;
-    ThinThin.write =        Syscalls.write;
-    ThinThin.open =         Syscalls.open;
-    ThinThin.openat =       Syscalls.openat;
-    ThinThin.linkat =       Syscalls.linkat;
-    ThinThin.close =        function (fd) {
-        if (fd > 2)
-            return Syscalls.close(fd);
+    for (var syscall in Syscalls)
+        ThinThin[syscall] = Syscalls[syscall];
+    // ThinThin.close =        function (fd) {
+    //     if (fd > 2)
+    //         return Syscalls.close(fd);
 
-        return 0;
-    };
-    ThinThin.stat =         Syscalls.stat;
-    ThinThin.fstat =        Syscalls.fstat;
-    ThinThin.lseek =        Syscalls.lseek;
-    ThinThin.access =       Syscalls.access;
-    ThinThin.select =       Syscalls.select;
-    ThinThin.ioctl_p =      Syscalls.ioctl_p;
+    //     return 0;
+    // };
     ThinThin.exit =         function (code) {
         quit(code);
         if (code != 0 && code !== undefined)
@@ -1748,28 +1805,17 @@ if (typeof(os) !== "undefined" &&
         else
             throw new SuccessException();
     };
-    ThinThin.unlink =       Syscalls.unlink;
-    ThinThin.rename =       Syscalls.rename;
-    ThinThin.chdir =        Syscalls.chdir;
-    ThinThin.fcntl_v =      Syscalls.fcntl_v;
-    ThinThin.fcntl_i =      Syscalls.fcntl_i;
-    ThinThin.ftruncate =    Syscalls.ftruncate;
-    ThinThin.getcwd =       Syscalls.getcwd;
-    ThinThin.gettimeofday = Syscalls.gettimeofday;
     ThinThin.gethostname = function (addr, len) {
         this.HEAP8[addr] = 0;
 
         return 0;
     };
-    ThinThin.faccessat =   Syscalls.faccessat;
-    ThinThin.getdents =    Syscalls.getdents;
     //Syscalls.gettimeofday;
     ThinThin.isatty = function () { return 1 };
     ThinThin.restart = function (dst, src, len, entry)
     {
         return this.restart(dst, src, len, entry);
     };
-    ThinThin.ppoll =       Syscalls.ppoll;
 } else {
     ThinThin.isatty = function (fdno) {
         return fdno <= 2 ? 1 : 0;
@@ -2114,16 +2160,25 @@ if (typeof window !== "undefined") {
 var sys;
 var worker;
 
+var copyvars = ["HOME", "MAKE", "LIBPERL_A", "PERL_CORE", "PATH", "EMACSLOADPATH", "EMACS_LOADPATH", "PERL_MM_USE_DEFAULT", "INSTALLDIRS"];
+
 function newAsmJSModule(mod)
 {
     sys = new AsmJSSystem();
     var env = [];
 
-    if (os.getenv("EMACSLOADPATH") !== undefined)
-        env.push("EMACSLOADPATH=" + os.getenv("EMACSLOADPATH"));
-    if (os.getenv("EMACS_LOADPATH") !== undefined)
-        env.push("EMACS_LOADPATH=" + os.getenv("EMACS_LOADPATH"));
-    env.push("TERM=vt100");
+    if ("getenvironment" in os) {
+        env = os.getenvironment();
+    } else {
+        for (var i = 0; i < copyvars.length; i++) {
+            var copyvar = copyvars[i];
+            var value = os.getenv(copyvar);
+
+            if (value !== undefined)
+                env.push(copyvar + "=" + value);
+        }
+        env.push("TERM=vt100");
+    }
     sys.instantiate(mod, args, env);
 
     while (sys.runqueue.length)
