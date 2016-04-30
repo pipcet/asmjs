@@ -914,6 +914,7 @@ function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
             case "path":
                 rargs.push(this.HEAPU8);
                 rargs.push(args[i]);
+                //console.log('str arg ' + CStringAt(this.HEAPU8, args[i]));
                 break;
 
             case "ptrs":
@@ -924,19 +925,20 @@ function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
                 for (j = 0; this.HEAP32[args[i]+4*j>>2]; j++) {
                     arg.push(this.HEAPU8);
                     arg.push(this.HEAP32[args[i]+4*j>>2]);
+                    //console.log('strs arg ' + CStringAt(this.HEAPU8, this.HEAP32[args[i]+4*j>>2]));
                 }
                 arg.push(0);
                 arg.push(0);
 
-                console.log(arg);
+                //console.log(arg);
                 rargs.push(arg);
             }
         }
-        console.log(argspecs);
-        console.log(args);
-        console.log(rargs);
+        //console.log(argspecs);
+        //console.log(args);
+        //console.log(rargs);
         ret = os.sys.call64.call(undefined, rargs);
-        print("syscall " + number + " ret " + ret);
+        //print("syscall " + number + " ret " + ret);
         return ret;
     };
 }
@@ -1784,12 +1786,12 @@ if (typeof(os) !== "undefined" &&
     typeof(os.sys) !== "undefined") {
     for (var syscall in Syscalls)
         ThinThin[syscall] = Syscalls[syscall];
-    ThinThin.close =        function (fd) {
-        if (fd > 2)
-            return Syscalls.close(fd);
+    // ThinThin.close =        function (fd) {
+    //     if (fd > 2)
+    //         return Syscalls.close(fd);
 
-        return 0;
-    };
+    //     return 0;
+    // };
     ThinThin.exit =         function (code) {
         quit(code);
         if (code != 0 && code !== undefined)
