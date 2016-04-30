@@ -385,6 +385,15 @@ rp = indcall(0, sp, r0, r1, 0xYYYY, 0xXXXX);
 
 In theory, we could do without the last argument for non-PIE code, and without the second-to-last one for functions not using __builtin_return_address(0).
 
+*** todo list
+**** TODO ordinary calls
+**** TODO indirect calls
+**** TODO trampolines
+**** TODO exceptions
+**** TODO __builtin_setjmp
+**** TODO setjmp()
+**** TODO MI thunks
+**** TODO other nonlocal gotos
 ** register save area
 *** pointer to rfp = . + length of register save area
 *** pc0
