@@ -370,7 +370,7 @@ sp = sp1 - 16
 for special calls:
 #+begin_src javascript
 dpc = -pc0
-rp = sp1
+rp = sp1 - 16
 #+end_src
 
 To call another asm.js function, use
