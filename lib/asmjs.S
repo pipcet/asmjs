@@ -213,46 +213,50 @@ ret.add_section(new AsmJSCodeSection("code",
         return in_bp|0;
     }
 
-    function f_0x0(pc, sp, r0, r1, rpc, rfp) {
-        pc = pc|0;
+    function f_0x0(dpc, sp, r0, r1, rpc, pc0) {
+        dpc = dpc|0;
         sp = sp|0;
         r0 = r0|0;
         r1 = r1|0;
         rpc = rpc|0;
-        rfp = rfp|0;
+        pc0 = pc0|0;
 
-        foreign_abort(1, sp|0);
+        foreign_abort(1, sp|0, 0, 0, 0);
 
         rv = 0;
 
         return sp|0;
     }
 
-    function foreign_indcall(pc, sp, r0, r1, rpc, rfp) {
-        pc = pc|0;
+    function foreign_indcall(dpc, sp, r0, r1, rpc, pc0) {
+        dpc = dpc|0;
         sp = sp|0;
         r0 = r0|0;
         r1 = r1|0;
         rpc = rpc|0;
-        rfp = rfp|0;
+        pc0 = pc0|0;
+
+        var pc = 0;
+
+        pc = dpc+pc0|0;
 
         switch (pc>>8) {
    .section .special.300
         default:
-            return foreign_indcall2(pc|0, sp|0, r0|0, r1|0, rpc|0, rfp|0)|0;
+            return foreign_indcall2(dpc|0, sp|0, r0|0, r1|0, rpc|0, pc0|0)|0;
         }
         return 0;
     }
 
-    function indcall(pc, sp, r0, r1, rpc, rfp) {
-        pc = pc|0;
+    function indcall(dpc, sp, r0, r1, rpc, pc0) {
+        dpc = dpc|0;
         sp = sp|0;
         r0 = r0|0;
         r1 = r1|0;
         rpc = rpc|0;
-        rfp = rfp|0;
+        pc0 = pc0|0;
 
-        return foreign_indcall(pc|0, sp|0, r0|0, r1|0, rpc|0, rfp|0)|0;
+        return foreign_indcall(dpc|0, sp|0, r0|0, r1|0, rpc|0, pc0|0)|0;
     }
 
     function rrds(pc, sp, initsp) {
