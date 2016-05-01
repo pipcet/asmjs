@@ -385,7 +385,15 @@ rp = indcall(0, sp, r0, r1, 0xYYYY, 0xXXXX);
 
 In theory, we could do without the last argument for non-PIE code, and without the second-to-last one for functions not using __builtin_return_address(0).
 
-*** todo list
+*** TODO todo list
+**** TODO unconditional branches
+***** DONE implement
+uses .dpc
+***** TODO test
+**** TODO conditional branches
+***** DONE implement
+uses .dpc
+***** TODO test
 **** TODO ordinary calls
 **** TODO indirect calls
 **** TODO trampolines
@@ -394,6 +402,15 @@ In theory, we could do without the last argument for non-PIE code, and without t
 **** TODO setjmp()
 **** TODO MI thunks
 **** TODO other nonlocal gotos
+**** TODO __builtin_return_address(0)
+***** DONE implement
+***** TODO test
+**** TODO __builtin_return_address(N)
+***** DONE implement
+***** TODO test
+**** TODO __builtin_frame_address(0)
+**** TODO __builtin_frame_address(N)
+**** TODO fix GDB
 ** register save area
 *** pointer to rfp = . + length of register save area
 *** pc0
