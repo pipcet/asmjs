@@ -87,6 +87,7 @@ build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir | build/glibc.m
 build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
 	test -d build/gcc-final/gcc || $(MKDIR) build/gcc-final/gcc
 	cp build/gcc-preliminary/gcc/libgcc.a build/gcc-final/gcc/libgcc_eh.a
+	cp build/gcc-preliminary/gcc/libgcc.a build/gcc-final/gcc/libgcc_s.a
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final install
 	touch $@
@@ -147,6 +148,9 @@ projects/binutils-gdb.fetch:
 
 tests/%.c.s: tests/%.c build/gcc-final.make
 	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -S $< -o $@
+
+tests/%.cpp.s: tests/%.cpp build/gcc-final.make
+	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-g++ -S $< -o $@
 
 tests/%.s.o: tests/%.s build/gcc-final.make
 	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -c $< -o $@

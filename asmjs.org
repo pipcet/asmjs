@@ -400,15 +400,15 @@ uses .dpc
 **** TODO exceptions
 **** DONE __builtin_setjmp
 ***** DONE appears to work
-**** TODO setjmp()
+**** DONE setjmp()
 **** TODO MI thunks
 **** TODO other nonlocal gotos
 **** TODO __builtin_return_address(0)
 ***** DONE implement
-***** TODO test
-**** TODO __builtin_return_address(N)
+***** DONE test
+**** DONE __builtin_return_address(N)
 ***** DONE implement
-***** TODO test
+***** DONE test
 **** TODO __builtin_frame_address(0)
 **** TODO __builtin_frame_address(N)
 **** TODO fix GDB
@@ -416,6 +416,7 @@ uses .dpc
 *** pointer to rfp = . + length of register save area
 *** pc0
 *** pc = pc0 + dpc
+*** rpc
 *** sp
 *** bitmap if return fp not yet reached
 *** r0-r7 as indicated in bitmap
