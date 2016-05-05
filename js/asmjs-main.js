@@ -74,7 +74,7 @@ AsmJSCodeSection.prototype.instantiate = function (thread)
     thread.module = mod;
 
     if (!mod.inAsmJS())
-        throw "no asm.js!";
+        console.log("no asm.js!");
 
     for (var page in this.functions) {
         var fo = this.functions[page];
