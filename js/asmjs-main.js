@@ -260,6 +260,8 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
         }
     }
 
+    //console.log("extcall " + fun + " " + args);
+
     switch (mod) {
     case "thinthin":
         if (ThinThin[fun]) {
@@ -297,7 +299,6 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
     }
 
     /*
-
     if (fun == "stat" || fun == "fstat") {
         console.log('stat buffer 0 '+this.HEAP32[args[1]+0>>2].toString(16));
         console.log('stat buffer 1 '+this.HEAP32[args[1]+4>>2].toString(16));
