@@ -370,7 +370,7 @@ sp = sp1 - 16
 for special calls:
 #+begin_src javascript
 dpc = -pc0
-rp = sp1
+rp = sp1 - 16
 #+end_src
 
 To call another asm.js function, use
@@ -385,10 +385,38 @@ rp = indcall(0, sp, r0, r1, 0xYYYY, 0xXXXX);
 
 In theory, we could do without the last argument for non-PIE code, and without the second-to-last one for functions not using __builtin_return_address(0).
 
+*** TODO todo list
+**** DONE unconditional branches
+***** DONE implement
+uses .dpc
+***** DONE test
+**** DONE conditional branches
+***** DONE implement
+uses .dpc
+***** DONE test
+**** DONE ordinary calls
+**** DONE indirect calls
+**** TODO trampolines
+**** TODO exceptions
+**** DONE __builtin_setjmp
+***** DONE appears to work
+**** DONE setjmp()
+**** TODO MI thunks
+**** TODO other nonlocal gotos
+**** TODO __builtin_return_address(0)
+***** DONE implement
+***** DONE test
+**** DONE __builtin_return_address(N)
+***** DONE implement
+***** DONE test
+**** TODO __builtin_frame_address(0)
+**** TODO __builtin_frame_address(N)
+**** TODO fix GDB
 ** register save area
 *** pointer to rfp = . + length of register save area
 *** pc0
 *** pc = pc0 + dpc
+*** rpc
 *** sp
 *** bitmap if return fp not yet reached
 *** r0-r7 as indicated in bitmap
@@ -426,3 +454,19 @@ Similarly, structure layouts and constants passed to system calls are identical 
 
 ** os.sys.call
 One implementation of the syscall API forwards them directly to the syscall(3) function, which is called by some extra code added to the SpiderMonkey JavaScript shell.
+
+** how to special-case the first case label:
+
+#+begin_src javascript
+function blah(x)
+{
+    while (x == 0) {
+        init stuff;
+
+        x = 1;
+        break;
+    }
+    switch (x) {
+    }
+}
+#+end_src

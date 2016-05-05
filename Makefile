@@ -1,4 +1,4 @@
-all: bin/hexify lib/asmjs.o build/gcc-final.make
+all: bin/hexify lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -50,6 +50,13 @@ build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
 	$(MAKE) -C build/binutils-gdb install
 	touch $@
 
+build/binutils-gdb.clean: FORCE
+	rm -rf build/binutils-gdb src/binutils-gdb
+	rm -f build/binutils-gdb.dir
+	rm -f src/binutils-gdb.dir
+	rm -f build/binutils-gdb.configure
+	rm -f build/binutils-gdb.make
+
 build/gcc-preliminary.configure: src/gcc-preliminary.dir build/gcc-preliminary.dir | build/binutils-gdb.make
 	(cd build/gcc-preliminary; ../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
@@ -63,6 +70,13 @@ build/gcc-preliminary.make: build/gcc-preliminary.dir build/gcc-preliminary.conf
 	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_s.a
 	touch $@
 
+build/gcc-preliminary.clean: FORCE
+	rm -rf build/gcc-preliminary src/gcc-preliminary
+	rm -f build/gcc-preliminary.dir
+	rm -f src/gcc-preliminary.dir
+	rm -f build/gcc-preliminary.configure
+	rm -f build/gcc-preliminary.make
+
 build/glibc.configure: src/glibc.dir build/glibc.dir | build/gcc-preliminary.make
 	(cd build/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
@@ -72,6 +86,13 @@ build/glibc.make: build/glibc.dir build/glibc.configure
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/glibc install
 	touch $@
 
+build/glibc.clean: FORCE
+	rm -rf build/glibc src/glibc
+	rm -f build/glibc.dir
+	rm -f src/glibc.dir
+	rm -f build/glibc.configure
+	rm -f build/glibc.make
+
 build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir | build/glibc.make
 	(cd build/gcc-final; ../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
@@ -79,6 +100,7 @@ build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir | build/glibc.m
 build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
 	test -d build/gcc-final/gcc || $(MKDIR) build/gcc-final/gcc
 	cp build/gcc-preliminary/gcc/libgcc.a build/gcc-final/gcc/libgcc_eh.a
+	cp build/gcc-preliminary/gcc/libgcc.a build/gcc-final/gcc/libgcc_s.a
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final install
 	touch $@
@@ -133,6 +155,13 @@ build/binfmt_misc.install:
 build/binfmt_misc-caching.install:
 	sudo ./binfmt_misc/binfmt_misc $(shell realpath ./bin/caching-interpreter) || true
 	touch $@
+
+build/gcc-final.clean: FORCE
+	rm -rf build/gcc-final src/gcc-final
+	rm -f build/gcc-final.dir
+	rm -f src/gcc-final.dir
+	rm -f build/gcc-final.configure
+	rm -f build/gcc-final.make
 
 src/.dir:
 	test -d src || $(MKDIR) src
@@ -194,5 +223,20 @@ projects/binutils-gdb.fetch:
 	rm -f projects/binutils-gdb
 	(cd projects; git clone https://github.com/pipcet/binutils-gdb -b asmjs)
 	touch $@
+
+tests/%.c.s: tests/%.c build/gcc-final.make
+	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -S $< -o $@
+
+tests/%.cpp.s: tests/%.cpp build/gcc-final.make
+	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-g++ -S $< -o $@
+
+tests/%.s.o: tests/%.s build/gcc-final.make
+	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -c $< -o $@
+
+tests/%.o.exe: tests/%.o build/gcc-final.make
+	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc $< -o $@
+
+tests/%.exe.js: tests/%.exe build/gcc-final.make
+	./bin/prepare $< > $@
 
 .PHONY: FORCE clean fetch
