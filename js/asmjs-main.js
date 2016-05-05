@@ -476,7 +476,7 @@ AsmJSThread.prototype.pre_call = function (pc, fp, a0, a1)
     return sp;
 };
 
-AsmJSThread.prototype.indcall = function (pc, sp, r0, r1, rpc, rfp)
+AsmJSThread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 {
     pc = pc << 4;
 
@@ -485,7 +485,7 @@ AsmJSThread.prototype.indcall = function (pc, sp, r0, r1, rpc, rfp)
 
     pc = pc >> 4;
     if (pc)
-        return gFunctions[pc].code(pc, sp, r0, r1, rpc, rfp);
+        return this.functionByPC(pc).code(0, sp, r0, r1, rpc, pc);
     this.module.set_rv(0);
 
     return sp;
