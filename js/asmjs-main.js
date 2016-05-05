@@ -222,6 +222,7 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
+    //console.log('extcall ' + fun + ' sp ' + sp);
     if (mod == "emscripten" && fun == "malloc") {
         mod = "thinthin";
         fun = "sbrk";
@@ -296,8 +297,8 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
         throw "cannot resolve " + mod + ":" + fun;
     }
 
+    //console.log('extcall ' + fun + ' returned ' + retv);
     /*
-    console.log('extcall ' + fun + ' returned ' + retv);
 
     if (fun == "stat" || fun == "fstat") {
         console.log('stat buffer 0 '+this.HEAP32[args[1]+0>>2].toString(16));
@@ -337,7 +338,7 @@ AsmJSThread.prototype.restart = function (dst, src, len, entry)
         }
 
         this.set_pc(entry>>4);
-        this.set_sp(initsp);
+        this.set_sp(initsp+16);
         this.set_initsp(initsp);
 
         delete this.restartCode;
@@ -360,6 +361,7 @@ AsmJSThread.prototype.step = function ()
     var pc = this.pc();
     var sp = this.sp();
     var rp = 0;
+    var isp = pc ? 0 : sp;
 
     while (true) {
         var cpc = pc;
@@ -387,22 +389,29 @@ AsmJSThread.prototype.step = function ()
         this.HEAP32[4096+2048+64>>2] = -1;
         this.module.set_bp_addr(4096+2048);
 
+        //console.log('pc ' + pc.toString(16) + ' cpc ' + cpc.toString(16) + ' sp ' + sp.toString(16));
+
         if (pc == 0) {
-            cpc = this.HEAP32[sp+4>>2]>>4;
-            var regsize = this.HEAP32[sp+12>>2];
-            var top_of_frame = this.HEAP32[sp+regsize>>2];
-            rfp = this.HEAP32[top_of_frame>>2];
-            rpc = this.HEAP32[rfp+4>>2];
+            cpc = this.HEAP32[sp+8>>2]>>4;
+            rpc = this.HEAP32[sp+12>>2];
         }
+
+        //console.log('v = ' + this.HEAP32[0x3ffffd28>>2].toString(16));
+        //console.log('pc ' + pc.toString(16) + ' cpc ' + cpc.toString(16) + ' sp ' + sp.toString(16));
 
         var f = this.functionByPC(cpc);
 
+
+        //console.log('rpc ' + rpc.toString(16));
         if (!f)
             throw "no f for " + cpc.toString(16);
-
-        rp = f.code(pc, sp, 0, 0, rpc, rfp);
+        //console.log('pc ' + pc.toString(16) + ' cpc ' + cpc.toString(16) + ' sp ' + sp.toString(16) + ' pc0 ' + f.pc0.toString(16) + ' pc0+dpc ' + this.HEAP32[sp+8>>2].toString(16) + ' rpc ' + rpc.toString(16));
+        rp = f.code(pc-(f.pc0), sp+16, 0, 0, rpc, (f.pc0));
+        //console.log('rp ' + rp.toString(16));
 
         if (rp&3) {
+            //console.log('should ' + this.HEAP32[sp>>2].toString(16) + ' be ' + isp.toString(16) + '?');
+            //console.log('v = ' + this.HEAP32[0x3ffffd28>>2].toString(16));
             /* the function has saved its JS stack to the VM stack,
              * or it has aborted. */
             pc = 0;
@@ -421,7 +430,7 @@ AsmJSThread.prototype.step = function ()
         }
 
         /* The function has returned to a function on the VM stack */
-        sp = this.HEAP32[rp+4>>2];
+        sp = this.HEAP32[rp>>2];
         pc = 0;
     }
 
@@ -483,18 +492,33 @@ AsmJSThread.prototype.indcall = function (pc, sp, r0, r1, rpc, rfp)
     return sp;
 };
 
-AsmJSThread.prototype.abort = function (code, arg)
+AsmJSThread.prototype.abort = function (code, arg0, arg1, arg2, arg3)
 {
     code = code|0;
-    arg = arg|0;
+    arg0 = arg0|0;
+    arg1 = arg1|0;
+    arg2 = arg2|0;
+    arg3 = arg3|0;
 
     switch (code) {
     case 0:
-        throw("bad PC " + arg + "!");
+        throw("bad PC " + [arg0.toString(16), arg1.toString(16), arg2.toString(16), arg3.toString(16)] + "!");
 
     case 1:
         //("NULL pointer called at " + arg + "!");
         return 0|0;
+
+    case -1:
+        console.log("debug " + arg0.toString(16) + " " + arg1.toString(16) + " " + arg2.toString(16) + " " + arg3.toString(16));
+
+        if (false)
+        for (var offset = 0x3ffff800; offset < 0x40000000; offset += 0x10)
+            console.log(offset.toString(16) + ': ' +
+                        this.HEAP32[offset>>2].toString(16) + ' ' +
+                        this.HEAP32[offset+4>>2].toString(16) + ' ' +
+                        this.HEAP32[offset+8>>2].toString(16) + ' ' +
+                        this.HEAP32[offset+12>>2].toString(16));
+        break;
 
     default:
         throw("unknown exception " + code);
