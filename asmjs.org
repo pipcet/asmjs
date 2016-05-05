@@ -454,3 +454,19 @@ Similarly, structure layouts and constants passed to system calls are identical 
 
 ** os.sys.call
 One implementation of the syscall API forwards them directly to the syscall(3) function, which is called by some extra code added to the SpiderMonkey JavaScript shell.
+
+** how to special-case the first case label:
+
+#+begin_src javascript
+function blah(x)
+{
+    while (x == 0) {
+        init stuff;
+
+        x = 1;
+        break;
+    }
+    switch (x) {
+    }
+}
+#+end_src
