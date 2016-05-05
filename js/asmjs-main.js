@@ -523,6 +523,18 @@ AsmJSThread.prototype.abort = function (code, arg0, arg1, arg2, arg3)
     }
 }
 
+/* This is somewhat tricky. The dwarf expressions we want to generate are:
+ *   DW_CFA_offset_extended_sf: r36 at cfa+8
+ *   DW_CFA_expression: r0 (DW_OP_breg2 (r2): 0; DW_OP_breg2 (r2): 0; DW_OP_deref; DW_OP_breg2 (r2): 0; DW_OP_minus; DW_OP_plus)
+ *   DW_CFA_def_cfa_register: r0
+ *
+ * (I have to try again to make the second expression less redundant).
+ * The point is that the stack pointer is implicitly set to the CFA,
+ * so we work around gcc's apparent inability to generate a
+ * DW_OP_call_frame_cfa opcode or use the CFA argument pushed onto the
+ * stack by CFA expressions.
+ */
+
 AsmJSThread.prototype.eh_return = function (fp, sp, handler)
 {
     fp = this.HEAP32[this.HEAP32[fp>>2]>>2];
