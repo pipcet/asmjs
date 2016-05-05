@@ -1034,6 +1034,7 @@ var Syscalls = {
     chdir:        new Syscall( 80, "ptr"),
     gettimeofday: new Syscall( 96, "ptr", "u64"),
     getdents:     new Syscall(217, "fd", "ptr", "u64"),
+    clock_gettime:new Syscall(227, "u64", "ptr"),
     openat:       new Syscall(257, "fd", "ptr", "u64", "u64"),
     mkdirat:      new Syscall(258, "fd", "ptr", "u64"),
     unlinkat:     new Syscall(263, "fd", "ptr", "u64"),
