@@ -222,7 +222,6 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
-    //console.log('extcall ' + fun + ' sp ' + sp);
     if (mod == "emscripten" && fun == "malloc") {
         mod = "thinthin";
         fun = "sbrk";
@@ -297,7 +296,6 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
         throw "cannot resolve " + mod + ":" + fun;
     }
 
-    //console.log('extcall ' + fun + ' returned ' + retv);
     /*
 
     if (fun == "stat" || fun == "fstat") {
@@ -527,36 +525,12 @@ AsmJSThread.prototype.abort = function (code, arg0, arg1, arg2, arg3)
 
 AsmJSThread.prototype.eh_return = function (fp, sp, handler)
 {
-    console.log("eh_return");
-    for (var offset = 0x3ffff800; offset < 0x40000000; offset += 0x10)
-        console.log(offset.toString(16) + ': ' +
-                    this.HEAP32[offset>>2].toString(16) + ' ' +
-                    this.HEAP32[offset+4>>2].toString(16) + ' ' +
-                    this.HEAP32[offset+8>>2].toString(16) + ' ' +
-                    this.HEAP32[offset+12>>2].toString(16));
-    console.log("handler " + handler.toString(16));
-    console.log("fp " + fp.toString(16));
-    console.log("sp " + sp.toString(16));
-    console.log("saved fp " + this.HEAP32[this.HEAP32[fp>>2]>>2].toString(16));
     fp = this.HEAP32[this.HEAP32[fp>>2]>>2];
-    console.log("saved sp " + this.HEAP32[fp+16>>2].toString(16));
+
     var a0 = this.HEAP32[fp+24>>2]|0;
     var a1 = this.HEAP32[fp+28>>2]|0;
     var a2 = this.HEAP32[fp+32>>2]|0;
     var a3 = this.HEAP32[fp+36>>2]|0;
-    console.log("a0 " + a0.toString(16));
-    console.log("a1 " + a1.toString(16));
-    console.log("a2 " + a2.toString(16));
-    console.log("a3 " + a3.toString(16));
-    //fp = this.HEAP32[this.HEAP32[fp>>2]>>2]|0;
-    console.log("fp " + fp.toString(16));
-    a3 = (a3|0)+fp|0;
-    console.log("a3 " + a3.toString(16));
-    //while (((fp|0) <= (a3|0))|0) {
-    //    fp = this.HEAP32[this.HEAP32[fp>>2]>>2]|0;
-    //    console.log("fp " + fp.toString(16));
-    //}
-    console.log("fp " + fp.toString(16));
 
     this.module.set_arg(0, a0);
     this.module.set_arg(1, a1);
