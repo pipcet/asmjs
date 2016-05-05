@@ -60,6 +60,7 @@ AsmJSCodeSection.prototype.instantiate = function (thread)
         indcall: thread.indcall.bind(thread),
         tp: 0,
         abort: thread.abort.bind(thread),
+        eh_return: thread.eh_return.bind(thread),
         fround: Math.fround,
         bogotics: 0x7fffffff,
         single_stepping: 0,
@@ -499,6 +500,49 @@ AsmJSThread.prototype.abort = function (code, arg)
         throw("unknown exception " + code);
     }
 }
+
+AsmJSThread.prototype.eh_return = function (fp, sp, handler)
+{
+    console.log("eh_return");
+    for (var offset = 0x3ffff800; offset < 0x40000000; offset += 0x10)
+        console.log(offset.toString(16) + ': ' +
+                    this.HEAP32[offset>>2].toString(16) + ' ' +
+                    this.HEAP32[offset+4>>2].toString(16) + ' ' +
+                    this.HEAP32[offset+8>>2].toString(16) + ' ' +
+                    this.HEAP32[offset+12>>2].toString(16));
+    console.log("handler " + handler.toString(16));
+    console.log("fp " + fp.toString(16));
+    console.log("sp " + sp.toString(16));
+    console.log("saved fp " + this.HEAP32[this.HEAP32[fp>>2]>>2].toString(16));
+    fp = this.HEAP32[this.HEAP32[fp>>2]>>2];
+    console.log("saved sp " + this.HEAP32[fp+16>>2].toString(16));
+    var a0 = this.HEAP32[fp+24>>2]|0;
+    var a1 = this.HEAP32[fp+28>>2]|0;
+    var a2 = this.HEAP32[fp+32>>2]|0;
+    var a3 = this.HEAP32[fp+36>>2]|0;
+    console.log("a0 " + a0.toString(16));
+    console.log("a1 " + a1.toString(16));
+    console.log("a2 " + a2.toString(16));
+    console.log("a3 " + a3.toString(16));
+    //fp = this.HEAP32[this.HEAP32[fp>>2]>>2]|0;
+    console.log("fp " + fp.toString(16));
+    a3 = (a3|0)+fp|0;
+    console.log("a3 " + a3.toString(16));
+    //while (((fp|0) <= (a3|0))|0) {
+    //    fp = this.HEAP32[this.HEAP32[fp>>2]>>2]|0;
+    //    console.log("fp " + fp.toString(16));
+    //}
+    console.log("fp " + fp.toString(16));
+
+    this.module.set_arg(0, a0);
+    this.module.set_arg(1, a1);
+    this.module.set_arg(2, a2);
+    this.module.set_arg(3, a3);
+
+    this.HEAP32[fp+8>>2] = handler;
+
+    return fp|3;
+};
 
 AsmJSThread.prototype.freeze = function ()
 {

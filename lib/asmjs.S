@@ -43,6 +43,7 @@ ret.add_section(new AsmJSCodeSection("code",
     var foreign_extcall = foreign.extcall;
     var foreign_indcall2 = foreign.indcall;
     var foreign_abort = foreign.abort;
+    var foreign_eh_return = foreign.eh_return;
 
     var imul = stdlib.Math.imul;
     var fround = foreign.fround;
