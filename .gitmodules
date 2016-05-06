@@ -22,3 +22,7 @@
 	path = subrepos/mozilla
 	url = https://github.com/pipcet/mozilla
         branch = asmjs
+[submodule "subrepos/bash"]
+	path = subrepos/bash
+	url = https://github.com/pipcet/bash
+        branch = asmjs
