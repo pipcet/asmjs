@@ -20,7 +20,7 @@ SECTIONS {
 
   PROVIDE(__top_of_memory = 1024 * 1024 * 1024);
   PROVIDE(__start_of_sbrk = 32 * 1024 * 1024);
-  PROVIDE(__top_of_stack = __top_of_mem);
+  PROVIDE(__top_of_stack = __top_of_memory);
   PROVIDE(__size_of_stack = 2 * 1024 * 1024);
   PROVIDE(__bottom_of_stack = __top_of_stack - __size_of_stack);
   PROVIDE(__start_of_data = 16384);
