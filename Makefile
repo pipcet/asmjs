@@ -40,6 +40,10 @@ build/spidermonkey.dir: build/.dir
 	test -d build/spidermonkey || $(MKDIR) build/spidermonkey
 	touch $@
 
+build/bash.dir: build/.dir
+	test -d build/bash || $(MKDIR) build/bash
+	touch $@
+
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
@@ -128,6 +132,15 @@ build/emacs.make: build/emacs.configure build/ncurses.make | build/binfmt_misc.i
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/emacs
 	touch $@
 
+build/bash.configure: src/bash.dir build/bash.dir
+	(cd build/bash; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/bash/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --disable-net-redirections --without-bash-malloc)
+	touch $@
+
+build/bash.make: build/bash.configure
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/bash
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/bash install
+	touch $@
+
 build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
 	(cd src/spidermonkey/js/src; autoconf2.13)
 	(cd build/spidermonkey; ../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/asmjs-virtual-asmjs/spidermonkey --without-system-zlib)
@@ -165,6 +178,10 @@ build/gcc-final.clean: FORCE
 
 src/.dir:
 	test -d src || $(MKDIR) src
+	touch $@
+
+src/bash.dir:
+	test -L src/bash || ln -sf ../subrepos/bash src/bash
 	touch $@
 
 src/binutils-gdb.dir: src/.dir
