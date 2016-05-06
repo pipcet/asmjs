@@ -1859,6 +1859,9 @@ if (typeof(os) !== "undefined" &&
     {
         return this.restart(dst, src, len, entry);
     };
+    ThinThin.fork = function () {
+        return os.sys.fork();
+    };
 } else {
     ThinThin.isatty = function (fdno) {
         return fdno <= 2 ? 1 : 0;
