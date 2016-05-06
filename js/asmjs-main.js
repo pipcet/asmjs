@@ -52,7 +52,6 @@ AsmJSCodeSection.prototype.instantiate = function (thread)
     var mod;
 
     mod = this.constructor(global, {
-        global_data: 0,
         print: print,
         now: function () { return +(new Date())/1000.0 },
         bp_addr: 0,
@@ -613,26 +612,6 @@ AsmJSProcess.prototype.deffun = function(page, fo)
     }
 };
 
-AsmJSProcess.prototype.initData = function (sections)
-{
-    var global_data = 5402632;
-    if (global_data != 5402632)
-        throw "unhardcode global_data!";
-
-    global_data -= 8;
-
-    var i,j;
-    var o = 0;
-    for (i = 0; i < sections.length; i++) {
-        var data_section = data[sections[i]];
-        for (j = 0; j < data_section.length; j++) {
-            this.HEAPU8[global_data + o++] = data_section[j];
-        }
-        o += 4095;
-        o &= -4096;
-    }
-};
-
 AsmJSProcess.prototype.freeze = function ()
 {
     return new FrozenAsmJSProcess(this);
@@ -772,10 +751,10 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
     var heap = new ArrayBuffer(size);
     var HEAP32 = new Int32Array(heap);
 
-    HEAP32[4096>>2] = size; // top of available memory
-    HEAP32[4104>>2] =   32 * 1024 * 1024; // top of sbrk'd memory
-    HEAP32[4112>>2] = 8192;               // first thread page
-    HEAP32[4120>>2] =   32 * 1024 * 1024; // bottom of sbrk'd memory
+    HEAP32[4096>>2] = module.top_of_memory; // top of available memory
+    HEAP32[4104>>2] = module.start_of_sbrk; // top of sbrk'd memory
+    HEAP32[4112>>2] = 8192;                 // first thread page
+    HEAP32[4120>>2] = module.start_of_sbrk; // bottom of sbrk'd memory
 
     HEAP32[8192 + 0x00>>2] = 8192; // next thread page
     HEAP32[8192 + 0x08>>2] = 8192; // prev thread page

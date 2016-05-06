@@ -10,14 +10,27 @@ ret.top_of_memory = $
     .hex __top_of_memory
 ;
 
-ret.top_of_stack = ret.top_of_memory;
-ret.bottom_of_stack = ret.top_of_stack - 2 * 1024 * 1024;
+ret.top_of_stack = $
+    .hex __top_of_stack
+;
+
+ret.size_of_stack = $
+    .hex __size_of_stack
+;
+
+ret.bottom_of_stack = $
+    .hex __bottom_of_stack
+;
 
 ret.add_section(new AsmJSDataSection("data", $
     .hex __start_of_data
-- 8, [
+, [
     .section .special.200
 ]));
+
+ret.start_of_sbrk = $
+    .hex __start_of_sbrk
+;
 
 ret.add_section(new AsmJSCodeSection("code",
                                      function (stdlib, foreign, heap) {
@@ -32,7 +45,6 @@ ret.add_section(new AsmJSCodeSection("code",
     var HEAPF32 = new stdlib.Float32Array(heap);
     var HEAPF64 = new stdlib.Float64Array(heap);
 
-    var global_data = foreign.global_data|0;
     var bp_addr = foreign.bp_addr|0;
     var bogotics = foreign.bogotics|0;
     var single_stepping = foreign.single_stepping|0;

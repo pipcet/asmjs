@@ -23,9 +23,11 @@ SECTIONS {
   PROVIDE(__top_of_stack = __top_of_mem);
   PROVIDE(__size_of_stack = 2 * 1024 * 1024);
   PROVIDE(__bottom_of_stack = __top_of_stack - __size_of_stack);
-  PROVIDE(__start_of_data = 5402632);
+  PROVIDE(__start_of_data = 16384);
   . = __start_of_data;
   .data : { *(.data*) }
   PROVIDE(__end_of_data = .);
+  . = ALIGN(., 4096);
+  PROVIDE(__start_of_sbrk = .);
   /DISCARD/ : { *(*) }
 }
