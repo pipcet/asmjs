@@ -26,3 +26,7 @@
 	path = subrepos/bash
 	url = https://github.com/pipcet/bash
         branch = asmjs
+[submodule "subrepos/perl"]
+	path = subrepos/perl
+	url = https://github.com/pipcet/perl
+        branch = asmjs
