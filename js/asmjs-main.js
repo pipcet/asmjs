@@ -480,15 +480,19 @@ AsmJSThread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 {
     pc = pc << 4;
 
-    this.module.set_rv(this.HEAP32[pc+8>>2]);
-    pc = this.HEAP32[pc+4>>2];
+    if (this.HEAP32[pc>>2] == 0x4d4a5254) {
+        this.module.set_rv(this.HEAP32[pc+8>>2]);
+        pc = this.HEAP32[pc+4>>2];
 
-    pc = pc >> 4;
-    if (pc)
-        return this.functionByPC(pc).code(0, sp, r0, r1, rpc, pc);
-    this.module.set_rv(0);
+        pc = pc >> 4;
+        if (pc)
+            return this.functionByPC(pc).code(0, sp, r0, r1, rpc, pc);
+        this.module.set_rv(0);
 
-    return sp;
+        return sp;
+    } else {
+        this.abort(0, pc, sp, r0, r1);
+    }
 };
 
 AsmJSThread.prototype.abort = function (code, arg0, arg1, arg2, arg3)
