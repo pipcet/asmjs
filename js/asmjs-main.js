@@ -1572,13 +1572,7 @@ if (typeof(os) !== "undefined" &&
     typeof(os.sys) !== "undefined") {
     for (var syscall in Syscalls)
         ThinThin[syscall] = Syscalls[syscall];
-    // ThinThin.close =        function (fd) {
-    //     if (fd > 2)
-    //         return Syscalls.close(fd);
-
-    //     return 0;
-    // };
-    ThinThin.exit =         function (code) {
+    ThinThin.exit = function (code) {
         quit(code);
         if (code != 0 && code !== undefined)
             throw "Exit Status " + code;
