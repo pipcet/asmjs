@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+use Data::Dumper;
+use File::Slurp qw(read_file write_file);
+
+my $cache;
+
+if (-e "latemp-cache.pl") {
+    $cache = eval(read_file("latemp-cache.pl")) // {};
+} else {
+    $cache = {};
+}
+my $cache_changed;
+
+sub do_subst {
+    my ($format, $c, $preamble) = @_;
+
+    # we deliberately cache values independently of the preamble.
+    my $program = qq{
+int main(void) {
+    printf("$format", $c);
+
+    return 0;
+}
+};
+
+    my $ret = $cache->{$program};
+
+    return $ret if defined($ret);
+
+    write_file("tmp.c", $preamble . "\n\n" . $program);
+    system("asmjs-virtual-asmjs-gcc -Iinclude tmp.c") and die;
+
+    $cache_changed = 1;
+    return $cache->{$program} = `./a.out`;
+}
+
+my $in = join("", <>);
+my $preamble = "";
+
+while ($in =~ s/\#\{([^}]*)\}\n//m) {
+    $preamble .= $1 . "\n";
+}
+
+while ($in =~ s/(\%[sl.0-9]*[defgox])\{([^}]*)\}/do_subst($1, $2, $preamble)/mesg) {}
+
+print $in;
+
+if ($cache_changed) {
+    write_file("latemp-cache.pl", Dumper($cache));
+}
