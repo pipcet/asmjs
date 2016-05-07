@@ -1,5 +1,5 @@
 language: c
-cache: ccache
+sudo: required
 os:
     - linux
 addons:
@@ -29,8 +29,14 @@ script:
     - (sleep 25m && echo "I'm not done yet") &
     - (sleep 30m && echo "I'm not done yet") &
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make
+    - make build/binutils-gdb.clean
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make
+    - make build/gcc-preliminary.clean
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make
+    - make build/glibc.clean
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make
+    - make build/gcc-final.clean
     - make -kj3 build/ncurses.make
+    - make build/ncurses.clean
     - make -kj3 build/emacs.make
+    - make build/emacs.clean
