@@ -34,3 +34,7 @@
 	path = subrepos/coreutils
 	url = https://github.com/pipcet/coreutils.git
         branch = asmjs
+[submodule "subrepos/graphviz"]
+	path = subrepos/graphviz
+	url = https://github.com/pipcet/graphviz
+        branch = asmjs
