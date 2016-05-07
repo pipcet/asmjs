@@ -4,5 +4,5 @@
 build/
 src/
 asmjs-virtual-asmjs/
-*.jsc.js
-/js/asmjs.js
+cache/
+js/
