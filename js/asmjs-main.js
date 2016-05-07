@@ -1036,6 +1036,61 @@ var Syscalls = {
     execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64"),
 };
 
+var SyscallSignatures = {
+    read:         [  0, "fd", "ptr", "u64"],
+    write:        [  1, "fd", "ptr", "u64"],
+    open:         [  2, "ptr", "u64", "u64"],
+    close:        [  3, "fd"],
+    stat:         [  4, "ptr", "ptr"],
+    fstat:        [  5, "u64", "ptr"],
+    lseek:        [  8, "u64", "u64", "u64"],
+    ioctl_p:      [ 16, "u64", "u64", "ptr"],
+    access:       [ 21, "ptr", "u64"],
+    select:       [ 23, "u64", "ptr", "ptr", "ptr", "ptr"],
+    sched_yield:  [ 24],
+    dup:          [ 32, "u64"],
+    dup2:         [ 33, "u64", "u64"],
+    getpid:       [ 39],
+    clone:        [ 56, "u64", "ptr", "ptr", "ptr", "ptr"],
+    fork:         [ 57],
+    execve:       [ 59, "path", "strs", "strs"],
+    exit:         [ 60, "u64"],
+    wait4:        [ 61, "u64", "ptr", "u64", "ptr"],
+    kill:         [ 62, "u64", "u64"],
+    fcntl_v:      [ 72, "u64", "u64"],
+    fcntl_i:      [ 72, "u64", "u64", "u64"],
+    fcntl_p:      [ 72, "u64", "u64", "ptr"],
+    ftruncate:    [ 77, "u64", "u64"],
+    getcwd:       [ 79, "ptr", "u64"],
+    chdir:        [ 80, "ptr"],
+    fchdir:       [ 81, "u64"],
+    rename:       [ 82, "ptr", "ptr"],
+    mkdir:        [ 83, "ptr", "u64"],
+    rmdir:        [ 84, "ptr"],
+    unlink:       [ 87, "ptr"],
+    rename:       [ 82, "ptr", "ptr"],
+    chdir:        [ 80, "ptr"],
+    gettimeofday: [ 96, "ptr", "u64"],
+    getuid:       [102],
+    getgid:       [104],
+    geteuid:      [107],
+    getegid:      [108],
+    getdents:     [217, "fd", "ptr", "u64"],
+    clock_gettime:[227, "u64", "ptr"],
+    openat:       [257, "fd", "ptr", "u64", "u64"],
+    mkdirat:      [258, "fd", "ptr", "u64"],
+    unlinkat:     [263, "fd", "ptr", "u64"],
+    linkat:       [265, "fd", "ptr", "fd", "ptr", "u64"],
+    readlinkat:   [267, "fd", "ptr", "ptr", "u64"],
+    fchmodat:     [268, "fd", "ptr", "u64", "u64"],
+    faccessat:    [269, "fd", "ptr", "u64", "u64"],
+    ppoll:        [271, "ptr", "u64", "ptr", "ptr"],
+    utimensat:    [280, "fd", "ptr", "ptr", "u64"],
+    pipe2:        [293, "ptr", "u64"],
+    renameat2:    [316, "fd", "ptr", "fd", "ptr", "u64"],
+    execveat:     [333, "fd", "ptr", "aptr", "aptr", "u64"],
+};
+
 function InputPromise(fd, output = undefined)
 {
     var done = false;
@@ -1535,7 +1590,6 @@ if (typeof(os) !== "undefined" &&
 
         return 0;
     };
-    //Syscalls.gettimeofday;
     ThinThin.isatty = function () { return 1 };
     ThinThin.restart = function (dst, src, len, entry)
     {
