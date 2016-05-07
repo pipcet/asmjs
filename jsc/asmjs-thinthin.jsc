@@ -967,8 +967,8 @@ if (typeof(os) !== "undefined" &&
             %s{clear(direntp,struct dirent,d_ino)}
             %s{clear(direntp,struct dirent,d_off)}
             %s{set(direntp,struct dirent,d_reclen,9)}
-            
-            CStringTo(this.HEAP8, %d(offsetof(struct dirent,d_name)), "words.eng");
+
+            CStringTo(this.HEAP8, %d{offsetof(struct dirent,d_name)}, "words.eng");
             first--;
             return 26;
         }

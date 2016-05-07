@@ -95,6 +95,33 @@ AsmJSModule.prototype.instantiate = function (thread)
     }
 };
 
+function AsmJSThread(process, module, threadpage)
+{
+    this.process = process;
+    process.threads.push(this);
+    var system = process.system;
+
+    this.fds = process.fds;
+
+    this.system = system;
+    system.threads.push(this);
+
+    this.HEAP8 = process.HEAP8;
+    this.HEAP16 = process.HEAP16;
+    this.HEAP32 = process.HEAP32;
+    this.HEAPU8 = process.HEAPU8;
+    this.HEAPU16 = process.HEAPU16;
+    this.HEAPU32 = process.HEAPU32;
+    this.HEAPF32 = process.HEAPF32;
+    this.HEAPF64 = process.HEAPF64;
+
+    this.threadpage = threadpage;
+
+    this.module = module;
+
+    this.extcallRet = {};
+}
+
 AsmJSThread.prototype.stopped = function ()
 {
     return this.HEAP32[this.threadpage+%d{offsetof(threadpage_t, stop_reason)}>>2];
