@@ -5,7 +5,7 @@ use File::Slurp qw(read_file write_file);
 my $cache;
 
 if (-e "latemp-cache.pl") {
-    $cache = eval(read_file("latemp-cache.pl")) // {};
+    $cache = eval(read_file("cache/interpolate-cache.pl")) // {};
 } else {
     $cache = {};
 }
@@ -46,5 +46,5 @@ while ($in =~ s/(\%[sl.0-9]*[defgox])\{([^}]*)\}/do_subst($1, $2, $preamble)/mes
 print $in;
 
 if ($cache_changed) {
-    write_file("latemp-cache.pl", Dumper($cache));
+    write_file("cache/interpolate-cache.pl", Dumper($cache));
 }
