@@ -4,7 +4,7 @@ use File::Slurp qw(read_file write_file);
 
 my $cache;
 
-if (-e "latemp-cache.pl") {
+if (-e "cache/interpolate-cache.pl") {
     $cache = eval(read_file("cache/interpolate-cache.pl")) // {};
 } else {
     $cache = {};
@@ -27,8 +27,8 @@ int main(void) {
 
     return $ret if defined($ret);
 
-    write_file("tmp.c", $preamble . "\n\n" . $program);
-    system("asmjs-virtual-asmjs-gcc -Iinclude tmp.c") and die;
+    write_file("tmp.cc", $preamble . "\n\n" . $program);
+    system("asmjs-virtual-asmjs-g++ -Iinclude tmp.cc") and die;
 
     $cache_changed = 1;
     return $cache->{$program} = `./a.out`;
@@ -37,11 +37,11 @@ int main(void) {
 my $in = join("", <>);
 my $preamble = "";
 
-while ($in =~ s/\#\{([^}]*)\}\n//m) {
-    $preamble .= $1 . "\n";
+while ($in =~ s/\#(\{(((?>[^\{\}]+)|(?-3))*)\})\n//m) {
+    $preamble .= $2 . "\n";
 }
 
-while ($in =~ s/(\%[sl.0-9]*[defgox])\{([^}]*)\}/do_subst($1, $2, $preamble)/mesg) {}
+while ($in =~ s/(\%[l.0-9]*[defgosx])(\{((?:(?>[^\{\}]+)|(?-2))*)\})/do_subst($1, $3, $preamble)/mesgx) {}
 
 print $in;
 

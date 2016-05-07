@@ -299,9 +299,13 @@ bin/hexify: hexify/hexify.c
 lib/asmjs.o: lib/asmjs.S build/gcc-final.make
 	asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -c $< -o $@
 
-%.js: %.pre-js
+%.jsc.js: %.jsc
 	test -d cache || mkdir cache
 	perl ./bin/interpolate $< > $@
+
+js/asmjs.js: js/asmjs-main.jsc.js js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.js js/asmjs-vt100.jsc.js
+	cat js/asmjs-main.jsc.js js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.js js/asmjs-vt100.jsc.js > $@.new
+	mv $@.new $@
 
 clean:
 	rm -rf asmjs-virtual-asmjs build cache src
