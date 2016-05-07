@@ -231,7 +231,7 @@ src/binutils-gdb.dir: src/.dir
 	(cd subrepos/binutils-gdb; tar c --exclude .git .) | (cd src/binutils-gdb; tar x)
 	touch $@
 
-src/coreutils.dir:
+src/coreutils.dir: src/.dir
 	test -d src/coreutils || mkdir src/coreutils
 	(cd subrepos/coreutils; tar c --exclude .git .) | (cd src/coreutils; tar x)
 	touch $@
