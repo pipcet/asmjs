@@ -52,6 +52,10 @@ build/coreutils.dir: build/.dir
 	test -d build/coreutils || $(MKDIR) build/coreutils
 	touch $@
 
+build/graphviz.dir: build/.dir
+	test -d build/graphviz || $(MKDIR) build/graphviz
+	touch $@
+
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
@@ -189,6 +193,15 @@ build/coreutils.make: build/coreutils.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/coreutils install
 	touch $@
 
+build/graphviz.configure: src/graphviz.dir build/graphviz.dir
+	(cd build/graphviz; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/graphviz/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	touch $@
+
+build/graphviz.make: build/graphviz.configure
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/graphviz
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/graphviz install
+	touch $@
+
 build/binfmt_misc.install:
 	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/interpreter) || true
 	touch $@
@@ -218,6 +231,13 @@ build/coreutils.clean: FORCE
 	rm -f build/coreutils.configure
 	rm -f build/coreutils.make
 
+build/graphviz.clean: FORCE
+	rm -rf build/graphviz src/graphviz
+	rm -f build/graphviz.dir
+	rm -f src/graphviz.dir
+	rm -f build/graphviz.configure
+	rm -f build/graphviz.make
+
 src/.dir:
 	test -d src || $(MKDIR) src
 	touch $@
@@ -246,6 +266,11 @@ src/gcc-final.dir: src/.dir
 
 src/glibc.dir: src/.dir
 	test -L src/glibc || ln -sf ../subrepos/glibc src/glibc
+	touch $@
+
+src/graphviz.dir: src/.dir
+	test -d src/graphviz || mkdir src/graphviz
+	(cd subrepos/graphviz; tar c --exclude .git .) | (cd src/graphviz; tar x)
 	touch $@
 
 src/ncurses.dir: src/.dir
