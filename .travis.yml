@@ -2,6 +2,8 @@ language: c
 sudo: required
 os:
     - linux
+git:
+    submodules: false
 addons:
     apt:
         packages:
@@ -19,6 +21,10 @@ addons:
             - libmpc-dev
             - yasm
 script:
+    - git clone git://github.com/git/git
+    - (cd git; autoconf && ./configure --prefix=$HOME && make && make install)
+    - hash -r
+    - $HOME/bin/git submodule update --init --recursive --depth=1
     - (CC=clang make -kj3 build/spidermonkey.make >/dev/null 2>/dev/null) || CC=clang make -kj3 build/spidermonkey.make
     - make -kj3 build/spidermonkey.clean
     - make -kj3 build/binfmt_misc.install
