@@ -1,4 +1,4 @@
-all: bin/hexify lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js
+all: bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -303,12 +303,12 @@ lib/asmjs.o: lib/asmjs.S build/gcc-final.make
 	test -d cache || mkdir cache
 	perl ./bin/interpolate $< > $@
 
-js/asmjs.js: js/asmjs-main.jsc.js js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.js js/asmjs-vt100.jsc.js
+js/asmjs.js: js/asmjs-main.jsc.js js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.js js/asmjs-vt100.jsc.js build/gcc-final.make
 	cat js/asmjs-main.jsc.js js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.js js/asmjs-vt100.jsc.js > $@.new
 	mv $@.new $@
 
 clean:
-	rm -rf asmjs-virtual-asmjs build cache src
+	rm -rf asmjs-virtual-asmjs build cache src js/asmjs.js
 
 tests/%.c.s: tests/%.c build/gcc-final.make
 	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -S $< -o $@
