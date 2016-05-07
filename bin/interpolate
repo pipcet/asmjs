@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 use Data::Dumper;
 use File::Slurp qw(read_file write_file);
+use File::Temp;
 
+my $dir = File::Temp->newdir;
 my $cache;
 
 if (-e "cache/interpolate-cache.pl") {
@@ -27,11 +29,11 @@ int main(void) {
 
     return $ret if defined($ret);
 
-    write_file("tmp.cc", $preamble . "\n\n" . $program);
-    system("asmjs-virtual-asmjs-g++ -Iinclude tmp.cc") and die;
+    write_file("$dir/tmp.cc", $preamble . "\n\n" . $program);
+    system("asmjs-virtual-asmjs-g++ -Iinclude $dir/tmp.cc -o $dir/a.out") and die;
 
     $cache_changed = 1;
-    return $cache->{$program} = `./a.out`;
+    return $cache->{$program} = `$dir/a.out`;
 }
 
 my $in = join("", <>);
