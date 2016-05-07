@@ -30,3 +30,7 @@
 	path = subrepos/perl
 	url = https://github.com/pipcet/perl
         branch = asmjs
+[submodule "subrepos/coreutils"]
+	path = subrepos/coreutils
+	url = https://github.com/pipcet/coreutils.git
+        branch = asmjs
