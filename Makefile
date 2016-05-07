@@ -186,7 +186,7 @@ build/spidermonkey.clean: build/spidermonkey.make
 
 build/coreutils.configure: src/coreutils.dir build/coreutils.dir
 	(cd src/coreutils; ./bootstrap --gnulib-srcdir=gnulib --skip-po)
-	(cd build/coreutils; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/coreutils/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/coreutils; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/coreutils/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --enable-static --disable-shared)
 	touch $@
 
 build/coreutils.make: build/coreutils.configure
