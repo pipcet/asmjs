@@ -48,6 +48,10 @@ build/perl.dir: build/.dir
 	test -d build/perl || $(MKDIR) build/perl
 	touch $@
 
+build/coreutils.dir: build/.dir
+	test -d build/coreutils || $(MKDIR) build/coreutils
+	touch $@
+
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
@@ -175,6 +179,16 @@ build/spidermonkey.clean: build/spidermonkey.make
 	rm -rf src/spidermonkey
 	touch $@
 
+build/coreutils.configure: src/coreutils.dir build/coreutils.dir
+	(cd src/coreutils; ./bootstrap --gnulib-srcdir=gnulib --skip-po)
+	(cd build/coreutils; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/coreutils/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	touch $@
+
+build/coreutils.make: build/coreutils.configure
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/coreutils
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/coreutils install
+	touch $@
+
 build/binfmt_misc.install:
 	sudo ./binfmt_misc/binfmt_misc $(shell realpath ./bin/interpreter) || true
 	touch $@
@@ -190,6 +204,20 @@ build/gcc-final.clean: FORCE
 	rm -f build/gcc-final.configure
 	rm -f build/gcc-final.make
 
+build/bash.clean: FORCE
+	rm -rf build/bash src/bash
+	rm -f build/bash.dir
+	rm -f src/bash.dir
+	rm -f build/bash.configure
+	rm -f build/bash.make
+
+build/coreutils.clean: FORCE
+	rm -rf build/coreutils src/coreutils
+	rm -f build/coreutils.dir
+	rm -f src/coreutils.dir
+	rm -f build/coreutils.configure
+	rm -f build/coreutils.make
+
 src/.dir:
 	test -d src || $(MKDIR) src
 	touch $@
@@ -201,6 +229,11 @@ src/bash.dir:
 src/binutils-gdb.dir: src/.dir
 	test -d src/binutils-gdb || mkdir src/binutils-gdb
 	(cd subrepos/binutils-gdb; tar c --exclude .git .) | (cd src/binutils-gdb; tar x)
+	touch $@
+
+src/coreutils.dir:
+	test -d src/coreutils || mkdir src/coreutils
+	(cd subrepos/coreutils; tar c --exclude .git .) | (cd src/coreutils; tar x)
 	touch $@
 
 src/gcc-preliminary.dir: src/.dir
