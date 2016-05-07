@@ -2,7 +2,7 @@ all: bin/hexify lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
-OPT_NATIVE ?= "-O0 -g0"
+OPT_NATIVE ?= "-O3 -g0"
 OPT_ASMJS ?= "-O2"
 
 # asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a: asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a
