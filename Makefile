@@ -194,7 +194,7 @@ build/coreutils.make: build/coreutils.configure
 	touch $@
 
 build/graphviz.configure: src/graphviz.dir build/graphviz.dir
-	(cd build/graphviz; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/graphviz/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/graphviz; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/graphviz/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk)
 	touch $@
 
 build/graphviz.make: build/graphviz.configure
