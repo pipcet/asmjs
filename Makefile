@@ -44,6 +44,10 @@ build/bash.dir: build/.dir
 	test -d build/bash || $(MKDIR) build/bash
 	touch $@
 
+build/perl.dir: build/.dir
+	test -d build/perl || $(MKDIR) build/perl
+	touch $@
+
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs)
@@ -141,9 +145,19 @@ build/bash.make: build/bash.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/bash install
 	touch $@
 
+build/perl.configure: build/perl.dir | build/gcc-final.make
+	test -f build/perl/config.sh && mv build/perl/config.sh build/perl/config.sh.old
+	touch build/perl/config.sh
+	(cd build/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ')
+	touch $@
+
 build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
 	(cd src/spidermonkey/js/src; autoconf2.13)
 	(cd build/spidermonkey; ../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/asmjs-virtual-asmjs/spidermonkey --without-system-zlib)
+	touch $@
+
+build/perl.make: build/perl.dir build/perl.configure
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/perl
 	touch $@
 
 build/spidermonkey.make: build/spidermonkey.configure
@@ -213,6 +227,11 @@ src/emacs.dir: src/.dir
 src/spidermonkey.dir: src/.dir
 	test -d src/spidermonkey || mkdir src/spidermonkey
 	(cd subrepos/mozilla; tar c --exclude .git .) | (cd src/spidermonkey; tar x)
+	touch $@
+
+src/perl.dir: src.dir
+	test -d src/perl || mkdir src/perl
+	(cd subrepos/perl; tar c --exclude .git .) | (cd src/perl; tar x)
 	touch $@
 
 bin/hexify: hexify/hexify.c
