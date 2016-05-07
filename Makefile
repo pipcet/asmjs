@@ -45,7 +45,8 @@ build/bash.dir: build/.dir
 	touch $@
 
 build/perl.dir: build/.dir
-	test -d build/perl || $(MKDIR) build/perl
+	test -d build/perl || mkdir build/perl
+	(cd src/perl; tar c --exclude .git .) | (cd build/perl; tar x)
 	touch $@
 
 build/coreutils.dir: build/.dir
@@ -153,8 +154,8 @@ build/bash.make: build/bash.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/bash install
 	touch $@
 
-build/perl.configure: build/perl.dir | build/gcc-final.make
-	test -f build/perl/config.sh && mv build/perl/config.sh build/perl/config.sh.old
+build/perl.configure: src/perl.dir build/perl.dir | build/gcc-final.make
+	test -f build/perl/config.sh && mv build/perl/config.sh build/perl/config.sh.old || true
 	touch build/perl/config.sh
 	(cd build/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ')
 	touch $@
@@ -287,7 +288,7 @@ src/spidermonkey.dir: src/.dir
 	(cd subrepos/mozilla; tar c --exclude .git .) | (cd src/spidermonkey; tar x)
 	touch $@
 
-src/perl.dir: src.dir
+src/perl.dir: src/.dir
 	test -d src/perl || mkdir src/perl
 	(cd subrepos/perl; tar c --exclude .git .) | (cd src/perl; tar x)
 	touch $@
