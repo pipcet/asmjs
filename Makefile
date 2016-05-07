@@ -190,11 +190,11 @@ build/coreutils.make: build/coreutils.configure
 	touch $@
 
 build/binfmt_misc.install:
-	sudo ./binfmt_misc/binfmt_misc $(shell realpath ./bin/interpreter) || true
+	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/interpreter) || true
 	touch $@
 
 build/binfmt_misc-caching.install:
-	sudo ./binfmt_misc/binfmt_misc $(shell realpath ./bin/caching-interpreter) || true
+	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/caching-interpreter) || true
 	touch $@
 
 build/gcc-final.clean: FORCE
