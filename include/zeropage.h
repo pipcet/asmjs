@@ -1,11 +1,11 @@
-typedef struct {
+typedef struct zeropage {
   unsigned long long top_of_memory;
   unsigned long long top_of_sbrk;
   unsigned long long thread_list;
   unsigned long long bottom_of_sbrk;
 } zeropage_t;
 
-typedef struct {
+typedef struct threadpage {
   unsigned long long next;
   unsigned long long prev;
   unsigned long long id;

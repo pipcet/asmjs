@@ -14,17 +14,23 @@
 #{#define offsetof(type, field) ((unsigned)&((type *)0)->field)}
 #{#include "js.h"}
 
+#{str zp("4096");}
+#{str tvptr("tvptr");}
+#{str statbufptr("statbufptr");}
+#{str direntp("direntp");}
+#{str fdsptr("fdsptr");}
+#{str i("i");}
+
 var ThinThin = {};
 
 ThinThin.sbrk = function (size)
 {
     size = (size + 4095) & -4096;
-    var ret = this.HEAP32[4096+%d{offsetof(zeropage_t, top_of_sbrk)}>>2];
+    var ret = %{zp[&zeropage::top_of_sbrk]};
 
-    this.HEAP32[4096+%d{offsetof(zeropage_t, top_of_sbrk)}>>2] += size;
+    %{zp[&zeropage::top_of_sbrk]} += size;
 
-    if (this.HEAP32[4096+%d{offsetof(zeropage_t, top_of_sbrk)}>>2] >
-        this.HEAP32[4096+%d{offsetof(zeropage_t, top_of_memory)}>>2]) {
+    if (%{zp[&zeropage::top_of_sbrk]} > %{zp[&zeropage::top_of_memory]}) {
         throw "OOM";
     }
 
@@ -235,6 +241,7 @@ var Syscalls = {
     unlink:       new Syscall( 87, "ptr"),
     rename:       new Syscall( 82, "ptr", "ptr"),
     chdir:        new Syscall( 80, "ptr"),
+    fchmod:       new Syscall( 91, "fd", "u64"),
     gettimeofday: new Syscall( 96, "ptr", "u64"),
     getuid:       new Syscall(102),
     getgid:       new Syscall(104),
@@ -507,7 +514,7 @@ ThinThinDD.prototype = Object.create(ThinThinFD.prototype);
 
 ThinThinDD.prototype.mode = function ()
 {
-    return %d{S_IFDIR + 0777};
+    return %{S_IFDIR + 0777};
 };
 
 ThinThinDD.prototype.openat = function (path)
@@ -530,7 +537,7 @@ function ThinThinFD(process, fdno = undefined)
 
 ThinThinFD.prototype.mode = function ()
 {
-    return %d{S_IFREG + 0666};
+    return %{S_IFREG + 0666};
 };
 
 ThinThinFD.prototype.open = function ()
@@ -869,7 +876,7 @@ if (typeof(os) !== "undefined" &&
         var fd = this.fds[fdno];
 
         if (!fd)
-            return -%d{EBADF};
+            return -%{EBADF};
 
         if (len == 0)
             return 0;
@@ -882,7 +889,7 @@ if (typeof(os) !== "undefined" &&
         var fd = this.fds[fdno];
 
         if (!fd)
-            return -%d{EBADF};
+            return -%{EBADF};
 
         if (len == 0)
             return 0;
@@ -907,7 +914,7 @@ if (typeof(os) !== "undefined" &&
         var fd = this.fds[fdno];
 
         if (!fd)
-            return -%d{EBADF};
+            return -%{EBADF};
 
         return fd.close();
     },
@@ -918,14 +925,14 @@ if (typeof(os) !== "undefined" &&
         var path = CStringAt(this.HEAPU8, ptr);
 
         var off;
-        for (off = 0; off < %d{sizeof(struct stat)}; off += 4)
+        for (off = 0; off < %{sizeof(struct stat)}; off += 4)
             this.HEAP32[statbufptr+off>>2] = 0;
 
-        this.HEAP32[statbufptr+%d{offsetof(struct stat,st_nlink)}>>2] = 1;
-        this.HEAP32[statbufptr+%d{offsetof(struct stat,st_mode)}>>2] = fd.mode();
-        this.HEAP32[statbufptr+%d{offsetof(struct stat,st_size)}>>2] = fd.size();
-        this.HEAP32[statbufptr+%d{offsetof(struct stat,st_blksize)}>>2] = fd.size();
-        this.HEAP32[statbufptr+%d{offsetof(struct stat,st_blocks)}>>2] = 1;
+        %{statbufptr[&stat::st_nlink] = "1"}
+        %{statbufptr[&stat::st_mode] = "fd.mode()"}
+        %{statbufptr[&stat::st_size] = "fd.size()"}
+        %{statbufptr[&stat::st_blksize] = "fd.size()"}
+        %{statbufptr[&stat::st_blocks] = "1"}
     };
     ThinThin.stat = function (ptr, bufptr) {
         var path = CStringAt(this.HEAPU8, ptr);
@@ -964,11 +971,11 @@ if (typeof(os) !== "undefined" &&
     ThinThin.getdents = function (fdno, direntp, count)
     {
         if (first) {
-            %s{clear(direntp,struct dirent,d_ino)}
-            %s{clear(direntp,struct dirent,d_off)}
-            %s{set(direntp,struct dirent,d_reclen,9)}
+            %{direntp[&dirent::d_ino] = "0"}
+            %{direntp[&dirent::d_off] = "0"}
+            %{direntp[&dirent::d_reclen] = 9}
 
-            CStringTo(this.HEAP8, %d{offsetof(struct dirent,d_name)}, "words.eng");
+            CStringTo(this.HEAP8, direntp+%{offsetof(struct dirent,d_name)}, "words.eng");
             first--;
             return 26;
         }
@@ -1012,7 +1019,7 @@ if (typeof(os) !== "undefined" &&
         var fd = this.fds[fdno];
 
         switch (code) {
-        case %d{FIONREAD}:
+        case %{FIONREAD}:
             return fd.available().then(avail => {
                 if (avail) {
                     this.HEAP32[intptr>>2] = avail;
@@ -1024,7 +1031,7 @@ if (typeof(os) !== "undefined" &&
             });
 
         default:
-            return -%d{EINVAL};
+            return -%{EINVAL};
         }
     };
     ThinThin.ppoll = function (fdsptr, nfds, toptr, sigmaskptr) {
@@ -1045,12 +1052,12 @@ if (typeof(os) !== "undefined" &&
             var fdno = this.HEAP32[fdsptr+8*i>>2];
             var fd = this.fds[fdno];
             var events = this.HEAP16[fdsptr+8*i+4>>1];
-            if (events & %d{POLLIN}) {
+            if (events & %{POLLIN}) {
                 all.push(fd.available().then((avail) => {
                     if (incall) {
                         if (avail > 0) {
-                            retval += this.HEAP16[fdsptr+8*i+6>>1] == 0;
-                            this.HEAP16[fdsptr+8*i+6>>1] |= %d{POLLIN};
+                            retval += %{fdsptr[i][&pollfd::fd]} == 0;
+                            %{fdsptr[i][&pollfd::revents]} |= %{POLLIN};
                         }
                     }
                 }));
@@ -1083,14 +1090,14 @@ if (typeof(os) !== "undefined" &&
         console.log("lseek " + fdno + " " + pos + " " + whence);
         var fd = this.fds[fdno];
 
-        if (whence == %d{SEEK_SET})
+        if (whence == %{SEEK_SET})
             fd.readPosition = pos;
-        else if (whence == %d{SEEK_CUR})
+        else if (whence == %{SEEK_CUR})
             fd.readPosition += pos;
-        else if (whence == %d{SEEK_END})
+        else if (whence == %{SEEK_END})
             throw("SEEK_END not supported");
         else
-            return -%d{EINVAL};
+            return -%{EINVAL};
 
         return fd.readPosition;
     };
@@ -1119,8 +1126,8 @@ if (typeof(os) !== "undefined" &&
         var s = date / 1000.0;
         var us = (date % 1000.0) * 1000.0;
 
-        %s{set(tvptr,struct timeval,tv_sec,"s|0")}
-        %s{set(tvptr,struct timeval,tv_usec,"us|0")}
+        %{tvptr[&timeval::tv_sec] = "s"}
+        %{tvptr[&timeval::tv_usec] = "us"}
 
         return 0;
     };
@@ -1135,17 +1142,17 @@ if (typeof(os) !== "undefined" &&
     ThinThin.execveat = function (dirfdno, pathptr, argvptr, envpptr, flags)
     {
         if (this.HEAP8[pathptr] == "/".charCodeAt(0))
-            dirfdno = %d{AT_FDROOTD};
+            dirfdno = %{AT_FDROOTD};
 
         var fd;
         if (this.HEAP8[pathptr] == 0 &&
-            flags & %d{AT_EMPTY_PATH})
+            flags & %{AT_EMPTY_PATH})
             fd = this.fds[dirfdno];
         else
             fd = this.fds[ThinThin.openat.call(this, dirfdno, pathptr, 0)];
 
         if (!fd)
-            return %d{EBADF};
+            return %{EBADF};
 
         var argv = CStringsAt(argvptr);
         var envp = CStringsAt(envpptr);
