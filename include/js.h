@@ -150,21 +150,30 @@ class field {
 public:
   unsigned long off;
   unsigned long size;
-  field(I T::* x)
-  {
-    T* ptr = nullptr;
-    off = (unsigned long)&(ptr->*x);
-    size = sizeof(ptr->*x);
-  }
 
-  field(T *p = nullptr)
+  field(I *p = nullptr, unsigned long o = 0)
   {
-    T* ptr = nullptr;
-    off = (unsigned long)ptr;
+    I* ptr = nullptr;
+    off = (unsigned long)ptr + o;
     size = sizeof(*ptr);
   }
 };
 
+template<typename T>
+field<T,T>
+construct_field(T* p)
+{
+  return field<T,T>();
+}
+
+template<typename T, typename I>
+field<T,I>
+construct_field(I T::* x)
+{
+  T* ptr = nullptr;
+  unsigned long off = (unsigned long)&(ptr->*x);
+  return field<T,I>(nullptr, off);
+}
 template<typename I>
 class range;
 
@@ -200,7 +209,7 @@ public:
   range<I>
   operator[](I T::* a)
   {
-    field<T,I> f(a);
+    field<T,I> f(construct_field(a));
     return (*this)[f];
   }
 
@@ -271,7 +280,7 @@ public:
   range<I>
   operator[](I T::* a)
   {
-    field<T,I> f(a);
+    field<T,I> f(construct_field(a));
     return (*this)[f];
   }
 
@@ -337,6 +346,90 @@ public:
   }
 };
 
+template <typename T>
+class typed: public elt
+{
+public:
+  using elt::elt;
+
+  using elt::operator=;
+  using elt::operator[];
+
+  range<T>
+  operator*()
+  {
+    return (*this)[entire<T>()];
+  }
+
+  typed& operator=(const typed&) = delete;
+
+  range<T>
+  operator[](T x)
+  {
+    return (*this)[entire<T>()] = x;
+  }
+
+  range<T>
+  operator()(T x)
+  {
+    return (*this)[entire<T>()] = x;
+  }
+
+  range<T>
+  operator()(std::string st)
+  {
+    return (*this)[entire<T>()] = st;
+  }
+
+  range<T>
+  operator()()
+  {
+    return (*this)[entire<T>()] = T();
+  }
+};
+
+template <typename T>
+class typed<T[]>: public elt
+{
+public:
+  using elt::elt;
+
+  using elt::operator=;
+  using elt::operator[];
+
+  range<T>
+  operator*()
+  {
+    return (*this)[entire<T>()];
+  }
+
+  typed& operator=(const typed&) = delete;
+
+  range<T>
+  operator[](T x)
+  {
+    return (*this)[entire<T>()] = x;
+  }
+
+  range<T>
+  operator()(T x)
+  {
+    return (*this)[entire<T>()] = x;
+  }
+
+  range<T>
+  operator()()
+  {
+    return (*this)[entire<T>()] = T();
+  }
+
+  typed<T>
+  operator[](elt index)
+  {
+    return typed<T>(s, index.s, prefix);
+  }
+};
+
 #define NWORDS(s) ((s)/4 + ((s)&2)/2 + ((s)&1))
 
 template<typename I>
@@ -396,6 +489,12 @@ public:
   }
 
   range
+  operator()()
+  {
+    return (*this) = range("0");
+  }
+
+  range
   operator&()
   {
     range ret(*this);
@@ -422,33 +521,37 @@ public:
     unsigned long off = f.off;
     unsigned long size = f.size;
     std::string infix("");
+    std::string infix2("");
     size_t i = 0;
 
     if (std::string(base.i) != "")
       infix = "+" + std::string(base.i) + "*" + to_string(sizeof(T));
     while (size >= 4) {
+      if (off != 0)
+        infix2 = "+" + to_string(off);
       v[i++] = (address ? "" : std::string(base.prefix) + "32[") +
         std::string(base.s) +
-        infix + "+" +
-        to_string(off) +
+        infix + infix2 +
         (address ? "" : ">>2]");
       off += 4;
       size -= 4;
     }
     if (size >= 2) {
+      if (off != 0)
+        infix2 = "+" + to_string(off);
       v[i++] = (address ? "" : std::string(base.prefix) + "16[") +
         std::string(base.s) +
-        infix + "+" +
-        to_string(off) +
+        infix + infix2 +
         (address ? "" : ">>1]");
       off += 2;
       size -= 2;
     }
     if (size >= 1) {
+      if (off != 0)
+        infix2 = "+" + to_string(off);
       v[i++] = (address ? "" : std::string(base.prefix) + "8[") +
         std::string(base.s) +
-        infix + "+" +
-        to_string(off) +
+        infix + infix2 +
         (address ? "" : "]");
       off += 1;
       size -= 1;
