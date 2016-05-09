@@ -14,12 +14,19 @@
 #{#define offsetof(type, field) ((unsigned)&((type *)0)->field)}
 #{#include "js.h"}
 
-#{str zp("4096");}
-#{str tvptr("tvptr");}
-#{str statbufptr("statbufptr");}
-#{str direntp("direntp");}
-#{str fdsptr("fdsptr");}
-#{str i("i");}
+#{elt zp("4096");}
+#{elt tvptr("tvptr");}
+#{elt statbufptr("statbufptr");}
+#{elt direntp("direntp");}
+#{elt fdsptr("fdsptr");}
+#{elt i("i");}
+
+%{zp=zeropage()}
+%{tvptr = timeval({10, 12})}
+%{tvptr << timeval({10, 12})}
+%{tvptr[timeval({10, 12})]}
+%{fdsptr[i][&pollfd::revents]} |= %{POLLIN};
+%{tvptr[entire<timeval>()] = timeval({ 10, 12 })}
 
 var ThinThin = {};
 

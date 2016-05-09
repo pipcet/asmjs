@@ -233,9 +233,16 @@ public:
   {
     return s;
   }
-  
-  elt operator[](str i);
 };
+
+template<typename T>
+field<T,T>
+entire(T* p = nullptr)
+{
+  return field<T,T>(p);
+}
+
+int main();
 
 class elt {
 public:
@@ -283,10 +290,45 @@ public:
     return (*this)+f;
   }
 
+  template<typename T>
+  range<T>
+  operator[](void (T::* f)(T&&))
+  {
+    return (*this)[entire<T>()];
+  }
+
+  template<typename T>
+  range<T>
+  operator[](T*)
+  {
+    return (*this)[entire<T>()];
+  }
+
+  template<typename T>
+  range<T>
+  operator[](T x)
+  {
+    return (*this)[entire<T>()] = x;
+  }
+
+  template<typename T>
+  range<T>
+  operator=(T x)
+  {
+    return (*this)[entire<T>()] = x;
+  }
+
+  template<typename T>
+  range<T>
+  operator<<(T x)
+  {
+    return (*this)[entire<T>()] = x;
+  }
+
   elt
   operator[](elt index)
   {
-    return elt(s, i, prefix);
+    return elt(s, index.s, prefix);
   }
 
   operator std::string()
@@ -294,12 +336,6 @@ public:
     return std::string(s);
   }
 };
-
-elt
-str::operator[](str i)
-{
-  return elt(*this, i);
-}
 
 #define NWORDS(s) ((s)/4 + ((s)&2)/2 + ((s)&1))
 
@@ -446,11 +482,3 @@ public:
     return v[0];
   }
 };
-
-template<typename T>
-field<T,T>
-entire(T* p = nullptr)
-{
-  return field<T,T>(p);
-}
-
