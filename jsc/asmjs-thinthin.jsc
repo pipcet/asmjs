@@ -14,14 +14,20 @@
 #{#define offsetof(type, field) ((unsigned)&((type *)0)->field)}
 #{#include "js.h"}
 
-#{elt zp("4096");}
-#{elt tvptr("tvptr");}
-#{elt statbufptr("statbufptr");}
-#{elt direntp("direntp");}
-#{elt fdsptr("fdsptr");}
+#{typed<zeropage> zp("4096");}
+#{typed<timeval> tvptr("tvptr");}
+#{typed<struct stat> statbufptr("statbufptr");}
+#{typed<dirent> direntp("direntp");}
+#{typed<pollfd[]> fdsptr("fdsptr");}
+#{typed<int> intptr("intptr");}
 #{elt i("i");}
 
+%{fdsptr[i]()}
+%{fdsptr[i][&pollfd::revents]()}
+%{zp()}
 %{zp=zeropage()}
+%{*zp="0"}
+%{zp[{}]}
 %{tvptr = timeval({10, 12})}
 %{tvptr << timeval({10, 12})}
 %{tvptr[timeval({10, 12})]}
@@ -34,8 +40,6 @@ ThinThin.sbrk = function (size)
 {
     size = (size + 4095) & -4096;
     var ret = %{zp[&zeropage::top_of_sbrk]};
-
-    %{zp[entire<zeropage>()] = "0"}
 
     %{zp[&zeropage::top_of_sbrk]} += size;
 
@@ -984,7 +988,7 @@ if (typeof(os) !== "undefined" &&
             %{direntp[&dirent::d_off] = "0"}
             %{direntp[&dirent::d_reclen] = 9}
 
-            CStringTo(this.HEAP8, direntp+%{offsetof(struct dirent,d_name)}, "words.eng");
+            CStringTo(this.HEAP8, %{&direntp[&dirent::d_name]}, "words.eng");
             first--;
             return 26;
         }
@@ -1031,9 +1035,9 @@ if (typeof(os) !== "undefined" &&
         case %{FIONREAD}:
             return fd.available().then(avail => {
                 if (avail) {
-                    this.HEAP32[intptr>>2] = avail;
+                    %{intptr("avail")}
                 } else {
-                    this.HEAP32[intptr>>2] = 0;
+                    %{intptr()}
                 }
 
                 return 0;
@@ -1043,13 +1047,13 @@ if (typeof(os) !== "undefined" &&
             return -%{EINVAL};
         }
     };
-    ThinThin.ppoll = function (fdsptr, nfds, toptr, sigmaskptr) {
+    ThinThin.ppoll = function (fdsptr, nfds, tvptr, sigmaskptr) {
         var incall = true;
         var retval = 0;
         var retry = function () {
             if (incall)
                 return ThinThin.ppoll.call(this,
-                                           fdsptr, nfds, toptr, sigmaskptr);
+                                           fdsptr, nfds, tvptr, sigmaskptr);
         };
 
         var all = [];
@@ -1058,14 +1062,16 @@ if (typeof(os) !== "undefined" &&
         var ii;
         for (ii = 0; ii < nfds; ii++) {
             var i = ii;
-            var fdno = this.HEAP32[fdsptr+8*i>>2];
+            var fdno = %{fdsptr[i][&pollfd::fd]};
             var fd = this.fds[fdno];
-            var events = this.HEAP16[fdsptr+8*i+4>>1];
+            var events = %{fdsptr[i][&pollfd::events]};
+            %{fdsptr[i][&pollfd::revents]()}
             if (events & %{POLLIN}) {
                 all.push(fd.available().then((avail) => {
                     if (incall) {
                         if (avail > 0) {
-                            retval += %{fdsptr[i][&pollfd::fd]} == 0;
+                            if (%{fdsptr[i][&pollfd::revents]} == 0)
+                                retval++;
                             %{fdsptr[i][&pollfd::revents]} |= %{POLLIN};
                         }
                     }
@@ -1080,9 +1086,9 @@ if (typeof(os) !== "undefined" &&
 
             var a = [];
             a.push(Promise.race(any.map(p => Promise.resolve(p()))).then(() => retry()));
-            if (toptr) {
-                var s = this.HEAP32[toptr>>2];
-                var ns = this.HEAP32[toptr+8>>2];
+            if (tvptr) {
+                var s = %{tvptr[&timeval::tv_sec]};
+                var ns = %{tvptr[&timeval::tv_usec]};
 
                 var ms = 1000 * s + 1e-6 * ns;
 
