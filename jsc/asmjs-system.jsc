@@ -705,7 +705,7 @@ AsmJSSystem.prototype.init_sp = function (heap, off, args, env)
 };
 
 #{elt zp("4096", "HEAP");}
-#{elt tp0("8192", "HEAP");}
+#{elt tp1("8192", "HEAP");}
 
 AsmJSSystem.prototype.instantiate = function (module, args, env)
 {
@@ -715,23 +715,23 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
 
     %{zp[&zeropage::top_of_memory] = "module.top_of_memory"}
     %{zp[&zeropage::top_of_sbrk] = "module.start_of_sbrk"}
-    %{zp[&zeropage::thread_list]} = %{tp0};
+    %{zp[&zeropage::thread_list]} = %{tp1};
     %{zp[&zeropage::bottom_of_sbrk] = "module.start_of_sbrk"}
 
-    %{tp0[&threadpage::next]} = %{tp0};
-    %{tp0[&threadpage::prev]} = %{tp0};
-    %{tp0[&threadpage::id] = "1"}
-    %{tp0[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
-    %{tp0[&threadpage::top_of_stack] = "module.top_of_stack"}
+    %{tp1[&threadpage::next]} = %{tp1};
+    %{tp1[&threadpage::prev]} = %{tp1};
+    %{tp1[&threadpage::id] = "1"}
+    %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
+    %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
 
     var sp = this.init_sp(heap, module.top_of_stack, args, env);
-    %{tp0[&threadpage::sp] = "sp"}
-    %{tp0[&threadpage::initsp] = "sp"}
+    %{tp1[&threadpage::sp] = "sp"}
+    %{tp1[&threadpage::initsp] = "sp"}
 
     var process = new AsmJSProcess(this, heap);
     var thread = new AsmJSThread(process, module, 8192);
     thread.module.instantiate(thread);
-    %{tp0[&threadpage::pc] = "process.entry"}
+    %{tp1[&threadpage::pc] = "process.entry"}
     if (typeof document !== "undefined") {
         new ThinThinFD(process, 0);
         new VT100FD(process, document.getElementById("output2"), 1, 0);
