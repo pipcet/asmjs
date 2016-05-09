@@ -133,7 +133,7 @@ void clear(int T::*x)
   T* ptr = nullptr;
   unsigned long off = (unsigned long)&(ptr->*x);
   int status;
-  std::cout << "HEAP32[" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "+" << off << ">>2] = 0;\n";
+  std::cout << "this.HEAP32[" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "+" << off << ">>2] = 0;\n";
 }
 
 template<typename T>
@@ -142,7 +142,7 @@ void clear(long long T::*x)
   T* ptr = nullptr;
   unsigned long off = (unsigned long)&(ptr->*x);
   int status;
-  std::cout << "HEAP32[" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "+" << off << ">>2] = 0;\n";
+  std::cout << "this.HEAP32[" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "+" << off << ">>2] = 0;\n";
 }
 
 template<typename T, typename I>
@@ -204,6 +204,26 @@ public:
     return (*this)[f];
   }
 
+  template<typename T, typename I>
+  range<I>
+  operator+(field<T,I> f)
+  {
+    return range<I>(*this, f, true);
+  }
+
+  template<typename T, typename I>
+  range<I>
+  operator+(I T::* a)
+  {
+    field<T,I> f(a);
+    return (*this)+f;
+  }
+
+  str(const char s[])
+    : s(s)
+  {
+  }
+
   str(std::string s)
     : s(s)
   {
@@ -221,14 +241,15 @@ class elt {
 public:
   str s;
   str i;
+  str prefix;
 
-  elt(str s, str i)
-    : s(s), i(i)
+  elt(str s, str i, str prefix)
+    : s(s), i(i), prefix(prefix)
   {
   }
 
-  elt(str s)
-    : s(s), i("")
+  elt(str s, str prefix = str("this.HEAP"))
+    : s(s), i(""), prefix(prefix)
   {
   }
 
@@ -245,6 +266,32 @@ public:
   {
     field<T,I> f(a);
     return (*this)[f];
+  }
+
+  template<typename T, typename I>
+  range<I>
+  operator+(field<T,I> f)
+  {
+    return range<I>(*this, f, true);
+  }
+
+  template<typename T, typename I>
+  range<I>
+  operator+(I T::* a)
+  {
+    field<T,I> f(a);
+    return (*this)+f;
+  }
+
+  elt
+  operator[](elt index)
+  {
+    return elt(s, i, prefix);
+  }
+
+  operator std::string()
+  {
+    return std::string(s);
   }
 };
 
@@ -292,28 +339,48 @@ public:
     : v(NWORDS(sizeof(I)))
   {
     v[0] = base;
-    if (v.size() > 1)
-      v[1] = "0";
+    for (size_t i = 1; i < v.size(); i++)
+      v[i] = "0";
   }
 
   range(std::string base)
     : v(NWORDS(sizeof(I)))
   {
     v[0] = str(base);
-    if (v.size() > 1)
-      v[1] = "0";
+    for (size_t i = 1; i < v.size(); i++)
+      v[i] = "0";
   }
 
   range(const char *base)
     : v(NWORDS(sizeof(I)))
   {
     v[0] = str(base);
-    if (v.size() > 1)
-      v[1] = "0";
+    for (size_t i = 1; i < v.size(); i++)
+      v[i] = "0";
+  }
+
+  range
+  operator&()
+  {
+    range ret(*this);
+    for (size_t i = 0; i < ret.v.size(); i++) {
+      size_t first = ret.v[i].find_first_of('[');
+      size_t last = ret.v[i].find_last_of(']');
+
+      if (first != last)
+        ret.v[i] = ret.v[i].substr(first+1, last-first-1);
+
+      if (ret.v[i].substr(ret.v[i].length() - 3) == ">>3" ||
+          ret.v[i].substr(ret.v[i].length() - 3) == ">>2" ||
+          ret.v[i].substr(ret.v[i].length() - 3) == ">>1")
+        ret.v[i] = ret.v[i].substr(0, ret.v[i].length()-3);
+    }
+
+    return ret;
   }
 
   template<typename T>
-  range(elt base, field<T,I> f)
+  range(elt base, field<T,I> f, bool address = false)
     : v(NWORDS(sizeof(I)))
   {
     unsigned long off = f.off;
@@ -324,28 +391,40 @@ public:
     if (std::string(base.i) != "")
       infix = "+" + std::string(base.i) + "*" + to_string(sizeof(T));
     while (size >= 4) {
-      v[i++] = "HEAP32[" + std::string(base.s) + infix + "+" + to_string(off) + ">>2]";
+      v[i++] = (address ? "" : std::string(base.prefix) + "32[") +
+        std::string(base.s) +
+        infix + "+" +
+        to_string(off) +
+        (address ? "" : ">>2]");
       off += 4;
       size -= 4;
     }
     if (size >= 2) {
-      v[i++] = "HEAP16[" + std::string(base.s) + infix + "+" + to_string(off) + ">>1]";
+      v[i++] = (address ? "" : std::string(base.prefix) + "16[") +
+        std::string(base.s) +
+        infix + "+" +
+        to_string(off) +
+        (address ? "" : ">>1]");
       off += 2;
       size -= 2;
     }
     if (size >= 1) {
-      v[i++] = "HEAP8[" + std::string(base.s) + infix + "+" + to_string(off) + "]";
+      v[i++] = (address ? "" : std::string(base.prefix) + "8[") +
+        std::string(base.s) +
+        infix + "+" +
+        to_string(off) +
+        (address ? "" : "]");
       off += 1;
       size -= 1;
     }
   }
 
   template<typename T>
-  range(elt base, I T::* a)
+  range(elt base, I T::* a, bool address = false)
     : v(NWORDS(sizeof(I)))
   {
     field<T,I> f(a);
-    range(base, f);
+    range(base, f, address);
   }
 
   std::string
@@ -367,3 +446,11 @@ public:
     return v[0];
   }
 };
+
+template<typename T>
+field<T,T>
+entire(T* p = nullptr)
+{
+  return field<T,T>(p);
+}
+

@@ -28,6 +28,8 @@ ThinThin.sbrk = function (size)
     size = (size + 4095) & -4096;
     var ret = %{zp[&zeropage::top_of_sbrk]};
 
+    %{zp[entire<zeropage>()] = "0"}
+
     %{zp[&zeropage::top_of_sbrk]} += size;
 
     if (%{zp[&zeropage::top_of_sbrk]} > %{zp[&zeropage::top_of_memory]}) {

@@ -9,8 +9,8 @@
 #{#include <sys/ioctl.h>}
 #{#include <sys/poll.h>}
 #{#include "zeropage.h"}
+#{#include "js.h"}
 #{#define AT_FDROOTD -101}
-#{#define offsetof(type, field) ((unsigned)&((type *)0)->field)}
 
 function AsmJSCodeSection(name, constructor)
 {
@@ -122,24 +122,26 @@ function AsmJSThread(process, module, threadpage)
     this.extcallRet = {};
 }
 
+#{str tp("this.threadpage");}
+
 AsmJSThread.prototype.stopped = function ()
 {
-    return this.HEAP32[this.threadpage+%d{offsetof(threadpage_t, stop_reason)}>>2];
+    return %{tp[&threadpage::stop_reason]};
 };
 
 AsmJSThread.prototype.pc = function ()
 {
-    return this.HEAP32[this.threadpage+%d{offsetof(threadpage_t, pc)}>>2];
+    return %{tp[&threadpage::pc]};
 };
 
 AsmJSThread.prototype.sp = function ()
 {
-    return this.HEAP32[this.threadpage+%d{offsetof(threadpage_t, sp)}>>2];
+    return %{tp[&threadpage::sp]};
 };
 
 AsmJSThread.prototype.initsp = function ()
 {
-    return this.HEAP32[this.threadpage+%d{offsetof(threadpage_t, initsp)}>>2];
+    return %{tp[&threadpage::initsp]};
 };
 
 var run;
@@ -147,8 +149,7 @@ var run;
 AsmJSThread.prototype.stop = function (reason)
 {
     var stopped = this.stopped();
-    this.HEAP32[this.threadpage+%d{offsetof(threadpage_t, stop_reason)}>>2] =
-        reason;
+    %{tp[&threadpage::stop_reason]} = reason;
 
     if (stopped && reason == 0) {
         this.system.runqueue.push(this);
@@ -159,18 +160,17 @@ AsmJSThread.prototype.stop = function (reason)
 
 AsmJSThread.prototype.set_pc = function (pc)
 {
-    this.HEAP32[this.threadpage+%d{offsetof(threadpage_t, pc)}>>2] = pc;
+    %{tp[&threadpage::pc]} = pc;
 };
 
 AsmJSThread.prototype.set_sp = function (sp)
 {
-    this.HEAP32[this.threadpage+%d{offsetof(threadpage_t, sp)}>>2] = sp;
+    %{tp[&threadpage::sp]} = sp;
 };
 
 AsmJSThread.prototype.set_initsp = function (initsp)
 {
-    this.HEAP32[this.threadpage+%d{offsetof(threadpage_t, initsp)}>>2] =
-        initsp;
+    %{tp[&threadpage::initsp]} = initsp;
 };
 
 AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
@@ -704,31 +704,34 @@ AsmJSSystem.prototype.init_sp = function (heap, off, args, env)
     return off;
 };
 
+#{elt zp("4096", "HEAP");}
+#{elt tp0("8192", "HEAP");}
+
 AsmJSSystem.prototype.instantiate = function (module, args, env)
 {
     var size = module.top_of_memory;
     var heap = new ArrayBuffer(size);
     var HEAP32 = new Int32Array(heap);
 
-    HEAP32[4096>>2] = module.top_of_memory; // top of available memory
-    HEAP32[4104>>2] = module.start_of_sbrk; // top of sbrk'd memory
-    HEAP32[4112>>2] = 8192;                 // first thread page
-    HEAP32[4120>>2] = module.start_of_sbrk; // bottom of sbrk'd memory
+    %{zp[&zeropage::top_of_memory] = "module.top_of_memory"}
+    %{zp[&zeropage::top_of_sbrk] = "module.start_of_sbrk"}
+    %{zp[&zeropage::thread_list]} = %{tp0};
+    %{zp[&zeropage::bottom_of_sbrk] = "module.start_of_sbrk"}
 
-    HEAP32[8192 + 0x00>>2] = 8192; // next thread page
-    HEAP32[8192 + 0x08>>2] = 8192; // prev thread page
-    HEAP32[8192 + 0x10>>2] = 1;    // thread id
-    HEAP32[8192 + 0x18>>2] = module.bottom_of_stack;
-    HEAP32[8192 + 0x20>>2] = module.top_of_stack;
+    %{tp0[&threadpage::next]} = %{tp0};
+    %{tp0[&threadpage::prev]} = %{tp0};
+    %{tp0[&threadpage::id] = "1"}
+    %{tp0[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
+    %{tp0[&threadpage::top_of_stack] = "module.top_of_stack"}
 
     var sp = this.init_sp(heap, module.top_of_stack, args, env);
-    HEAP32[8192 + 0x38>>2] = sp;
-    HEAP32[8192 + 0x40>>2] = sp;
+    %{tp0[&threadpage::sp] = "sp"}
+    %{tp0[&threadpage::initsp] = "sp"}
 
     var process = new AsmJSProcess(this, heap);
     var thread = new AsmJSThread(process, module, 8192);
     thread.module.instantiate(thread);
-    HEAP32[8192 + 0x30>>2] = process.entry;
+    %{tp0[&threadpage::pc] = "process.entry"}
     if (typeof document !== "undefined") {
         new ThinThinFD(process, 0);
         new VT100FD(process, document.getElementById("output2"), 1, 0);
