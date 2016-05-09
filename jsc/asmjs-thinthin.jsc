@@ -22,18 +22,6 @@
 #{typed<int> intptr("intptr");}
 #{elt i("i");}
 
-%{fdsptr[i]()}
-%{fdsptr[i][&pollfd::revents]()}
-%{zp()}
-%{zp=zeropage()}
-%{*zp="0"}
-%{zp[{}]}
-%{tvptr = timeval({10, 12})}
-%{tvptr << timeval({10, 12})}
-%{tvptr[timeval({10, 12})]}
-%{fdsptr[i][&pollfd::revents]} |= %{POLLIN};
-%{tvptr[entire<timeval>()] = timeval({ 10, 12 })}
-
 var ThinThin = {};
 
 ThinThin.sbrk = function (size)
