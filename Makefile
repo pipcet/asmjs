@@ -1,4 +1,4 @@
-all: bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js
+all: bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js build/emacs.make build/perl.make build/coreutils.make build/bash.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -59,7 +59,7 @@ build/graphviz.dir: build/.dir
 
 build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs CFLAGS=$(OPT_NATIVE))
+	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs CFLAGS=$(OPT_NATIVE)
 	touch $@
 
 build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
@@ -157,7 +157,7 @@ build/bash.make: build/bash.configure
 build/perl.configure: src/perl.dir build/perl.dir | build/gcc-final.make
 	test -f build/perl/config.sh && mv build/perl/config.sh build/perl/config.sh.old || true
 	touch build/perl/config.sh
-	(cd build/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ')
+	(cd build/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define)
 	touch $@
 
 build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
