@@ -15,6 +15,9 @@ fi
 if [ x"$DELAY" = x ]; then
     DELAY=1
 fi
+if [ x"$JSFLAGS" = x ]; then
+    JSFLAGS="--no-threads"
+fi
 REALPATH=$(realpath -- $1)
 mkdir -p $ASMJSDIR/cache/$REALPATH
 if test $ASMJSDIR/cache/$REALPATH/js -nt $1; then
