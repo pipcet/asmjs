@@ -1,0 +1,50 @@
+#{#define _GNU_SOURCE}
+#{#include <stdio.h>}
+#{#include <sys/stat.h>}
+#{#include <fcntl.h>}
+#{#include <sys/fcntl.h>}
+#{#include <unistd.h>}
+#{#include <sys/types.h>}
+#{#include <errno.h>}
+#{#include <sys/ioctl.h>}
+#{#include <sys/poll.h>}
+#{#include "zeropage.h"}
+#{#include "js2.h"}
+#{#define AT_FDROOTD -101}
+
+#{Heap theap("this.HEAP");}
+#{Context context(&theap);}
+#{Context* cx(&context);}
+#{ExpressionValue<threadpage*> tp1(cx, "8192");}
+#{ExpressionValue<threadpage*> tpa(cx, "8192");}
+#{V<threadpage*> tp1v(&tp1);}
+#{V<threadpage*> tpav(&tpa);}
+#{auto tpbv(&tpa);}
+#{V<threadpage*> tpcv("8192");}
+
+#{V<threadpage*> t1w("8192");}
+
+#{V<pollfd*> pfd("pfd");}
+
+%{t1w[V<size_t>(new ImmValue<size_t>(1))+&threadpage::id+3]}
+%{t1w[NO<threadpage,threadpage>(1)+NO<threadpage,unsigned long long>(&threadpage::id)]}
+%{t1w+1+&threadpage::id+2}
+
+%{tpcv[&threadpage::id]}
+%{(pfd+2)[&pollfd::revents]}
+
+%{t1w}
+%{t1w[&threadpage::id]}
+
+%{tpbv[&threadpage::id]}
+
+%{tpav+17}
+
+%{tp1v}
+%{tp1v[&threadpage::id]}
+
+%{tp1.describe_word()}
+%{tp1[&threadpage::id]}
+%{tpa[new ImmValue<size_t>(17)]+&threadpage::id}
+%{(tpa+new ImmValue<size_t>(17))[&threadpage::id]}
+%{tpa+new ImmValue<size_t>(17)}
