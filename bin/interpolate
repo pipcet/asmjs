@@ -53,7 +53,8 @@ int main(void) {
     return $ret if defined($ret);
 
     write_file("$dir/tmp.cc", $preamble . "\n\n" . $program);
-    system("asmjs-virtual-asmjs-g++ --std=gnu++1z -Iinclude $dir/tmp.cc -o $dir/a.out") and die;
+    #system("asmjs-virtual-asmjs-g++ --std=gnu++1z -Iinclude $dir/tmp.cc -o $dir/a.out") and die;
+    system("asmjs-virtual-asmjs-g++ -fpermissive --std=gnu++1z -Iinclude $dir/tmp.cc -o $dir/a.out") and die;
 
     $cache_changed = 1;
     $cache->{$c} = `$dir/a.out`;
