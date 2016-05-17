@@ -223,6 +223,9 @@ public:
     if (offset == "0")
       return base;
 
+    if (base == "0")
+      return offset;
+
     return base + "+" + offset;
   }
 };
