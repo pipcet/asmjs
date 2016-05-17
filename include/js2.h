@@ -213,7 +213,7 @@ public:
     : a(a), b(b)
   {
   }
-  
+
   virtual std::string
   describe_word() override
   {
