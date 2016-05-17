@@ -359,20 +359,6 @@ public:
   PtrValue(Value<T*>* a)
     : BasePtrValue<T>(a)
   {
-    this->a = a;
-    this->c = a->c;
-  }
-
-  template<typename I>
-  PtrValue<I>
-  operator+(I T::* x)
-  {
-    T* p = nullptr;
-    size_t off = (size_t)&(p->*x);
-
-    OffValue<T,I> ov(this->a, new ImmValue<size_t>(ImmValue<size_t>(off)));
-
-    return *ov;
   }
 };
 
@@ -425,22 +411,16 @@ public:
 PtrValue<long long unsigned int>::PtrValue(Value<long long unsigned int*>* a)
 : BasePtrValue<long long unsigned int>(a)
 {
-  this->a = a;
-  this->c = a->c;
 }
 
 PtrValue<short unsigned int>::PtrValue(Value<short unsigned int*>* a)
 : BasePtrValue<short unsigned int>(a)
 {
-  this->a = a;
-  this->c = a->c;
 }
 
 PtrValue<short int>::PtrValue(Value<short int*>* a)
 : BasePtrValue<short int>(a)
 {
-  this->a = a;
-  this->c = a->c;
 }
 
 Value<long long unsigned int>*
@@ -461,52 +441,13 @@ Value<short int*>::operator_deref()
   return new PtrValue<short int>(this);
 }
 
-template<typename A,typename B>
-class O {
-  size_t off;
-
-  O(size_t off, bool)
-    : off(off)
-  {
-  }
-
-  O(B A::* a)
-  {
-    A* p = nullptr;
-    off = (size_t)&(p->*a);
-  }
-
-  template<typename C>
-  O<A,C>
-  operator+(O<B,C> b)
-  {
-    return O(this->off + b.off, true);
-  }
-};
-
-template<typename A>
-class O<A,A> {
-  size_t off;
-
-  O(size_t off)
-    : off(sizeof(A) * off)
-  {
-  }
-
-  template<typename B>
-  O<A,B>
-  operator+(O<A,B> b)
-  {
-    return O(this->off + b.off);
-  }
-};
-
 template<typename T>
 class V;
 
 template<typename T>
 class Value<T*> : public BaseValue {
 public:
+#if 0
   V<T*>
   operator&()
   {
@@ -525,7 +466,6 @@ public:
     return *ov;
   }
 
-#if 0
   PtrValue<T>
   operator[](Value<size_t> i)
   {
@@ -594,6 +534,7 @@ public:
     return this->operator_plus(i)->operator_deref();
   }
 
+#if 0
   PtrValue<T>
   operator[](Value<size_t>* i)
   {
@@ -615,6 +556,7 @@ public:
 
     return ov;
   }
+#endif
 };
 
 template<typename T>
@@ -630,6 +572,7 @@ public:
   }
 };
 
+#if 0
 template<typename T,typename I>
 PtrValue<I>
 operator*(OffValue<T,I> address)
@@ -639,7 +582,6 @@ operator*(OffValue<T,I> address)
   return PtrValue<I>(a);
 }
 
-#if 0
 template<typename T>
 PtrValue<T>
 operator*(Value<T*> address)
