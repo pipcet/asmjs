@@ -1,0 +1,49 @@
+#{#define _GNU_SOURCE}
+#{#include <stdio.h>}
+#{#include <sys/stat.h>}
+#{#include <fcntl.h>}
+#{#include <sys/fcntl.h>}
+#{#include <unistd.h>}
+#{#include <sys/types.h>}
+#{#include <errno.h>}
+#{#include <sys/ioctl.h>}
+#{#include <sys/poll.h>}
+#{#include "zeropage.h"}
+#{#include "js3.h"}
+#{#define AT_FDROOTD -101}
+
+#{Heap theap("this.HEAP");}
+#{Context context(&theap);}
+#{Context* cx(&context);}
+#{ExpressionValue<threadpage*> tp1(cx, "8192");}
+#{ExpressionValue<threadpage*> tpa(cx, "8192");}
+#{JSV<threadpage*> tp1v(&tp1);}
+#{JSV<threadpage*> tpav(&tpa);}
+#{JSV<threadpage*> tpcv("8192");}
+
+#{JSV<threadpage*> t1w("8192");}
+
+#{JSV<pollfd*> pfd("pfd");}
+
+#{JSV<unsigned*> tpu("4096");}
+%{*tpu = *tpu}
+#{JSV<unsigned long long*> tpull("4096");}
+%{*tpull = *tpull}
+%{*tpull = 0LL}
+%{t1w[JSV<size_t>(new ImmValue<size_t>(1))+&threadpage::id+3]}
+%{t1w[NO<threadpage,threadpage>(1)+NO<threadpage,unsigned long long>(&threadpage::id)]}
+%{t1w+1+&threadpage::id+2}
+
+%{tpcv[&threadpage::id]}
+%{(pfd+2)[&pollfd::revents]}
+
+%{t1w}
+%{t1w[&threadpage::id]}
+%{t1w+&threadpage::id}
+%{tpav+17}
+
+%{tp1v}
+%{tp1v[&threadpage::id]}
+
+%{tp1.describe_word()}
+
