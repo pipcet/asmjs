@@ -9,8 +9,11 @@
 #{#include <sys/ioctl.h>}
 #{#include <sys/poll.h>}
 #{#include "zeropage.h"}
-#{#include "js.h"}
+#{#include "js3.h"}
 #{#define AT_FDROOTD -101}
+
+#{Heap thisheap("this.HEAP");}
+#{Context context(&thisheap);}
 
 function AsmJSCodeSection(name, constructor)
 {
@@ -122,7 +125,7 @@ function AsmJSThread(process, module, threadpage)
     this.extcallRet = {};
 }
 
-#{str tp("this.threadpage");}
+#{JSV<threadpage*> tp("this.threadpage");}
 
 AsmJSThread.prototype.stopped = function ()
 {
@@ -704,8 +707,8 @@ AsmJSSystem.prototype.init_sp = function (heap, off, args, env)
     return off;
 };
 
-#{elt zp("4096", "HEAP");}
-#{elt tp1("8192", "HEAP");}
+#{JSV<zeropage*> zp("4096", "HEAP");}
+#{JSV<threadpage*> tp1("8192", "HEAP");}
 
 AsmJSSystem.prototype.instantiate = function (module, args, env)
 {

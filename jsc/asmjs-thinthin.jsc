@@ -12,15 +12,18 @@
 #{#include "zeropage.h"}
 #{#define AT_FDROOTD -101}
 #{#define offsetof(type, field) ((unsigned)&((type *)0)->field)}
-#{#include "js.h"}
+#{#include "js3.h"}
 
-#{typed<zeropage> zp("4096");}
-#{typed<timeval> tvptr("tvptr");}
-#{typed<struct stat> statbufptr("statbufptr");}
-#{typed<dirent> direntp("direntp");}
-#{typed<pollfd[]> fdsptr("fdsptr");}
-#{typed<int> intptr("intptr");}
-#{elt i("i");}
+#{Heap thisheap("this.HEAP");}
+#{Context context(&thisheap);}
+
+#{JSV<zeropage*> zp("4096");}
+#{JSV<timeval*> tvptr("tvptr");}
+#{JSV<struct stat*> statbufptr("statbufptr");}
+#{JSV<dirent*> direntp("direntp");}
+#{JSV<pollfd*> fdsptr("fdsptr");}
+#{JSV<int*> intptr("intptr");}
+#{JSV<size_t> i("i");}
 
 var ThinThin = {};
 
@@ -929,7 +932,7 @@ if (typeof(os) !== "undefined" &&
         for (off = 0; off < %{sizeof(struct stat)}; off += 4)
             this.HEAP32[statbufptr+off>>2] = 0;
 
-        %{statbufptr[&stat::st_nlink] = "1"}
+        %{statbufptr[&stat::st_nlink] = 1LL}
         %{statbufptr[&stat::st_mode] = "fd.mode()"}
         %{statbufptr[&stat::st_size] = "fd.size()"}
         %{statbufptr[&stat::st_blksize] = "fd.size()"}
@@ -976,7 +979,7 @@ if (typeof(os) !== "undefined" &&
             %{direntp[&dirent::d_off] = "0"}
             %{direntp[&dirent::d_reclen] = 9}
 
-            CStringTo(this.HEAP8, %{&direntp[&dirent::d_name]}, "words.eng");
+            CStringTo(this.HEAP8, %{direntp+&dirent::d_name}, "words.eng");
             first--;
             return 26;
         }
@@ -1023,9 +1026,9 @@ if (typeof(os) !== "undefined" &&
         case %{FIONREAD}:
             return fd.available().then(avail => {
                 if (avail) {
-                    %{intptr("avail")}
+                    %{*intptr = "avail"}
                 } else {
-                    %{intptr()}
+                    %{*intptr = 0}
                 }
 
                 return 0;
@@ -1050,17 +1053,17 @@ if (typeof(os) !== "undefined" &&
         var ii;
         for (ii = 0; ii < nfds; ii++) {
             var i = ii;
-            var fdno = %{fdsptr[i][&pollfd::fd]};
+            var fdno = %{fdsptr[i+&pollfd::fd]};
             var fd = this.fds[fdno];
-            var events = %{fdsptr[i][&pollfd::events]};
-            %{fdsptr[i][&pollfd::revents]()}
+            var events = %{fdsptr[i+&pollfd::events]};
+            %{fdsptr[i+&pollfd::revents] = 0}
             if (events & %{POLLIN}) {
                 all.push(fd.available().then((avail) => {
                     if (incall) {
                         if (avail > 0) {
-                            if (%{fdsptr[i][&pollfd::revents]} == 0)
+                            if (%{fdsptr[i+&pollfd::revents]} == 0)
                                 retval++;
-                            %{fdsptr[i][&pollfd::revents]} |= %{POLLIN};
+                            %{fdsptr[i+&pollfd::revents]} |= %{POLLIN};
                         }
                     }
                 }));
