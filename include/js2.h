@@ -365,87 +365,55 @@ public:
   }
 };
 
-template<>
-class PtrValue<long long unsigned int> : public BasePtrValue<long long unsigned int> {
-public:
-  PtrValue(Value<long long unsigned int*>* a);
-};
-
-template<>
-class PtrValue<short unsigned int> : public BasePtrValue<short unsigned int> {
-public:
-  PtrValue(Value<short unsigned int*>* a);
-};
-
-template<>
-class PtrValue<short int> : public BasePtrValue<short int> {
-public:
-  PtrValue(Value<short int*>* a);
-};
-
-template<>
-class Value<long long unsigned int*> : public BaseValue {
-public:
-  template<typename T>
-  Value<T*>*
-  operator_plus_bytes(Value<size_t>* n, T*)
-  {
-    return new OffValue<T,T>(this, n);
+#define PTRVALUE_INTTYPE(TYPE)                                          \
+  template<>                                                            \
+  class PtrValue<TYPE> : public BasePtrValue<TYPE>                      \
+  {                                                                     \
+  public:                                                               \
+    PtrValue(Value<TYPE*>* a);                                          \
+  };                                                                    \
+                                                                        \
+  template<>                                                            \
+  class Value<TYPE*> : public BaseValue                                 \
+  {                                                                     \
+  public:                                                               \
+    template<typename T>                                                \
+      Value<T*>*                                                        \
+      operator_plus_bytes(Value<size_t>* n, T*)                         \
+    {                                                                   \
+      return new OffValue<T,T>(this, n);                                \
+    }                                                                   \
+                                                                        \
+    Value<TYPE>*                                                        \
+      operator_deref();                                                 \
+  };                                                                    \
+                                                                        \
+  PtrValue<TYPE>::PtrValue(Value<TYPE*>* a)                             \
+    : BasePtrValue<TYPE>(a)                                             \
+  {                                                                     \
+  }                                                                     \
+                                                                        \
+  Value<TYPE>*                                                          \
+  Value<TYPE*>::operator_deref()                                        \
+  {                                                                     \
+    return new PtrValue<TYPE>(this);                                    \
   }
 
-  Value<long long unsigned int>*
-  operator_deref();
-};
+PTRVALUE_INTTYPE(long long unsigned int)
+PTRVALUE_INTTYPE(long unsigned int)
+PTRVALUE_INTTYPE(unsigned int)
+PTRVALUE_INTTYPE(short unsigned int)
+PTRVALUE_INTTYPE(unsigned char)
 
-template<>
-class Value<short unsigned int*> : public BaseValue {
-public:
-  Value<short unsigned int>*
-  operator_deref();
-};
-
-template<>
-class Value<short int*> : public BaseValue {
-public:
-  Value<short int>*
-  operator_deref();
-};
-
-PtrValue<long long unsigned int>::PtrValue(Value<long long unsigned int*>* a)
-: BasePtrValue<long long unsigned int>(a)
-{
-}
-
-PtrValue<short unsigned int>::PtrValue(Value<short unsigned int*>* a)
-: BasePtrValue<short unsigned int>(a)
-{
-}
-
-PtrValue<short int>::PtrValue(Value<short int*>* a)
-: BasePtrValue<short int>(a)
-{
-}
-
-Value<long long unsigned int>*
-Value<long long unsigned int*>::operator_deref()
-{
-  return new PtrValue<long long unsigned int>(this);
-}
-
-Value<short unsigned int>*
-Value<short unsigned int*>::operator_deref()
-{
-  return new PtrValue<short unsigned int>(this);
-}
-
-Value<short int>*
-Value<short int*>::operator_deref()
-{
-  return new PtrValue<short int>(this);
-}
+PTRVALUE_INTTYPE(long long int)
+PTRVALUE_INTTYPE(long int)
+PTRVALUE_INTTYPE(int)
+PTRVALUE_INTTYPE(short int)
+PTRVALUE_INTTYPE(signed char)
+PTRVALUE_INTTYPE(char)
 
 template<typename T>
-class V;
+class JSV;
 
 template<typename T>
 class Value<T*> : public BaseValue {
@@ -613,26 +581,31 @@ public:
 };
 
 template<typename T>
-class BaseV {
+class BaseJSV {
 public:
   Value<T>* v;
 
-  BaseV(Value<T>* v)
+  BaseJSV(Value<T>* v)
     : v(v)
   {
   }
 
-  BaseV(size_t s)
+  BaseJSV(size_t s)
     : v(new ImmValue<size_t>(s))
   {
   }
 
-  BaseV(int s)
+  BaseJSV(int s)
     : v(new ImmValue<size_t>(s))
   {
   }
 
-  BaseV operator[](BaseV<size_t> off)
+  BaseJSV(std::string address)
+    : v(new ExpressionValue<T>(&context, address))
+  {
+  }
+
+  BaseJSV operator[](BaseJSV<size_t> off)
   {
     return v->operator_indir(off.v);
   }
@@ -645,68 +618,75 @@ public:
 };
 
 template<typename T>
-class V : public BaseV<T> {
+class JSV : public BaseJSV<T> {
 public:
-  V(Value<T>* v)
-    : BaseV<T>(v)
+  JSV(Value<T>* v)
+    : BaseJSV<T>(v)
   {
   }
 
-  V(size_t s)
-    : BaseV<T>(s)
+  JSV(size_t s)
+    : BaseJSV<T>(s)
   {
   }
 
-  V(int s)
-    : BaseV<T>(s)
+  JSV(int s)
+    : BaseJSV<T>(s)
   {
   }
+
+  JSV(std::string expr)
+    : BaseJSV<T>(expr)
+  {
+  }
+
+  std::string operator=(T);
 };
 
 template<typename A,typename B>
 class NO;
 
 template<typename T>
-class V<T*> : public BaseV<T*> {
+class JSV<T*> : public BaseJSV<T*> {
 public:
-  V(Value<T*>* v)
-    : BaseV<T*>(v)
+  JSV(Value<T*>* v)
+    : BaseJSV<T*>(v)
   {
   }
 
-  V(std::string address)
-    : BaseV<T*>(new ExpressionValue<T*>(&context, address))
+  JSV(std::string address)
+    : BaseJSV<T*>(new ExpressionValue<T*>(&context, address))
   {
   }
 
-  V<T*>
-  operator+(V<size_t> n)
+  JSV<T*>
+  operator+(JSV<size_t> n)
   {
-    return V<T*>(this->v->operator_plus_bytes(new ScaledValue(n.v, new ImmValue<size_t>(sizeof(T))), (T*)nullptr));
+    return JSV<T*>(this->v->operator_plus_bytes(new ScaledValue(n.v, new ImmValue<size_t>(sizeof(T))), (T*)nullptr));
   }
 
   template<typename I>
-  V<I*>
+  JSV<I*>
   operator+(NO<T,I> off)
   {
     return this->v->operator_plus_bytes(off.off.v, (I*)nullptr);
   }
 
-  V<T>
-  operator[](V<size_t> n)
+  JSV<T>
+  operator[](JSV<size_t> n)
   {
     return (*this+n).v->operator_deref();
   }
 
   template<typename I>
-  V<I>
+  JSV<I>
   operator[](NO<T,I> off)
   {
     return (*this+off).v->operator_deref();
   }
 
   template<typename I>
-  V<I*>
+  JSV<I*>
   operator+(I T::* x)
   {
     T* p = nullptr;
@@ -717,82 +697,76 @@ public:
   }
 
   template<typename I>
-  V<I>
+  JSV<I>
   operator[](I T::* x)
   {
     return *(*this + x);
   }
 
-  V<T>
+  JSV<T>
   operator[](size_t n)
   {
     return *(*this + n);
   }
 
-  V<T>
+  JSV<T>
   operator*()
   {
     return this->v->operator_deref();
   }
 };
+
+#define JSV_INTPTR(TYPE)                                                \
+  template<>                                                            \
+  class JSV<TYPE*> : public BaseJSV<TYPE*> {                            \
+  public:                                                               \
+                                                                        \
+  JSV(Value<TYPE*>* v) : BaseJSV<TYPE*>(v)                              \
+    {                                                                   \
+    }                                                                   \
+                                                                        \
+  JSV(std::string expr) : BaseJSV<TYPE*>(expr)                          \
+    {                                                                   \
+    }                                                                   \
+                                                                        \
+  JSV                                                                   \
+  operator+(JSV<size_t> n)                                              \
+    {                                                                   \
+      return JSV<TYPE*>(this->v->operator_plus_bytes(new ScaledValue(n.v, new ImmValue<size_t>(sizeof(TYPE))), (TYPE*)nullptr)); \
+    }                                                                   \
+                                                                        \
+  JSV<TYPE>                                                             \
+  operator*()                                                           \
+    {                                                                   \
+      return this->v->operator_deref();                                 \
+    }                                                                   \
+  };
+
+JSV_INTPTR(long long unsigned int)
+JSV_INTPTR(long unsigned int)
+JSV_INTPTR(unsigned int)
+JSV_INTPTR(short unsigned int)
+JSV_INTPTR(unsigned char)
+
+JSV_INTPTR(long long int)
+JSV_INTPTR(long int)
+JSV_INTPTR(int)
+JSV_INTPTR(short int)
+JSV_INTPTR(signed char)
+JSV_INTPTR(char)
 
 template<>
-class V<long long unsigned int*> : public BaseV<long long unsigned int*> {
-public:
-  V(Value<long long unsigned int*>* v)
-    : BaseV<long long unsigned int*>(v)
-  {
-  }
-
-  V<long long unsigned int*>
-  operator+(V<size_t> n)
-  {
-    return V<long long unsigned int*>(this->v->operator_plus_bytes(new ScaledValue(n.v, new ImmValue<size_t>(sizeof(long long unsigned int))), (long long unsigned int*)nullptr));
-  }
-
-
-  V<long long unsigned int>
-  operator*()
-  {
-    return this->v->operator_deref();
-  }
-};
-
-template<>
-class V<short unsigned int*> : public BaseV<short unsigned int*> {
-public:
-  V(Value<short unsigned int*>* v)
-    : BaseV<short unsigned int*>(v)
-  {
-  }
-
-  V<short unsigned int>
-  operator*()
-  {
-    return this->v->operator_deref();
-  }
-};
-
-template<>
-class V<short int*> : public BaseV<short int*> {
-public:
-  V(Value<short int*>* v)
-    : BaseV<short int*>(v)
-  {
-  }
-
-  V<short int>
-  operator*()
-  {
-    return this->v->operator_deref();
-  }
-};
+std::string
+JSV<long long unsigned int>::operator=(long long unsigned int r)
+{
+  return std::string(*this) + " = " + to_string(r);
+}
 
 template<typename T>
-class V<T[]> : public BaseV<T[]> {
+class JSV<T[]> : public BaseJSV<T[]> {
 public:
-  V(std::string address)
-    : BaseV<T[]>(new ExpressionValue<T[]>(&context, address))
+  JSV(std::string address)
+    : BaseJSV<T[]>(new ExpressionValue<T[]>(&context, address))
   {
   }
 };
@@ -800,9 +774,9 @@ public:
 template<typename A,typename B>
 class NO {
 public:
-  V<size_t> off;
+  JSV<size_t> off;
 
-  NO(V<size_t> off)
+  NO(JSV<size_t> off)
     : off(off)
   {
   }
@@ -822,7 +796,7 @@ public:
   }
 
   NO<A,B>
-  operator+(V<size_t> v)
+  operator+(JSV<size_t> v)
   {
     return *this + NO<B,B>(v);
   }
@@ -830,21 +804,21 @@ public:
   NO<A,B>
   operator+(size_t n)
   {
-    return *this + V<size_t>(n);
+    return *this + JSV<size_t>(n);
   }
 };
 
 template<typename A>
 class NO<A,A> {
 public:
-  V<size_t> off;
+  JSV<size_t> off;
 
   NO(size_t n)
     : off(new ImmValue<size_t>(n))
   {
   }
 
-  NO(V<size_t> n)
+  NO(JSV<size_t> n)
     : off(new ScaledValue(n.v, new ImmValue<size_t>(sizeof(A))))
   {
   }
@@ -859,7 +833,7 @@ public:
 
 template<typename A,typename B>
 NO<A,B>
-operator+(V<size_t> i, B A::* b)
+operator+(JSV<size_t> i, B A::* b)
 {
   return NO<A,B>(new AddValue<size_t>(new ScaledValue(i.v, new ImmValue<size_t>(sizeof(A))), NO<A,B>(b).off.v));
 }
