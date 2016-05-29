@@ -19,7 +19,6 @@
 #{ExpressionValue<threadpage*> tpa(cx, "8192");}
 #{V<threadpage*> tp1v(&tp1);}
 #{V<threadpage*> tpav(&tpa);}
-#{auto tpbv(&tpa);}
 #{V<threadpage*> tpcv("8192");}
 
 #{V<threadpage*> t1w("8192");}
@@ -35,16 +34,10 @@
 
 %{t1w}
 %{t1w[&threadpage::id]}
-
-%{tpbv[&threadpage::id]}
-
+%{t1w+&threadpage::id}
 %{tpav+17}
 
 %{tp1v}
 %{tp1v[&threadpage::id]}
 
 %{tp1.describe_word()}
-%{tp1[&threadpage::id]}
-%{tpa[new ImmValue<size_t>(17)]+&threadpage::id}
-%{(tpa+new ImmValue<size_t>(17))[&threadpage::id]}
-%{tpa+new ImmValue<size_t>(17)}
