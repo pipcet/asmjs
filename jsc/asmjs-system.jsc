@@ -501,19 +501,42 @@ AsmJSThread.prototype.abort = function (code, arg0, arg1, arg2, arg3)
 
 AsmJSThread.prototype.eh_return = function (fp, sp, handler)
 {
-    fp = this.HEAP32[this.HEAP32[fp>>2]>>2];
-
     var a0 = this.HEAP32[fp+24>>2]|0;
     var a1 = this.HEAP32[fp+28>>2]|0;
     var a2 = this.HEAP32[fp+32>>2]|0;
     var a3 = this.HEAP32[fp+36>>2]|0;
+
+/*
+    console.log("handler " + handler.toString(16));
+
+    console.log("a0 " + a0 + " (" + this.module.get_arg(0) + ")");
+    console.log("a1 " + a1 + " (" + this.module.get_arg(1) + ")");
+    console.log("a2 " + a2 + " (" + this.module.get_arg(2) + ")");
+    console.log("a3 " + a3 + " (" + this.module.get_arg(3) + ")");
+*/
 
     this.module.set_arg(0, a0);
     this.module.set_arg(1, a1);
     this.module.set_arg(2, a2);
     this.module.set_arg(3, a3);
 
+    //console.log("fp " + fp.toString(16));
+
+    fp = this.HEAP32[this.HEAP32[fp>>2]>>2];
+
+    //console.log("changing pc from " + this.HEAP32[fp+8>>2].toString(16));
+
     this.HEAP32[fp+8>>2] = handler;
+/*
+        for (var offset = 0x3ffff800; offset < 0x40000000; offset += 0x10)
+            console.log(offset.toString(16) + ': ' +
+                        this.HEAP32[offset>>2].toString(16) + ' ' +
+                        this.HEAP32[offset+4>>2].toString(16) + ' ' +
+                        this.HEAP32[offset+8>>2].toString(16) + ' ' +
+                        this.HEAP32[offset+12>>2].toString(16));
+    console.log("fp " + fp.toString(16));
+*/
+
 
     return fp|3;
 };
