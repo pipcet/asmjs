@@ -119,6 +119,8 @@ build/gcc-final.make: build/gcc-final.dir build/gcc-final.configure
 	cp build/gcc-preliminary/gcc/libgcc.a build/gcc-final/gcc/libgcc_eh.a
 	cp build/gcc-preliminary/gcc/libgcc.a build/gcc-final/gcc/libgcc_s.a
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final
+	cp build/gcc-final/gcc/libgcc.a build/gcc-final/gcc/libgcc_eh.a
+	cp build/gcc-final/gcc/libgcc.a build/gcc-final/gcc/libgcc_s.a
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/gcc-final install
 	touch $@
 
