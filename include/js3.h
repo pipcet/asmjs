@@ -754,10 +754,8 @@ public:
   }
 
   NO(B A::* a)
-    : off(new ImmValue<size_t>(0))
+    : off((size_t)&(((A*)nullptr)->*a))
   {
-    A* p = nullptr;
-    off = (size_t)&(p->*a);
   }
 
   template<typename C>
