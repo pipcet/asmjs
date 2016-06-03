@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #define _GLIBCXX_USE_C99_STDIO 1
 #include <stdio.h>
 #include <typeinfo>
@@ -7,6 +8,19 @@
 #include <ext/vstring.h>
 #include <bitset>
 #include <bits/basic_string.h>
+#include <cxxabi.h>
+#include <stdlib.h>
+
+const char *demangle(const std::type_info *info)
+{
+  int status;
+  const char *ret = __cxxabiv1::__cxa_demangle(info->name(), NULL, NULL, &status);
+
+  if (status)
+    throw "bad";
+
+  return ret;
+}
 
 extern "C" {
   int f(int x, unsigned long y)
@@ -107,6 +121,28 @@ public:
   {
   }
 };
+
+struct St {
+  int a;
+  int b;
+  int c;
+};
+
+template<class X, class...Ts, size_t...S>
+auto
+members(X *st, std::tuple<Ts...> tuple, std::index_sequence<S...>)
+{
+  return std::make_tuple(st->*std::get<S>(tuple)...);
+}
+
+template<class X, class...Ts>
+auto
+members(X *st, std::tuple<Ts...> tuple)
+{
+  return members(st, tuple, std::index_sequence_for<Ts...>());
+}
+
+
 
 template<class...Cs>
 class ATuple {
@@ -225,7 +261,7 @@ public:
     : f(f), t(typeid(*f).name())
   {
     printf("registering f %p type %s apply %p\n",
-           f, typeid(*f).name(), apply);
+           f, demangle(&typeid(*f)), apply);
   }
 };
 
@@ -244,7 +280,7 @@ public:
     }
 
     printf("applying f %p type %s/%s apply %p\n",
-           f1, t1, typeid(F).name(), apply);
+           f1, t1, demangle(&typeid(F)), apply);
 
     ATuple<Ts...> at(params ? params+1 : nullptr);
     at.dump();
@@ -255,7 +291,7 @@ public:
     : f(f), t(typeid(*f).name())
   {
     printf("registering f %p type %s apply %p\n",
-           f, typeid(*f).name(), apply);
+           f, demangle(&typeid(*f)), apply);
   }
 };
 
@@ -276,6 +312,16 @@ mt2(char, short, int, long, long long)
 {
   return std::make_tuple(-1, -1, -1, -1, -1);
 }
+
+struct smorgasbord {
+  char c; signed char sc; unsigned char uc;
+  short s; unsigned short us;
+  int i; unsigned int ui;
+  long l; unsigned long ul;
+  long long ll; unsigned long long ull;
+  double d;
+  void *ptr;
+};
 
 int main()
 {
@@ -303,9 +349,11 @@ int main()
   lift(puts);
   lift(fflush);
   lift(qsort);
+  lift(qsort_r);
   lift(fopen);
   lift(mt);
   lift(mt2);
+  lift(__cxxabiv1::__cxa_demangle);
 
   std::tuple<const void *, size_t, size_t, FILE *> t((const void*)"hi!\n", 4, 1, stdout);
   ATuple<const void*, size_t, size_t, FILE *> at(&t);
@@ -314,4 +362,11 @@ int main()
   atuple_apply(fwrite, atuple(&std::make_tuple((const void *)"Hi!\n", 4, 1, stdout)));;
   
   printf("%s\n", std::to_string(3).c_str());
+  int status;
+  printf("%s\n", __cxxabiv1::__cxa_demangle(typeid(qsort).name(), NULL, NULL, &status));
+
+  St st = { 1, 2, 3 };
+  auto t3 = members(&st, std::make_tuple(&St::a, &St::c));
+
+  printf("%d %d\n", std::get<0>(t3), std::get<1>(t3));
 }
