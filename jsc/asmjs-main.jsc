@@ -36,6 +36,8 @@ function CStringTo(str, heap, offset)
     }
 
     heap[i0] = 0;
+
+    return i0+1;
 }
 
 if (typeof window !== "undefined") {
