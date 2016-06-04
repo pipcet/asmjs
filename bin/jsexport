@@ -1,0 +1,20 @@
+#!/bin/bash
+TMP1=$(mktemp);
+TMP2=$(mktemp);
+TMP3=$(mktemp);
+TMP4=$(mktemp);
+TMP5=$(mktemp);
+TMP6=$(mktemp);
+TMP7=$(mktemp);
+TMP8=$(mktemp);
+TMPD=$(mktemp -d);
+if [ x"$ASMJSDIR" = x ]; then
+    ASMJSDIR=$HOME/git/asmjs
+fi
+cat $ASMJSDIR/include/jsexport.h > $TMP1.cc
+asmjs-virtual-asmjs-objcopy --dump-section .jsexport=$TMP5 "$1" || exit 1
+$ASMJSDIR/bin/jsexport-extract $TMP5 >> $TMP1.cc || exit 1
+asmjs-virtual-asmjs-g++ -std=gnu++1z -fconcepts -c $TMP1.cc -o $TMP2 || exit 1
+asmjs-virtual-asmjs-objcopy --rename-section .init_array=.secondary.init_array --rename-section .data=.secondary.data --rename-section .rodata=.secondary.rodata --rename-section .bss=.secondary.bss $TMP2 $TMP3 || exit 1
+asmjs-virtual-asmjs-ld -T $ASMJSDIR/lds/asmjs-tight.x "$1" $TMP3 $ASMJSDIR/asmjs-virtual-asmjs/asmjs-virtual-asmjs/lib/libstdc++.a $ASMJSDIR/asmjs-virtual-asmjs/asmjs-virtual-asmjs/lib/libc.a -o $TMP4 || exit 1
+mv $TMP4 "$1"
