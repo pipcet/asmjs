@@ -123,6 +123,8 @@ function AsmJSThread(process, module, threadpage)
     this.module = module;
 
     this.extcallRet = {};
+    this.exports = {};
+    this.queue = [];
 }
 
 #{JSV<threadpage*> tp("this.threadpage");}

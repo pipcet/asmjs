@@ -1165,3 +1165,109 @@ if (typeof(os) !== "undefined" &&
         var blob = fd.blob();
     };
 }
+
+ThinThin.queue_peek = function ()
+{
+    if (this.queue.length == 0)
+        return -%{ENOENT};
+
+    return this.queue[0].size;
+};
+
+function queue_entry_size(entry)
+{
+    var data = entry.data;
+    var size = 0;
+
+    var nd = 0;
+    var nc = 0;
+    var i;
+    for (i = 0; i < data.length; i++) {
+        if (typeof data[i] === "number") {
+            nd++;
+        } else if (typeof data[i] === "string") {
+            nd++;
+            nc += data[i].length + 1;
+        } else {
+            throw "unsupported data entry " + data[i];
+        }
+    }
+
+    nc += 7;
+    nc &= -8;
+
+    return nd * 8 + nc;
+}
+
+function unpack_queue_entry(entry, where)
+{
+    var idata = entry.data;
+    var odata = [];
+
+    var i;
+
+    for (i = 0; i < idata.length; i++) {
+        if (typeof(idata[i]) === "number")
+            odata.push(idata[i]);
+        else if (typeof(idata[i] === "string")) {
+            var w = where;
+            where += CStringTo(idata[i], this.HEAP8, where);
+            odata.push(w);
+        }
+    }
+
+    where += 7;
+    where &= -8;
+
+    for (i = 0; i < odata.length; i++) {
+        this.HEAPF64[where>>3] = odata[i];
+        where += 8;
+    }
+}
+
+ThinThin.queue_pop = function (applyp, funp, stackp)
+{
+    var entry = this.queue[0];
+    console.log("entry " + entry);
+    this.queue.shift();
+
+    this.HEAP32[applyp>>2] = entry.apply;
+    this.HEAP32[funp>>2] = entry.fun;
+    unpack_queue_entry.call(this, entry, stackp);
+
+    return 0;
+};
+
+ThinThin.export = function (namep, fp, typep, applyp, demangled_typep, nargs)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var type = CStringAt(this.HEAPU8, typep);
+    var demangled_type = CStringAt(this.HEAPU8, demangled_typep);
+
+    console.log("exporting " + name + " with type " + type + "/" + demangled_type + " " + nargs + " args" + " applyp " + applyp + " fp " + fp);
+
+    this.exports[name] = function (...args) {
+        var origsp = this.sp();
+        var origpc = this.pc();
+
+        var sp = this.sp();
+
+        sp -= 8 * args + 8;
+
+        this.set_sp(sp);
+
+        this.module.set_arg(0, fp);
+        this.module.set_arg(1, sp);
+
+        this.set_pc(applyp);
+    }.bind(this);
+
+    this.queue.push({
+        apply: applyp,
+        fun: fp,
+        size: 8,
+        data: [123],
+    });
+
+    return 0;
+};
