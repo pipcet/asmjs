@@ -37,10 +37,16 @@
 
 
 __attribute__((jsexport)) void hi();
-
+__attribute__((jsexport)) typeof(malloc) malloc;
+__attribute__((jsexport)) static void bye();
 void hi()
 {
   printf("hi\n");
+}
+
+static void bye()
+{
+  printf("bye\n");
 }
 
 int main(void)
@@ -52,6 +58,7 @@ int main(void)
   void (**ptr)() = *pptr0;
 
   while (ptr < *pptr1) {
+    printf("calling %p\n", *ptr);
     (**ptr)();
     ptr++;
   }
