@@ -35,7 +35,7 @@ function CStringTo(str, heap, offset)
         heap[offset + i0] = str.charCodeAt(i0);
     }
 
-    heap[i0] = 0;
+    heap[offset + i0] = 0;
 
     return i0+1;
 }
@@ -95,7 +95,8 @@ function newAsmJSModule(mod)
     sys = new AsmJSSystem();
     var env = [];
 
-    if ("getenvironment" in os) {
+    if (typeof os === "undefined") {
+    } else if ("getenvironment" in os) {
         env = os.getenvironment();
     } else {
         for (var i = 0; i < copyvars.length; i++) {
@@ -113,6 +114,12 @@ function newAsmJSModule(mod)
         sys.step();
 }
 
+if (typeof window !== "undefined") {
+    window.setInterval(function () {
+        while (sys.runqueue.length)
+            sys.step();
+    }, 100);
+}
 
 //     worker = new Worker("asmjs-worker.js");
 //     worker.onmessage = function (e) {
