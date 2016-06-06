@@ -541,8 +541,13 @@ function ThinThinFD(process, fdno = undefined)
 
 ThinThinFD.prototype.mode = function ()
 {
-    return %{S_IFREG + 0666};
+    return %{__S_IFCHR + 0666};
 };
+
+ThinThinFD.prototype.size = function ()
+{
+    return this.readData.length;
+}
 
 ThinThinFD.prototype.open = function ()
 {
@@ -926,7 +931,8 @@ if (typeof(os) !== "undefined" &&
         return 0;
     };
     ThinThin.newfstatat = function (fdno, pathstr, statbufptr, flags) {
-        var path = CStringAt(this.HEAPU8, ptr);
+        var fd = this.fds[fdno];
+        var path = CStringAt(this.HEAPU8, pathstr);
 
         var off;
         for (off = 0; off < %{sizeof(struct stat)}; off += 4)
@@ -937,6 +943,8 @@ if (typeof(os) !== "undefined" &&
         %{statbufptr[&stat::st_size] = "fd.size()"}
         %{statbufptr[&stat::st_blksize] = "fd.size()"}
         %{statbufptr[&stat::st_blocks] = "1"}
+
+        return 0;
     };
     ThinThin.stat = function (ptr, bufptr) {
         var path = CStringAt(this.HEAPU8, ptr);
