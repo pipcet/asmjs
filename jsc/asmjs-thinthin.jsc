@@ -1229,7 +1229,6 @@ ThinThin.queue_pop = function (applyp, funp, stackp)
 {
     var entry = this.queue[0];
     console.log("entry " + entry);
-    this.queue.shift();
 
     this.HEAP32[applyp>>2] = entry.apply;
     this.HEAP32[funp>>2] = entry.fun;
@@ -1238,36 +1237,190 @@ ThinThin.queue_pop = function (applyp, funp, stackp)
     return 0;
 };
 
-ThinThin.export = function (namep, fp, typep, applyp, demangled_typep, nargs)
+ThinThin.queue_return = function (stackp)
+{
+    if (this.queue.length == 0)
+        throw "what";
+    var entry = this.queue[0];
+
+    entry.resolve(this.HEAPF64[stackp>>3]);
+
+    this.queue.shift();
+
+    return 0;
+};
+
+ThinThin.export = function (namep, fp, typep, applyp, demangled_typep, nargs,
+                            rettypep)
 {
     var name = CStringAt(this.HEAPU8, namep);
     var type = CStringAt(this.HEAPU8, typep);
     var demangled_type = CStringAt(this.HEAPU8, demangled_typep);
+    var rettype = CStringAt(this.HEAPU8, rettypep);
 
     console.log("exporting " + name + " with type " + type + "/" + demangled_type + " " + nargs + " args" + " applyp " + applyp + " fp " + fp);
 
     this.exports[name] = function (...args) {
-        var origsp = this.sp();
-        var origpc = this.pc();
+        // var ret = new Promise((resolve, reject) => {
+        //     this.queue.push({
+        //         apply: applyp,
+        //         fun: fp,
+        //         size: queue_entry_size(args),
+        //         data: args,
+        //         resolve: resolve,
+        //     });
+        //     if (this.queue_resolve)
+        //         this.queue_resolve();
+        // }).then(addr => {
+        //     var t = this.types_by_id[rettype];
+        //     if (!t)
+        //         return addr;
 
-        var sp = this.sp();
+        //     var ret = new t(addr);
 
-        sp -= 8 * args + 8;
+        //     return ret.address ? ret : null;
+        // });
+        var sync = false;
+        var res;
+        var postproc = function (addr) {
+            var t = this.types_by_id[rettype];
+            if (!t)
+                return addr;
 
-        this.set_sp(sp);
+            var ret = new t(addr);
 
-        this.module.set_arg(0, fp);
-        this.module.set_arg(1, sp);
+            return ret.address ? ret : null;
+        }.bind(this);
 
-        this.set_pc(applyp);
+        var entry = {
+            apply: applyp,
+            fun: fp,
+            size: queue_entry_size(args),
+            data: args,
+            resolve: function (x) {
+                sync = true;
+                res = x;
+            }
+        };
+
+        this.stop(0);
+        this.queue.push(entry);
+        if (this.queue_resolve)
+            this.queue_resolve();
+
+        while (!sync && sys.runqueue.length)
+            sys.step();
+
+        if (sync) {
+            return postproc(res);
+        }
+
+        console.log("no sync result, giving up.");
+
+        return new Promise((resolve, reject) => {
+            entry.resolve = resolve;
+        }).then(postproc);
     }.bind(this);
 
-    this.queue.push({
-        apply: applyp,
-        fun: fp,
-        size: 8,
-        data: [123],
-    });
+    return 0;
+};
 
+/* It's tempting to add a map here so we don't create two wrapper
+ * objects for the same memory address; but we wouldn't know when to
+ * collect entries. */
+
+ThinThin.export_type = function (namep, typeidp)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var typeid = "P" + CStringAt(this.HEAPU8, typeidp);
+
+    var thread = this;
+
+    console.log("defined type " + name);
+
+    this.types_by_id[typeid] = this.types[name] = function (ptr) {
+        if (ptr == 0)
+            return undefined;
+
+        this.thread = thread;
+        this.address = ptr;
+    };
+
+    this.types[name].fields = [];
+
+    /* do not call this .then, that causes infinite recursion. */
+    this.types[name].prototype.promise = function () {
+        var ret = {};
+        var i;
+        var promises = [];
+
+        for (i = 0; i < this.thread.types[name].fields.length; i++) {
+            let field = this.thread.types[name].fields[i];
+
+            promises.push(this[field].then(x => ret[field] = x));
+        }
+
+        return Promise.all(promises).then(x => ret);
+    };
+
+    return 0;
+};
+
+ThinThin.export_field = function (namep, fieldnamep,
+                                  recordtypep, fieldtypep,
+                                  getterp, setterp)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var fieldname = CStringAt(this.HEAPU8, fieldnamep);
+    var recordtype = CStringAt(this.HEAPU8, recordtypep);
+    var fieldtype = CStringAt(this.HEAPU8, fieldtypep);
+    var getter = CStringAt(this.HEAPU8, getterp);
+    var setter = CStringAt(this.HEAPU8, setterp);
+
+    console.log("defined field for type " + name);
+
+    var get = function () {
+        return this.thread.exports[getter].call(this.thread, this.address).then(addr => {
+            var t = this.thread.types_by_id[fieldtype];
+            if (!t)
+                return addr;
+
+            var ret = new t(addr);
+
+            return ret.address ? ret : null;
+        });
+    };
+
+    var set = function (v) {
+        var address;
+
+        if (typeof (v) === "number")
+            address = v;
+        else
+            address = v.address;
+
+        this.thread.exports[setter].call(this.thread, this.address, address);
+    };
+
+    Object.defineProperty(this.types[name].prototype, fieldname,
+                          { get: get, set: set });
+
+    this.types[name].fields.push(fieldname);
+
+    return 0;
+};
+
+ThinThin.export_var = function (namep, typenamep, address)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var typename = CStringAt(this.HEAPU8, typenamep);
+
+    this.vars[name] = new this.types[typename](address);
+
+    return 0;
+};
+
+ThinThin.getuid = ThinThin.geteuid = ThinThin.getgid = ThinThin.getegid = function ()
+{
     return 0;
 };
