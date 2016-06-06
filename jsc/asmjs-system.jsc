@@ -124,7 +124,34 @@ function AsmJSThread(process, module, threadpage)
 
     this.extcallRet = {};
     this.exports = {};
+    this.types = {};
+    this.types_by_id = {};
+    this.vars = {};
     this.queue = [];
+
+    var thread = this;
+
+    this.types_by_id["PKc"] = this.types["string"] = function (ptr) {
+        if (ptr === 0)
+            return null;
+
+        var str = CStringAt(thread.HEAP8, ptr);
+
+        this.thread = thread;
+        this.address = ptr;
+        this.str = str;
+
+        this.toString = function () {
+            return this.str;
+        };
+
+        console.log(this.str);
+        var ret = new String(this.str);
+
+        ret.address = ptr;
+
+        return ret;
+    };
 }
 
 #{JSV<threadpage*> tp("this.threadpage");}
