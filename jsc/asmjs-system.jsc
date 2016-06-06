@@ -281,7 +281,8 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
     if (retv !== undefined && retv == retv) {
         this.module.set_rv(retv);
     } else if (retv != retv) {
-        return initsp;
+        this.stop(1);
+        return sp|1;
     } else {
         throw "cannot resolve " + mod + ":" + fun;
     }
