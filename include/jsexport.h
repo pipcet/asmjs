@@ -191,7 +191,8 @@ extern "C"
 __attribute__((stackcall))
 int
 __thinthin_export(const char *name, void *f, const char *type, void *apply,
-                  const char *demangled_type, unsigned nargs);
+                  const char *demangled_type, unsigned nargs,
+                  const char *rettype);
 
 extern "C"
 __attribute__((stackcall))
@@ -211,23 +212,6 @@ int
 __thinthin_export_var(const char *jsname, const char *type_jsname,
                       unsigned long address);
 
-#if 0
-int
-__thinthin_export(const char *name, void *f, const char *type, void *apply,
-                  const char *demangled_type, unsigned nargs)
-{
-  asm volatile("dpc = \n\t\t.dpc .LI%=\n\t\t\t|0;\n\t"
-               "rp = foreign_extcall(%O0|0, %O1|0, 0xdedbeef|0, %O2|0)|0;\n\t"
-               "if (rp&3) {\n\t\t"
-               "break mainloop;\n\t"
-               "}\n\t"
-               ".labeldef_internal .LI%="
-               : : "r" ("thinthin"), "r" ("export"), "r" (__builtin_frame_address(0)+40));
-
-  return 0;
-}
-#endif
-
 template<class F>
 class AsmJSExport {
   const char *name;
@@ -246,7 +230,8 @@ class AsmJSExport {
            classtype, rettype, type);
     auto L(lift(f));
     __thinthin_export(name, (void *)f, type, (void *)L.apply_doubles,
-                      demangle(type), count_double_args<decltype(f)>::count());
+                      demangle(type), count_double_args<decltype(f)>::count(),
+                      rettype);
   }
 };
 
