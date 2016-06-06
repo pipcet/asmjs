@@ -59,7 +59,7 @@ SECTIONS
      . = ALIGN(., 16);
     *(.secondary.bss)
      . = ALIGN(., 16);
-     *(.rodata*)
+    *(.rodata*)
     . = ALIGN(., 16);
     __secondary_init_array_start = .;
     KEEP (*(SORT_BY_INIT_PRIORITY(.secondary.init_array.*)))
