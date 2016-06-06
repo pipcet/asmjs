@@ -657,8 +657,17 @@ ThinThinFD.prototype.write = function (heap = undefined, ptr = 0, len = 0)
     if (len == 0)
         return Promise.resolve(0);
 
-    return this.outputPromise(heap, ptr, len).then(i =>
-        this.write(heap, ptr+i, len-i).then(j => i+j));
+    if ("async hack") {
+        this.outputPromise(heap, ptr, len).then
+        (i =>
+         this.write(heap, ptr+i, len-i).then(j => i+j));
+
+        return len;
+    } else {
+        return this.outputPromise(heap, ptr, len).then
+        (i =>
+         this.write(heap, ptr+i, len-i).then(j => i+j));
+    }
 };
 
 ThinThinFD.prototype.outputPromise = function (heap, ptr, len)
@@ -1176,22 +1185,34 @@ if (typeof(os) !== "undefined" &&
 
 ThinThin.queue_peek = function ()
 {
-    if (this.queue.length == 0)
-        return -%{ENOENT};
+    console.log('queue_peek length ' + this.queue.length);
 
+    // if (this.queue.length == 0)
+    //     return new Promise((resolve,reject) => {
+    //         var old_resolve = this.queue_resolve;
+    //         this.queue_resolve = function () {
+    //             delete this.queue_resolve;
+    //             if (old_resolve)
+    //                 old_resolve();
+    //             resolve();
+    //         };
+    //     }).then(x => 0);
+
+    if (this.queue.length == 0)
+        return NaN;
+
+    console.log('queue_peek size ' + this.queue[0].size);
     return this.queue[0].size;
 };
 
-function queue_entry_size(entry)
+function queue_entry_size(data)
 {
-    var data = entry.data;
-    var size = 0;
-
     var nd = 0;
     var nc = 0;
     var i;
     for (i = 0; i < data.length; i++) {
-        if (typeof data[i] === "number") {
+        if (typeof data[i] === "number" ||
+            typeof data[i] === "object") {
             nd++;
         } else if (typeof data[i] === "string") {
             nd++;
@@ -1209,6 +1230,27 @@ function queue_entry_size(entry)
 
 function unpack_queue_entry(entry, where)
 {
+    var data = entry.data;
+    var nd = 0;
+    var nc = 0;
+    var i;
+    for (i = 0; i < data.length; i++) {
+        if (typeof data[i] === "number" ||
+            typeof data[i] === "object") {
+            nd++;
+        } else if (typeof data[i] === "string") {
+            nd++;
+            nc += data[i].length + 1;
+        } else {
+            throw "unsupported data entry " + data[i];
+        }
+    }
+
+    nc += 7;
+    nc &= -8;
+
+    var swhere = where + nd * 8;
+
     var idata = entry.data;
     var odata = [];
 
@@ -1218,16 +1260,16 @@ function unpack_queue_entry(entry, where)
         if (typeof(idata[i]) === "number")
             odata.push(idata[i]);
         else if (typeof(idata[i] === "string")) {
-            var w = where;
-            where += CStringTo(idata[i], this.HEAP8, where);
+            var w = swhere;
+            swhere += CStringTo(idata[i], this.HEAP8, swhere);
             odata.push(w);
+        } else if ("address" in idata[i]) {
+            odata.push(idata[i].address);
         }
     }
 
-    where += 7;
-    where &= -8;
-
     for (i = 0; i < odata.length; i++) {
+        console.log("pushing " + odata[i] + " to " + where);
         this.HEAPF64[where>>3] = odata[i];
         where += 8;
     }
