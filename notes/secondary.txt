@@ -1,0 +1,5 @@
+asmjs-virtual-asmjs-g++ -c ../bin/jsexport.cpp
+asmjs-virtual-asmjs-g++ -c ./linkme1.c 
+asmjs-virtual-asmjs-g++ -Wl,-T,../lds/asmjs-loose.x  ./linkme1.o
+asmjs-virtual-asmjs-objcopy --rename-section .init_array=.secondary.init_array --rename-section .data=.secondary.data --rename-section .rodata=.secondary.rodata --rename-section .bss=.secondary.bss jsexport.o jsexport2.o
+asmjs-virtual-asmjs-ld -T ../lds/asmjs-tight.x ./a.out ./jsexport2.o ~/git/asmjs/asmjs-virtual-asmjs/asmjs-virtual-asmjs/lib/libstdc++.a -o b.out

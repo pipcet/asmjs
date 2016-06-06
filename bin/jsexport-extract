@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+use English qw(all);
+use strict;
+
+$INPUT_RECORD_SEPARATOR = "\0";
+
+while (<>) {
+    chomp;
+    print $_;
+    print "\n";
+}
