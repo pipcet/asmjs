@@ -1,7 +1,3 @@
-function SuccessException()
-{
-}
-
 function CStringAt(heap, offset)
 {
     var ret = '';
