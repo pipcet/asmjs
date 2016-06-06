@@ -788,7 +788,7 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
     var thread = new AsmJSThread(process, module, 8192);
     thread.module.instantiate(thread);
     %{tp1[&threadpage::pc] = "process.entry"}
-    if (typeof document !== "undefined") {
+    if (false && typeof document !== "undefined") {
         new ThinThinFD(process, 0);
         new VT100FD(process, document.getElementById("output2"), 1, 0);
         new ThinThinFD(process, 2);
