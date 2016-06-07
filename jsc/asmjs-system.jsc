@@ -121,6 +121,7 @@ function AsmJSThread(process, module, threadpage)
     this.threadpage = threadpage;
 
     this.module = module;
+    this.rmodule = module;
 
     this.extcallRet = {};
     this.exports = {};
