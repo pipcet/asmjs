@@ -1185,7 +1185,7 @@ if (typeof(os) !== "undefined" &&
 
 ThinThin.queue_peek = function ()
 {
-    console.log('queue_peek length ' + this.queue.length);
+    //console.log('queue_peek length ' + this.queue.length);
 
     // if (this.queue.length == 0)
     //     return new Promise((resolve,reject) => {
@@ -1201,7 +1201,7 @@ ThinThin.queue_peek = function ()
     if (this.queue.length == 0)
         return NaN;
 
-    console.log('queue_peek size ' + this.queue[0].size);
+    //console.log('queue_peek size ' + this.queue[0].size);
     return this.queue[0].size;
 };
 
@@ -1269,7 +1269,7 @@ function unpack_queue_entry(entry, where)
     }
 
     for (i = 0; i < odata.length; i++) {
-        console.log("pushing " + odata[i] + " to " + where);
+        //console.log("pushing " + odata[i] + " to " + where);
         this.HEAPF64[where>>3] = odata[i];
         where += 8;
     }
@@ -1278,7 +1278,7 @@ function unpack_queue_entry(entry, where)
 ThinThin.queue_pop = function (applyp, funp, stackp)
 {
     var entry = this.queue[0];
-    console.log("entry " + entry);
+    //console.log("entry " + entry);
 
     this.HEAP32[applyp>>2] = entry.apply;
     this.HEAP32[funp>>2] = entry.fun;
