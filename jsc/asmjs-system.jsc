@@ -146,7 +146,6 @@ function AsmJSThread(process, module, threadpage)
             return this.str;
         };
 
-        console.log(this.str);
         var ret = new String(this.str);
 
         ret.address = ptr;
@@ -211,6 +210,7 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
+    //console.log('extcall ' + mod + ' ' + fun);
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
@@ -390,13 +390,14 @@ AsmJSThread.prototype.step = function ()
         //console.log('rpc ' + rpc.toString(16));
         if (!f)
             throw "no f for " + cpc.toString(16);
-        //console.log('pc ' + pc.toString(16) + ' cpc ' + cpc.toString(16) + ' sp ' + sp.toString(16) + ' pc0 ' + f.pc0.toString(16) + ' pc0+dpc ' + this.HEAP32[sp+8>>2].toString(16) + ' rpc ' + rpc.toString(16));
+        //putstr('pc ' + pc.toString(16) + ' cpc ' + cpc.toString(16) + ' sp ' + sp.toString(16) + ' pc0 ' + f.pc0.toString(16) + ' pc0+dpc ' + this.HEAP32[sp+8>>2].toString(16) + ' rpc ' + rpc.toString(16));
         rp = f.code(pc-(f.pc0), sp+16, 0, 0, rpc, (f.pc0));
-        //console.log('rp ' + rp.toString(16));
+        //putstr('rp ' + rp.toString(16));
 
         if (rp&3) {
             //console.log('should ' + this.HEAP32[sp>>2].toString(16) + ' be ' + isp.toString(16) + '?');
             //console.log('v = ' + this.HEAP32[0x3ffffd28>>2].toString(16));
+            //console.log('handoff');
             /* the function has saved its JS stack to the VM stack,
              * or it has aborted. */
             pc = 0;
@@ -793,6 +794,9 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
         new ThinThinFD(process, 0);
         new ThinThinFD(process, 1);
         new ThinThinFD(process, 2);
+
+        //console.log('restarting');
+
     }
     this.runqueue.push(thread);
 };
