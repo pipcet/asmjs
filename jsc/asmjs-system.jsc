@@ -211,10 +211,6 @@ AsmJSThread.prototype.extcall = function (modstr, funstr, pc, sp)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
-    if (mod == "emscripten" && fun == "malloc") {
-        mod = "thinthin";
-        fun = "sbrk";
-    }
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
