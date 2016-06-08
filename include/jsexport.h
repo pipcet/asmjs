@@ -354,14 +354,21 @@ public:
    method; RETTYPE is the typeid string for the function's return
    type; TYPE is the typeid string for the entire function pointer. */
 
-#define asmjs_register_function(jsname, suffix, function, classtype, rettype, type)           \
-  AsmJSExport<decltype(function)> jsexport_##suffix(jsname, (decltype(function))function, classtype, rettype, type);
+#define PASTE2(a,b) a ## b
+#define PASTE(a,b) PASTE2(a, b)
+#define UNIQ(x) PASTE(x, __COUNTER__)
+
+#define asmjs_register_function(jsname, function, classtype, rettype, type)           \
+  AsmJSExport<decltype(neuter(function))> UNIQ(jsexport_fun)(jsname, (decltype(neuter(function)))neuter(function), typeid(classtype).name(), typeid(rettype).name(), typeid(type).name());
+
+#define asmjs_register_function_type(jsname, rettype, type)     \
+  AsmJSExport<type> UNIQ(jsexport_fun)(jsname, NULL, NULL, typeid(rettype).name(), typeid(type).name());
 
 #define asmjs_register_record_type(jsname, classtype) \
-  AsmJSExportType jsexport_##__LINE__(jsname, typeid(classtype *).name());
+  AsmJSExportType UNIQ(jsexport_typ) (jsname, typeid(classtype).name());
 
-#define asmjs_register_field(jsname, classtype, fieldtype, fieldname, bitpos, bytesize) \
-  AsmJSExportField<classtype,fieldtype,(bitpos/8),bytesize> jsexport_##fieldname(jsname, #fieldname, typeid(classtype *).name(), typeid(fieldtype *).name());
+#define asmjs_register_field(jsname, fieldname, classtype, fieldtype, bitpos, bytesize) \
+  AsmJSExportField<classtype,fieldtype,(bitpos/8),bytesize> UNIQ(jsexport_fld)(jsname, #fieldname, typeid(classtype).name(), typeid(decltype(neuter<fieldtype>())).name());
 
-#define asmjs_register_variable(jsname, type_jsname, address) \
-  AsmJSExportVar jsexport_##address(jsname, type_jsname, address);
+#define asmjs_register_variable(jsname, type, type_jsname, address) \
+  AsmJSExportVar UNIQ(jsexport_var)(jsname, address, typeid(decltype(neuter<type>())).name());
