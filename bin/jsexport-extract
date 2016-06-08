@@ -4,8 +4,12 @@ use strict;
 
 $INPUT_RECORD_SEPARATOR = "\0";
 
+my %seen;
+
 while (<>) {
     chomp;
+    next if $seen{$_}++;
+    warn "$_\n";
     print $_;
     print "\n";
 }
