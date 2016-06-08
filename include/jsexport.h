@@ -86,6 +86,17 @@ T from_double(double d)
   return ret;
 }
 
+template<>
+void *from_double<void *>(double d)
+{
+  void *ret = (void *)(size_t(d));
+
+  if (double(size_t(ret)) != d)
+    ;//throw "round-trip conversion failed";
+
+  return ret;
+}
+
 template<class ...Ts, size_t ...S>
 std::tuple<Ts...>
 from_doubles(double *d, std::index_sequence<S...>)
