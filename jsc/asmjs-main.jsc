@@ -86,6 +86,8 @@ var worker;
 
 var copyvars = ["HOME", "MAKE", "LIBPERL_A", "PERL_CORE", "PATH", "EMACSLOADPATH", "EMACS_LOADPATH", "PERL_MM_USE_DEFAULT", "INSTALLDIRS"];
 
+var restart;
+
 function newAsmJSModule(mod)
 {
     sys = new AsmJSSystem();
@@ -105,16 +107,55 @@ function newAsmJSModule(mod)
         env.push("TERM=vt100");
     }
     sys.instantiate(mod, args, env);
+    //restart = function () {
+    //sys.instantiate(mod, args, env);
+    //};
 
     while (sys.runqueue.length)
         sys.step();
 }
 
+function update() {
+    if (!sys.threads || !sys.threads[0]) {
+        return;
+    }
+
+    while (sys.threads[0].stopped() == 0)
+        sys.step();
+
+    if (sys.threads.length == 0 || sys.threads[0].stopped() == -1)
+        restart();
+    else if (sys.threads[0].exports.dograph) {
+        outstr = "";
+        counter++;
+        document.getElementById("dot-counter").innerHTML = counter.toString();
+        content = document.getElementById("dot-input").value;
+        var start = Date.now();
+        var i = 0;
+        var res;
+        var str;
+        for (i = 0; i < 1; i++)
+            res = sys.threads[0].exports.dograph(content);
+        var dur = Date.now() - start;
+
+        if (res)
+            str = res.toString();
+        else
+            str = "";
+
+        outstr = str;
+        document.getElementById("svg-output").innerHTML = str;
+        counter = dur;
+        document.getElementById("dot-counter").innerHTML = counter.toString();
+
+        if (res)
+            sys.threads[0].exports.free(res);
+    }
+}
+
 if (typeof window !== "undefined") {
-    window.setInterval(function () {
-        while (sys.runqueue.length)
-            sys.step();
-    }, 100);
+    document.getElementById("dot-input").oninput = update;
+    window.setInterval(update, 5);
 }
 
 //     worker = new Worker("asmjs-worker.js");

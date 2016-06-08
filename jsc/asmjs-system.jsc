@@ -132,27 +132,53 @@ function AsmJSThread(process, module, threadpage)
 
     var thread = this;
 
-    this.types_by_id["PKc"] = this.types["string"] = function (ptr) {
-        if (ptr === 0)
-            return null;
+    this.types_by_id["Kc"] = this.types["string"] = {
+        constructor: function (thread, ptr) {
+            if (ptr === 0)
+                return null;
 
-        var str = CStringAt(thread.HEAP8, ptr);
+            var str = CStringAt(thread.HEAP8, ptr);
 
-        this.thread = thread;
-        this.address = ptr;
-        this.str = str;
+            this.thread = thread;
+            this.address = ptr;
+            this.str = str;
 
-        this.toString = function () {
-            return this.str;
-        };
+            this.toString = function () {
+                return this.str;
+            };
 
-        var ret = new String(this.str);
+            var ret = new String(this.str);
 
-        ret.address = ptr;
+            ret.address = ptr;
 
-        return ret;
-    };
+            return ret;
+        },
+        construct: function (thread, ptr) {
+            if (ptr === 0)
+                return null;
+
+            return new this.constructor(thread, ptr);
+        },
+    }
 }
+
+AsmJSThread.prototype.find_type = function (typeid)
+{
+    typeid = typeid.replace(/^P/, "");
+
+    if (typeid in this.types_by_id)
+        return this.types_by_id[typeid];
+    else if (typeid.match(/^P/))
+        return new ThinThin.TypePtr(typeid, typeid);
+    else
+        switch (typeid) {
+        case "i":
+            return this.types_by_id[typeid] = new ThinThin.Type32(typeid);
+
+        default:
+            return new ThinThin.TypeOpaque(typeid);
+    }
+};
 
 #{JSV<threadpage*> tp("this.threadpage");}
 
@@ -347,6 +373,7 @@ AsmJSThread.prototype.step = function ()
     var sp = this.sp();
     var rp = 0;
     var isp = pc ? 0 : sp;
+    var count = 0;
 
     while (true) {
         var cpc = pc;
@@ -569,6 +596,30 @@ AsmJSThread.prototype.eh_return = function (fp, sp, handler)
     return fp|3;
 };
 
+AsmJSThread.prototype.to_address = function (x)
+{
+    if (x === null)
+        return 0;
+
+    if (typeof x === "number")
+        return x;
+
+    if ("address" in x)
+        return x.address;
+
+    throw "cannot convert " + x + " to address";
+};
+
+AsmJSThread.prototype.from_address = function (type, addr)
+{
+    if (addr === 0)
+        return null;
+
+    var t = this.types_by_id[type];
+
+    return new t.constructor(this, address);
+};
+
 AsmJSThread.prototype.freeze = function ()
 {
     return new FrozenAsmJSThread(this);
@@ -782,9 +833,16 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
     %{tp1[&threadpage::sp] = "sp"}
     %{tp1[&threadpage::initsp] = "sp"}
 
-    var process = new AsmJSProcess(this, heap);
-    var thread = new AsmJSThread(process, module, 8192);
-    thread.module.instantiate(thread);
+    var process;
+    var thread;
+    if (!this.threads.length) {
+        process = new AsmJSProcess(this, heap);
+        thread = new AsmJSThread(process, module, 8192);
+        thread.module.instantiate(thread);
+    } else {
+        process = this.processes[0];
+        thread = this.threads[0];
+    }
     %{tp1[&threadpage::pc] = "process.entry"}
     if (false && typeof document !== "undefined") {
         new ThinThinFD(process, 0);
@@ -797,6 +855,23 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
 
         //console.log('restarting');
 
+        let first = true;
+
+        process.fds[0].inputPromise = function () {
+            if (first) {
+                first = false;
+                return new Promise((resolve,reject) => {
+                    var content = document.getElementById("dot-input").innerHTML;
+                    console.log(content);
+                    resolve(content);
+                });
+            } else {
+                console.log("EOF");
+                return Promise.resolve("");
+            }
+        };
+
+        outstr = "";
     }
     this.runqueue.push(thread);
 };
