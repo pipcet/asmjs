@@ -144,6 +144,106 @@ decltype(auto) tuple_apply(F&& f, ATuple&& t)
   return tuple_apply(f, t, std::make_index_sequence<n>());
 }
 
+/* By "neutering", we mean replacing all pointers in a function
+ * pointer's prototype with void pointers.  That makes debugging
+ * potentially harder, but it means we save drastically on template
+ * instantiations and compile time, while also making it more likely
+ * that additional function pointer types that we only learn about at
+ * runtime have a working template instantiation, so we can use
+ * them. */
+
+template<class T>
+class Neuter1 {
+public:
+  typedef T type;
+  static constexpr T *p = nullptr;
+};
+
+template<class T>
+class Neuter1<T*> {
+public:
+  typedef void *type;
+  static constexpr void **p = nullptr;
+};
+
+template<class T>
+requires(!std::is_pointer<T>::value)
+class Neuter1<T> {
+public:
+  typedef T type;
+  static constexpr T *p = nullptr;
+};
+
+template<class ...Ts>
+class Neuter {
+};
+
+template<>
+class Neuter<> {
+public:
+  typedef std::tuple<> tuple;
+  typedef std::tuple<> orig_tuple;
+};
+
+template<class T, class ...Ts>
+class Neuter<T*,Ts...> {
+public:
+  typedef decltype(tuple_cat(std::tuple<void *>(),Neuter<Ts...>::tuple())) tuple;
+  typedef decltype(tuple_cat(std::tuple<T*>(), Neuter<Ts...>::orig_tuple())) orig_tuple;
+};
+
+template<class T, class ...Ts>
+requires(!std::is_pointer<T>::value)
+class Neuter<T,Ts...> {
+public:
+  typedef decltype(tuple_cat(std::tuple<T>(), Neuter<Ts...>::tuple())) tuple;
+  typedef decltype(tuple_cat(std::tuple<T>(), Neuter<Ts...>::orig_tuple())) orig_tuple;
+};
+
+template<class F>
+class NeuterFun {
+public:
+  F f;
+  F f_neutered;
+
+  NeuterFun(F f)
+    : f(f), f_neutered(f)
+  {
+  }
+};
+
+template<class R,class ...Ts>
+class NeuterFun<R (*)(Ts...)> {
+public:
+  R (*f)(Ts...);
+  typedef typename std::remove_reference<decltype(*Neuter1<R>::p)>::type R_neutered;
+  R_neutered (*f_neutered)(typename std::remove_reference<decltype(*Neuter1<Ts>::p)>::type...);
+
+  NeuterFun(decltype(f) f)
+    : f(f), f_neutered((decltype(f_neutered))f)
+  {
+  }
+};
+
+template<class ...Ts>
+class NeuterFun<void (*)(Ts...)> {
+public:
+  void (*f)(Ts...);
+  void (*f_neutered)(typename std::remove_reference<decltype(*Neuter1<Ts>::p)>::type...);
+
+  NeuterFun(decltype(f) f)
+    : f(f), f_neutered((decltype(f_neutered))f)
+  {
+  }
+};
+
+template<class T>
+auto
+neuter(T *f = nullptr)
+{
+  return NeuterFun<T *>(f).f_neutered;
+}
+
 template<class R, class ...Ts>
 class Lift {
 public:
@@ -215,7 +315,8 @@ __attribute__((stackcall))
 int
 __thinthin_export_field(const char *jsname, const char *fieldname,
                         const char *recordtype, const char *fieldtype,
-                        const char *getter, const char *setter);
+                        const char *getter, const char *setter,
+                        const char *get_pointer_name);
 
 extern "C"
 __attribute__((stackcall))
@@ -249,7 +350,7 @@ class AsmJSExport {
 template<class T, class F, unsigned long offset, unsigned long bytesize>
 class AsmJSExportField {
 public:
-  static F *getter(T* p)
+  static F *get_pointer(T* p)
   {
     char *p2 = (char *)p;
 
@@ -258,41 +359,38 @@ public:
     return (F *)p2;
   }
 
-  static void setter(T* p, F *v)
+  AsmJSExportField (const char *jsname, const char *fieldname,
+                    const char *recordtype, const char *fieldtype)
+  {
+    char *get_pointer_name;
+
+    asprintf(&get_pointer_name, "%s_%s__get_pointer", jsname, fieldname);
+
+    AsmJSExport<decltype(&get_pointer)> jsexport_get_pointer(get_pointer_name, get_pointer, recordtype, fieldtype, typeid(get_pointer).name());
+
+    __thinthin_export_field(jsname, fieldname,
+                            recordtype, fieldtype,
+                            "", "",
+                            get_pointer_name);
+
+    free(get_pointer_name);
+  }
+};
+
+template<class T, class F, unsigned long offset, unsigned long bytesize>
+requires(std::is_scalar<F>::value)
+class AsmJSExportField<T,F,offset,bytesize> {
+public:
+  static F *get_pointer(T* p)
   {
     char *p2 = (char *)p;
 
     p2 += offset;
 
-    memcpy(p2, v, bytesize);
+    return (F *)p2;
   }
 
-  AsmJSExportField (const char *jsname, const char *fieldname,
-                    const char *recordtype, const char *fieldtype)
-  {
-    char *getter_name;
-    char *setter_name;
-
-    asprintf(&getter_name, "%s_%s__getter", jsname, fieldname);
-    asprintf(&setter_name, "%s_%s__setter", jsname, fieldname);
-
-    AsmJSExport<decltype(&getter)> jsexport_getter(getter_name, getter, recordtype, fieldtype, typeid(getter).name());
-    AsmJSExport<decltype(&setter)> jsexport_setter(setter_name, setter, recordtype, fieldtype, typeid(setter).name());
-
-    __thinthin_export_field(jsname, fieldname,
-                            recordtype, fieldtype,
-                            getter_name, setter_name);
-
-    free(getter_name);
-    free(setter_name);
-  }
-};
-
-template<class T,class F, unsigned long offset, unsigned long bytesize>
-requires(std::is_integral<F>::value || std::is_pointer<F>::value)
-class AsmJSExportField<T,F,offset,bytesize> {
-public:
-  static F getter(T* p)
+  static F get_value(T* p)
   {
     char *p2 = (char *)p;
 
@@ -301,7 +399,7 @@ public:
     return *(F *)p2;
   }
 
-  static void setter(T* p, F v)
+  static void set_value(T* p, F v)
   {
     char *p2 = (char *)p;
 
@@ -313,21 +411,26 @@ public:
   AsmJSExportField (const char *jsname, const char *fieldname,
                     const char *recordtype, const char *fieldtype)
   {
-    char *getter_name;
-    char *setter_name;
+    char *get_value_name;
+    char *set_value_name;
+    char *get_pointer_name;
 
-    asprintf(&getter_name, "%s_%s__getter", jsname, fieldname);
-    asprintf(&setter_name, "%s_%s__setter", jsname, fieldname);
+    asprintf(&get_value_name, "%s_%s__get_value", jsname, fieldname);
+    asprintf(&set_value_name, "%s_%s__set_value", jsname, fieldname);
+    asprintf(&get_pointer_name, "%s_%s__get_pointer", jsname, fieldname);
 
-    AsmJSExport<decltype(&getter)> jsexport_getter(getter_name, getter, recordtype, fieldtype, typeid(getter).name());
-    AsmJSExport<decltype(&setter)> jsexport_setter(setter_name, setter, recordtype, fieldtype, typeid(setter).name());
+    AsmJSExport<decltype(neuter(&get_pointer))> jsexport_get_pointer(get_pointer_name, neuter(&get_pointer), recordtype, fieldtype, typeid(neuter(&get_pointer)).name());
+    AsmJSExport<decltype(neuter(&get_value))> jsexport_get_value(get_value_name, neuter(&get_value), recordtype, fieldtype + 1, typeid(neuter(&get_value)).name());
+    AsmJSExport<decltype(neuter(&set_value))> jsexport_set_value(set_value_name, neuter(&set_value), recordtype, typeid(void).name(), typeid(neuter(&set_value)).name());
 
     __thinthin_export_field(jsname, fieldname,
                             recordtype, fieldtype,
-                            getter_name, setter_name);
+                            get_value_name, set_value_name,
+                            get_pointer_name);
 
-    free(getter_name);
-    free(setter_name);
+    free(get_value_name);
+    free(set_value_name);
+    free(get_pointer_name);
   }
 };
 
@@ -341,7 +444,7 @@ public:
 
 class AsmJSExportVar {
 public:
-  AsmJSExportVar (const char *jsname, const char *type_jsname, unsigned long address)
+  AsmJSExportVar (const char *jsname, unsigned long address, const char *type_jsname)
   {
     __thinthin_export_var (jsname, type_jsname, address);
   }
