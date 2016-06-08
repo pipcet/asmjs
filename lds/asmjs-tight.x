@@ -16,7 +16,7 @@ SECTIONS
   .data :
   {
      . = ALIGN(., 16);
-     *(.data*)
+     *(.data)
      . = ALIGN(., 16);
      *(.gnu.linkonce.d.*)
      . = ALIGN(., 16);
@@ -58,6 +58,8 @@ SECTIONS
     *(.secondary.rodata)
      . = ALIGN(., 16);
     *(.secondary.bss)
+     . = ALIGN(., 16);
+    *(.data*)
      . = ALIGN(., 16);
     *(.rodata*)
     . = ALIGN(., 16);
