@@ -1,0 +1,54 @@
+<html>
+  <head>
+    <title>something 2</title>
+    <script type="application/javascript;version=1.8"
+            src="dot.js"
+            defer="defer"
+            async="async">
+    </script>
+    <script>
+      var Module = { noExitRuntime: true };
+      var args = ["dot", "-Tsvg", "-Kdot"];
+      var outstr = "";
+      var counter = 0;
+      function putstr(str) {
+          outstr += str;
+          var node = document.getElementById("svg-output");
+          //node.innerHTML = outstr;
+      }
+
+      //window.setInterval(function () {
+      //  counter *= .9;
+      //}, 1000);
+
+      window.setInterval(function () {
+          if (!Module.ccall)
+              return;
+
+          var i;
+          var start = Date.now();
+          for (i = 0; i < 100; i++)
+              Module.ccall('dograph', null, ['string'], "graph { a -- b -- c -- d -- e -- f -- g -- h -- i -- j -- k -- l -- m -- n -- o -- p -- q -- r -- s -- t -- u --v -- w -- x -- y -- z}");
+          var dur = Date.now() - start;
+          counter = dur;
+          document.getElementById("dot-counter").innerHTML = counter.toString();
+      }, 5000);
+    </script>
+  </head>
+  <body>
+    <div id="input">
+      <textarea id="dot-input">
+graph G { a -- b }
+      </textarea>
+    </div>
+    <div id="dot-counter">
+    </div>
+    <pre>
+      <div id="output"></div>
+    </pre>
+    <div id="svg-output">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    </div>
+    </svg>
+  </body>
+</html>
