@@ -9,7 +9,6 @@ my %seen;
 while (<>) {
     chomp;
     next if $seen{$_}++;
-    warn "$_\n";
     print $_;
     print "\n";
 }
