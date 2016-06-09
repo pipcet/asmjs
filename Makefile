@@ -1,4 +1,4 @@
-all: bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js build/emacs.make build/perl.make build/coreutils.make build/bash.make
+all: bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js build/emacs.make build/perl.make build/coreutils.make build/bash.make build/graphviz.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -147,7 +147,7 @@ build/emacs.make: build/emacs.configure build/ncurses.make | build/binfmt_misc.i
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/emacs
 	touch $@
 
-build/bash.configure: src/bash.dir build/bash.dir
+build/bash.configure: src/bash.dir build/bash.dir | build/gcc-final.make
 	(cd build/bash; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/bash/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --disable-net-redirections --without-bash-malloc)
 	touch $@
 
@@ -186,7 +186,7 @@ build/spidermonkey.clean: build/spidermonkey.make
 	rm -rf src/spidermonkey
 	touch $@
 
-build/coreutils.configure: src/coreutils.dir build/coreutils.dir
+build/coreutils.configure: src/coreutils.dir build/coreutils.dir | build/gcc-final.make
 	(cd src/coreutils; ./bootstrap --gnulib-srcdir=gnulib --skip-po)
 	(cd build/coreutils; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/coreutils/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --enable-static --disable-shared)
 	touch $@
@@ -196,7 +196,7 @@ build/coreutils.make: build/coreutils.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/coreutils install
 	touch $@
 
-build/graphviz.configure: src/graphviz.dir build/graphviz.dir
+build/graphviz.configure: src/graphviz.dir build/graphviz.dir | build/gcc-final.make
 	(cd build/graphviz; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/graphviz/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --enable-static --disable-shared)
 	touch $@
 
@@ -315,7 +315,7 @@ js/asmjs.js: js/asmjs-main.jsc.js js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.j
 	mv $@.new $@
 
 clean:
-	rm -rf asmjs-virtual-asmjs build cache src js
+	rm -rf asmjs-virtual-asmjs build cache src js bin/hexify
 
 tests/%.c.s: tests/%.c build/gcc-final.make
 	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -S $< -o $@
