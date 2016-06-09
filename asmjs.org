@@ -28,37 +28,11 @@ This simply replaces each byte by its hexadecimal expansion.
 ** GNU ld turns this temporary ELF object file into JavaScript
 * Repositories
 
-** https://github.com/pipcet/binutils-gdb
-https://github.com/pipcet/binutils-gdb/tree/asmjs
+** main repository
 
-*** Build instructions
-Assuming that $HOME/git/binutils-gdb is where you want your cloned git tree to end up, $HOME/build/binutils-gdb is where you want to build it, and $HOME/asmjs-virtual-asmjs is the prefix to be used for installing programs and libraries:
+The main (meta) repository is at https://github.com/pipcet/asmjs. It includes sub-repositories for binutils/GDB, GCC, glibc, and some example applications.
 
-$ cd $HOME/git
-$ git clone https://github.com/pipcet/binutils-gdb -b asmjs
-$ (cd binutils-gdb/gas; aclocal-1.11; AUTOCONF=autoconf2.64 automake-1.11))
-$ mkdir $HOME/build/binutils-gdb
-$ cd $HOME/build/binutils-gdb
-$ ~/git/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$HOME/asmjs-virtual-asmjs
-$ make
-$ make install
-
-** https://github.com/pipcet/gcc
-https://github.com/pipcet/gcc/tree/asmjs
-
-*** Build instructions
-GCC needs to be built twice (at present); once before glibc is built, then again after glibc is built.
-
-**** Pre-glibc build
-Assuming that $HOME/git/gcc is where you want your cloned git tree to end up, $HOME/build/gcc is where you want to build it, and $HOME/asmjs-virtual-asmjs is the prefix to be used for installing programs and libraries:
-
-$ cd $HOME/git
-$ git clone https://github.com/pipcet/gcc -b asmjs
-$ mkdir $HOME/build/gcc
-$ cd $HOME/build/gcc
-$ ~/git/gcc/configure --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --prefix=$HOME/asmjs-virtual-asmjs --disable-libssp
-$ make
-$ make install
+The Makefile rules in this repository require manual intervention to rebuild things after changes; this is because otherwise, a tiny change in binutils or gcc would force a complete rebuild and slow down development too much.
 
 * Design
 ** "Assembler" language
@@ -68,10 +42,10 @@ Assembler input consists of the following kinds of line:
 Labels appear on lines of their own; these lines do not begin with whitespace and end with a colon.
 
 ** Pseudo-op lines
-Lines beginning with whitespace followed by a period are treated as assembler pseudo-ops, or macro invocations (macros are thus defined to have names that begin with a period).
+Lines beginning with whitespace followed by a period are treated as assembler pseudo-ops, or macro invocations (macros are thus restricted to have names that begin with a period).
 
 ** JavaScript lines
-Lines beginning with whitespace followed by a non-period are treated as JavaScript code. They are written verbatim, to the object file as though the .ascii pseudo-op had been used.  If the last character of a JavaScript line is a dollar sign =$=, no line termination is added, not even a space character, so the line appears "pasted together" with the following line; otherwise, a newline character is added.
+Lines beginning with whitespace followed by a non-period are treated as JavaScript code. They are written verbatim, to the object file as though the .ascii pseudo-op had been used.  If the last character of a JavaScript line is a dollar sign =$=, no line termination is added, not even a space character, so the line appears "pasted together" with the following line, which might be a pseudo-op or macro invocation; otherwise, a newline character is added.
 
 *** FIXME: indentation of macros
 ** asm.js code
@@ -298,10 +272,10 @@ Dynamic linking/loading does not currently work.
 Explicitly calling a gdb stub from C code to allow GDB to inspect data on the VM stack and modify it used to work. Breakpoints do not yet work, and are expected to require special build options and incur significant performance penalties when they do. Function calls made by GDB do not yet work.
 
 **** =__builtin_return_address=
-Currently broken, but relatively easy to fix.
+The GCC builtin =builtin_return_address= is supported and should return the right values; if called with an argument of 0 as =builtin_return_address(0)=, it returns the =rpc= register's value and should be relatively fast to execute; if called with an argument greater than 0, it causes the JavaScript function to perform a special return and inspects the stack afterwards to determine the right result; this is relatively slow.
 
 **** =__builtin_frame_address=
-Currently broken, but relatively easy to fix.
+Similarly to =builtin_return_address=, =builtin_frame_address(0)= returns a saved value and should execute quickly, while calling =builtin_frame_address= with an argument greater than 0 is relatively slow.
 
 ** ELF format
 The asm.js target uses a variant of the ELF format for intermediate files, even though the files ultimately processed by the web browser or JavaScript shell are pure JavaScript.
@@ -342,7 +316,7 @@ As there is currently no 64-bit support, there are only 32-bit little-endian bin
 As mentioned above, there are hexadecimal relocations specific to the asm.js "architecture" in addition to the binary relocations common to all ELF architectures:
 
 **** HEX16
-This relocation replaces 16 ASCII hex digits in the ELF section by the right number of hex digits to represent the value of the relocation, encoded as ASCII hex digits; the digits are preceded by space characters to keep the length of the resulting string at 16 bytes.
+This relocation replaces 16 ASCII hex digits in the ELF section by the right number of hex digits to represent the value of the relocation, encoded as ASCII hex digits; the digits are followed by space characters to keep the length of the resulting string at 16 bytes.
 
 **** HEX16R4
 Like HEX16, but only 15 ASCII hex digits are replaced, and the value is right-shifted by 4 bits; in other words, the last digit is omitted.
@@ -351,7 +325,13 @@ Like HEX16, but only 15 ASCII hex digits are replaced, and the value is right-sh
 Like HEX16R4, but the right shift is 12 bits, and the last three digits are omitted.
 
 ** signals
-Signals are not yet supported, but the basic design should allow for them.
+Signals are not currently supported.
+
+* Links
+** Emscripten
+http://emscripten.org
+** asm.js standard
+http://asmjs.org
 
 * Future design
 ** asm.js calling convention
