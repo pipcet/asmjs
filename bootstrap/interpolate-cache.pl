@@ -1,205 +1,53 @@
 $VAR1 = {
-          '
-int main(void) {
-    printf("%d", POLLIN);
-
-    return 0;
-}
-' => '1',
-          '
-int main(void) {
-    printf("%s", set(tvptr,struct timeval,tv_sec,"s|0"));
-
-    return 0;
-}
-' => 'this.HEAP32[tvptr+0>>2] = s|0; this.HEAP32[tvptr+4>>2] = 0;',
-          '
-int main(void) {
-    printf("%d", SEEK_SET);
-
-    return 0;
-}
-' => '0',
-          '
-int main(void) {
-    printf("%d", FIONREAD);
-
-    return 0;
-}
-' => '21531',
-          '
-int main(void) {
-    printf("%d", S_IFREG + 0666);
-
-    return 0;
-}
-' => '33206',
-          '
-int main(void) {
-    printf("%d", offsetof(zeropage_t, top_of_memory));
-
-    return 0;
-}
-' => '0',
-          '
-int main(void) {
-    printf("%d", S_IFDIR + 0777);
-
-    return 0;
-}
-' => '16895',
-          '
-int main(void) {
-    printf("%d", EINVAL);
-
-    return 0;
-}
-' => '22',
-          '
-int main(void) {
-    printf("%d", offsetof(struct stat,st_mode));
-
-    return 0;
-}
-' => '24',
-          '
-int main(void) {
-    printf("%d", offsetof(struct stat,st_size));
-
-    return 0;
-}
-' => '48',
-          '
-int main(void) {
-    printf("%d", SEEK_CUR);
-
-    return 0;
-}
-' => '1',
-          '
-int main(void) {
-    printf("%d", offsetof(struct stat,st_blksize));
-
-    return 0;
-}
-' => '56',
-          '
-int main(void) {
-    printf("%d", SEEK_END);
-
-    return 0;
-}
-' => '2',
-          '
-int main(void) {
-    printf("%d", EBADF);
-
-    return 0;
-}
-' => '9',
-          '
-int main(void) {
-    printf("%d", offsetof(struct dirent,d_name));
-
-    return 0;
-}
-' => '19',
-          '
-int main(void) {
-    printf("%s", set(direntp,struct dirent,d_reclen,9));
-
-    return 0;
-}
-' => 'this.HEAP16[direntp+16>>1] = 9;',
-          '
-int main(void) {
-    printf("%d", AT_EMPTY_PATH);
-
-    return 0;
-}
-' => '4096',
-          '
-int main(void) {
-    printf("%d", AT_FDROOTD);
-
-    return 0;
-}
-' => '-101',
-          '
-int main(void) {
-    printf("%d", offsetof(struct stat,st_blocks));
-
-    return 0;
-}
-' => '64',
-          '
-int main(void) {
-    printf("%s", set(tvptr,struct timeval,tv_usec,"us|0"));
-
-    return 0;
-}
-' => 'this.HEAP32[tvptr+8>>2] = us|0; this.HEAP32[tvptr+12>>2] = 0;',
-          '
-int main(void) {
-    printf("%d", sizeof(struct stat));
-
-    return 0;
-}
-' => '176',
-          '
-int main(void) {
-    printf("%s", clear(direntp,struct dirent,d_off));
-
-    return 0;
-}
-' => 'this.HEAP32[direntp+8>>2] = 0; this.HEAP32[direntp+12>>2] = 0;',
-          '
-int main(void) {
-    printf("%d", offsetof(zeropage_t, top_of_sbrk));
-
-    return 0;
-}
-' => '8',
-          '
-int main(void) {
-    printf("%d", offsetof(threadpage_t, pc));
-
-    return 0;
-}
-' => '48',
-          '
-int main(void) {
-    printf("%d", offsetof(struct stat,st_nlink));
-
-    return 0;
-}
-' => '16',
-          '
-int main(void) {
-    printf("%d", offsetof(threadpage_t, stop_reason));
-
-    return 0;
-}
-' => '40',
-          '
-int main(void) {
-    printf("%d", offsetof(threadpage_t, sp));
-
-    return 0;
-}
-' => '56',
-          '
-int main(void) {
-    printf("%s", clear(direntp,struct dirent,d_ino));
-
-    return 0;
-}
-' => 'this.HEAP32[direntp+0>>2] = 0; this.HEAP32[direntp+4>>2] = 0;',
-          '
-int main(void) {
-    printf("%d", offsetof(threadpage_t, initsp));
-
-    return 0;
-}
-' => '64'
+          '*intptr = "avail"' => 'this.HEAP32[intptr>>2] = avail;',
+          '*intptr = 0' => 'this.HEAP32[intptr>>2] = 0;',
+          'AT_EMPTY_PATH' => '4096',
+          'AT_FDROOTD' => '-101',
+          'EBADF' => '9',
+          'EINVAL' => '22',
+          'ENOENT' => '2',
+          'FIONREAD' => '21531',
+          'POLLIN' => '1',
+          'SEEK_CUR' => '1',
+          'SEEK_END' => '2',
+          'SEEK_SET' => '0',
+          'S_IFDIR + 0777' => '16895',
+          '__S_IFCHR + 0666' => '8630',
+          'direntp+&dirent::d_name' => 'direntp+19',
+          'direntp[&dirent::d_ino] = "0"' => 'this.HEAP32[direntp>>2] = 0;',
+          'direntp[&dirent::d_off] = "0"' => 'this.HEAP32[direntp+8>>2] = 0;',
+          'direntp[&dirent::d_reclen] = 9' => 'this.HEAP16[direntp+16>>2] = 9;',
+          'fdsptr[i+&pollfd::events]' => 'this.HEAP16[fdsptr+i*8+4>>1]',
+          'fdsptr[i+&pollfd::fd]' => 'this.HEAP32[fdsptr+i*8>>2]',
+          'fdsptr[i+&pollfd::revents]' => 'this.HEAP16[fdsptr+i*8+6>>1]',
+          'fdsptr[i+&pollfd::revents] = 0' => 'this.HEAP16[fdsptr+i*8+6>>2] = 0;',
+          'sizeof(struct stat)' => '176',
+          'statbufptr[&stat::st_blksize] = "fd.size()"' => 'this.HEAP32[statbufptr+56>>2] = fd.size();',
+          'statbufptr[&stat::st_blocks] = "1"' => 'this.HEAP32[statbufptr+64>>2] = 1;',
+          'statbufptr[&stat::st_mode] = "fd.mode()"' => 'this.HEAP32[statbufptr+24>>2] = fd.mode();',
+          'statbufptr[&stat::st_nlink] = 1LL' => 'this.HEAP32[statbufptr+16>>2] = 1; this.HEAP32[statbufptr+16+4>>2] = 0;',
+          'statbufptr[&stat::st_size] = "fd.size()"' => 'this.HEAP32[statbufptr+48>>2] = fd.size();',
+          'tp1' => '8192',
+          'tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"' => 'HEAP32[8192+24>>2] = module.bottom_of_stack;',
+          'tp1[&threadpage::id] = "1"' => 'HEAP32[8192+16>>2] = 1;',
+          'tp1[&threadpage::initsp] = "sp"' => 'HEAP32[8192+64>>2] = sp;',
+          'tp1[&threadpage::next]' => 'HEAP32[8192>>2]',
+          'tp1[&threadpage::pc] = "process.entry"' => 'HEAP32[8192+48>>2] = process.entry;',
+          'tp1[&threadpage::prev]' => 'HEAP32[8192+8>>2]',
+          'tp1[&threadpage::sp] = "sp"' => 'HEAP32[8192+56>>2] = sp;',
+          'tp1[&threadpage::top_of_stack] = "module.top_of_stack"' => 'HEAP32[8192+32>>2] = module.top_of_stack;',
+          'tp[&threadpage::initsp]' => 'this.HEAP32[this.threadpage+64>>2]',
+          'tp[&threadpage::pc]' => 'this.HEAP32[this.threadpage+48>>2]',
+          'tp[&threadpage::sp]' => 'this.HEAP32[this.threadpage+56>>2]',
+          'tp[&threadpage::stop_reason]' => 'this.HEAP32[this.threadpage+40>>2]',
+          'tvptr[&timeval::tv_sec]' => 'this.HEAP32[tvptr>>2]',
+          'tvptr[&timeval::tv_sec] = "s"' => 'this.HEAP32[tvptr>>2] = s;',
+          'tvptr[&timeval::tv_usec]' => 'this.HEAP32[tvptr+8>>2]',
+          'tvptr[&timeval::tv_usec] = "us"' => 'this.HEAP32[tvptr+8>>2] = us;',
+          'zp[&zeropage::bottom_of_sbrk] = "module.start_of_sbrk"' => 'HEAP32[4096+24>>2] = module.start_of_sbrk;',
+          'zp[&zeropage::thread_list]' => 'HEAP32[4096+16>>2]',
+          'zp[&zeropage::top_of_memory]' => 'this.HEAP32[4096>>2]',
+          'zp[&zeropage::top_of_memory] = "module.top_of_memory"' => 'HEAP32[4096>>2] = module.top_of_memory;',
+          'zp[&zeropage::top_of_sbrk]' => 'this.HEAP32[4096+8>>2]',
+          'zp[&zeropage::top_of_sbrk] = "module.start_of_sbrk"' => 'HEAP32[4096+8>>2] = module.start_of_sbrk;'
         };
