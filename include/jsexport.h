@@ -159,12 +159,14 @@ public:
   static constexpr T *p = nullptr;
 };
 
+#ifdef NEUTER
 template<class T>
 class Neuter1<T*> {
 public:
   typedef void *type;
   static constexpr void **p = nullptr;
 };
+#endif
 
 template<class T>
 requires(!std::is_pointer<T>::value)
