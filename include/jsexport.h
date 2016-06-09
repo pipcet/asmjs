@@ -349,9 +349,11 @@ class AsmJSExport {
   }
 };
 
-template<class T, class F, unsigned long offset, unsigned long bytesize>
+template<class T, class FP, unsigned long offset, unsigned long bytesize>
 class AsmJSExportField {
 public:
+  typedef typename std::remove_pointer<FP>::type F;
+
   static F *get_pointer(T* p)
   {
     char *p2 = (char *)p;
@@ -379,10 +381,12 @@ public:
   }
 };
 
-template<class T, class F, unsigned long offset, unsigned long bytesize>
-requires(std::is_scalar<F>::value)
-class AsmJSExportField<T,F,offset,bytesize> {
+template<class T, class FP, unsigned long offset, unsigned long bytesize>
+requires(std::is_scalar<typename std::remove_pointer<FP>::type>::value)
+class AsmJSExportField<T,FP,offset,bytesize> {
 public:
+  typedef typename std::remove_pointer<FP>::type F;
+
   static F *get_pointer(T* p)
   {
     char *p2 = (char *)p;
