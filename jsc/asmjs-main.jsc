@@ -134,8 +134,7 @@ function update() {
         var i = 0;
         var res;
         var str;
-        for (i = 0; i < 1; i++)
-            res = sys.threads[0].exports.dograph(content);
+        res = sys.threads[0].exports.dograph(content);
         var dur = Date.now() - start;
 
         if (res)

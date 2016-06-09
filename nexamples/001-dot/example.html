@@ -7,8 +7,8 @@
             async="async">
     </script>
     <script>
-      var Module = { noExitRuntime: true };
-      var args = ["dot", "-Tsvg", "-Kdot"];
+      var Module = {  noExitRuntime: true };
+      Module.arguments = ["-Tsvg", "-Kdot", "-otest.svg"];
       var outstr = "";
       var counter = 0;
       function putstr(str) {
@@ -27,11 +27,13 @@
 
           var i;
           var start = Date.now();
-          for (i = 0; i < 100; i++)
-              Module.ccall('dograph', null, ['string'], "graph { a -- b -- c -- d -- e -- f -- g -- h -- i -- j -- k -- l -- m -- n -- o -- p -- q -- r -- s -- t -- u --v -- w -- x -- y -- z}");
+      FS.writeFile("test.dot", "graph G { a -- b }", { encoding: "utf8"});
+      Module.ccall('dograph', null, ['string'], ["graph { a -- b -- c -- d -- e -- f -- g -- h -- i -- j -- k -- l -- m -- n -- o -- p -- q -- r -- s -- t -- u --v -- w -- x -- y -- z}"]);
+                          //Module._main();
           var dur = Date.now() - start;
           counter = dur;
           document.getElementById("dot-counter").innerHTML = counter.toString();
+          document.getElementById("svg-output").innerHTML = FS.readFile("test2.svg", {encoding: "utf8"});
       }, 5000);
     </script>
   </head>
