@@ -175,6 +175,9 @@ AsmJSThread.prototype.find_type = function (typeid)
         case "i":
             return this.types_by_id[typeid] = new ThinThin.Type32(typeid);
 
+        case "m":
+            return this.types_by_id[typeid] = new ThinThin.TypeU32(typeid);
+
         default:
             return new ThinThin.TypeOpaque(typeid);
     }
