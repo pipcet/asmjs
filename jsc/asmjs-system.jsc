@@ -851,30 +851,34 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
         new ThinThinFD(process, 0);
         new VT100FD(process, document.getElementById("output2"), 1, 0);
         new ThinThinFD(process, 2);
-    } else {
+    } else if (typeof document !== "undefined") {
         new ThinThinFD(process, 0);
         new ThinThinFD(process, 1);
         new ThinThinFD(process, 2);
 
         //console.log('restarting');
 
-        let first = true;
+        // let first = true;
 
-        process.fds[0].inputPromise = function () {
-            if (first) {
-                first = false;
-                return new Promise((resolve,reject) => {
-                    var content = document.getElementById("dot-input").innerHTML;
-                    console.log(content);
-                    resolve(content);
-                });
-            } else {
-                console.log("EOF");
-                return Promise.resolve("");
-            }
-        };
+        // process.fds[0].inputPromise = function () {
+        //     if (first) {
+        //         first = false;
+        //         return new Promise((resolve,reject) => {
+        //             var content = document.getElementById("dot-input").innerHTML;
+        //             console.log(content);
+        //             resolve(content);
+        //         });
+        //     } else {
+        //         console.log("EOF");
+        //         return Promise.resolve("");
+        //     }
+        // };
 
-        outstr = "";
+        // outstr = "";
+    } else {
+        new ThinThinFD(process, 0);
+        new ThinThinFD(process, 1);
+        new ThinThinFD(process, 2);
     }
     this.runqueue.push(thread);
 };
