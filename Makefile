@@ -1,4 +1,4 @@
-all: cache/interpolate-cache.pl bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js build/emacs.make build/perl.make build/coreutils.make build/bash.make build/graphviz.make
+all: build/spidermonkey.make cache/interpolate-cache.pl bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make build/graphviz.make # tests/001-do-nothing.c.s.o.exe.js build/perl.make build/coreutils.make build/bash.make # build/emacs.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -159,7 +159,7 @@ build/bash.make: build/bash.configure
 build/perl.configure: src/perl.dir build/perl.dir | build/gcc-final.make
 	test -f build/perl/config.sh && mv build/perl/config.sh build/perl/config.sh.old || true
 	touch build/perl/config.sh
-	(cd build/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define)
+	(cd build/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel)
 	touch $@
 
 build/spidermonkey.configure: src/spidermonkey.dir build/spidermonkey.dir
