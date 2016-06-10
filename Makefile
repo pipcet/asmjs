@@ -1,4 +1,4 @@
-all: bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js build/emacs.make build/perl.make build/coreutils.make build/bash.make build/graphviz.make
+all: cache/interpolate-cache.pl bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make tests/001-do-nothing.c.s.o.exe.js build/emacs.make build/perl.make build/coreutils.make build/bash.make build/graphviz.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -314,8 +314,12 @@ js/asmjs.js: js/asmjs-main.jsc.js js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.j
 	cat js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.js js/asmjs-vt100.jsc.js js/asmjs-main.jsc.js >> $@.new
 	mv $@.new $@
 
+cache/interpolate-cache.pl: bootstrap/interpolate-cache.pl
+	test -d cache || mkdir cache
+	cp $< $@
+
 clean:
-	rm -rf asmjs-virtual-asmjs build cache src js bin/hexify
+	rm -rf asmjs-virtual-asmjs build src js bin/hexify # cache
 
 tests/%.c.s: tests/%.c build/gcc-final.make
 	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -S $< -o $@
