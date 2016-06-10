@@ -8,24 +8,37 @@ It was originally based on Emscripten, but no Emscripten code remains at this po
 * Pipeline
 The stages of building a JavaScript program are as follows:
 
-** GCC translates C/C++ code to "assembler" code
+** GCC invocation
+
+The GCC cross-compiler, =asmjs-virtual-asmjs-gcc= is invoked to produce ELF objects and ultimately to link those into an ELF executable.
+
+*** GCC translates C/C++ code to "assembler" code
 This uses the standard GCC frontend, including full optimization, and a custom GCC backend that simply translates GCC's internal RTL expressions into asm.js code.
 
-** GNU as translates "assembler" code into an ELF object file
+*** GNU as translates "assembler" code into an ELF object file
 While, ultimately, JavaScript code is produced in a form that can be loaded by a web browser, we use the ELF format for intermediate files containing JavaScript code, binary data, and debugging information in the DWARF format.
 
-** GNU ld links the ELF object files into an ELF executable
+*** GNU ld links the ELF object files into an ELF executable
 During this stage, special "hexadecimal" relocations are used to patch hexadecimal addresses into the JavaScript source code stored in the ELF files.
 
-** GNU objcopy extracts the raw data file
+** bin/prepare invocation
+
+Afterwards, =prepare= is run on the ELF executable to produce a JavaScript file.
+
+*** GNU objcopy extracts the raw data file
 As JavaScript has no easy way of including binary data in a JavaScript source code file, all data is encoded in hexadecimal format for inclusion in the JavaScript code.
 
-** "hexify" turns the data file into a hex-encoded JavaScript array
+*** "hexify" turns the data file into a hex-encoded JavaScript array
 This simply replaces each byte by its hexadecimal expansion.
 
-** GNU objcopy adds this array to the ELF executable as a new section
-** GNU ld creates a temporary ELF object with JavaScript support code and the ELF executable
-** GNU ld turns this temporary ELF object file into JavaScript
+*** GNU objcopy adds this array to the ELF executable as a new section
+*** GNU ld creates a temporary ELF object with JavaScript support code and the ELF executable
+*** GNU ld turns this temporary ELF object file into JavaScript
+
+** bin/jsexport invocation
+
+WIP. The =jsexport= program is run on the ELF executable to add code and data for exporting C (C++-representable, actually) code and data to JavaScript code behind nice wrappers.
+
 * Repositories
 
 ** main repository
@@ -38,14 +51,14 @@ The Makefile rules in this repository require manual intervention to rebuild thi
 ** "Assembler" language
 Assembler input consists of the following kinds of line:
 
-** Labels
+*** Labels
 Labels appear on lines of their own; these lines do not begin with whitespace and end with a colon.
 
-** Pseudo-op lines
+*** Pseudo-op lines
 Lines beginning with whitespace followed by a period are treated as assembler pseudo-ops, or macro invocations (macros are thus restricted to have names that begin with a period).
 
-** JavaScript lines
-Lines beginning with whitespace followed by a non-period are treated as JavaScript code. They are written verbatim, to the object file as though the .ascii pseudo-op had been used.  If the last character of a JavaScript line is a dollar sign =$=, no line termination is added, not even a space character, so the line appears "pasted together" with the following line, which might be a pseudo-op or macro invocation; otherwise, a newline character is added.
+*** JavaScript lines
+Lines beginning with whitespace followed by a non-period are treated as JavaScript code. They are written verbatim to the object file as though the .ascii pseudo-op had been used.  If the last character of a JavaScript line is a dollar sign =$=, no line terminator is added, not even a space character, so the line appears "pasted together" with the following line, which might be a pseudo-op or macro invocation; otherwise, a newline character is added.
 
 *** FIXME: indentation of macros
 ** asm.js code
@@ -112,6 +125,42 @@ mainloop:
 }
 #+end_src
 
+This format actually changed to
+
+#+begin_src javascript
+function f_0xXXX(dpc, sp1, r0, r1, rpc, pc0)
+{
+mainloop:
+    while (1) {
+        switch (dpc|0) {
+            case 0:
+                <function prologue>
+            case 1:
+                <first basic block>
+            default:
+                if (pc|0) abort();
+                <restore registers>
+            }
+        }
+    }
+}
+#+end_src javascript
+
+**** parameters
+All six arguments are 32-bit integers.
+
+***** PC = pc0 + dpc
+The program counter is the sum of the =pc0= parameter, representing the first address in a function, and the =dpc= parameter, a delta value. This is so that code is nominally position-independent, which might be useful for simulating dynamic loading/linking, and so the switch statement can look up dpc in a table directly rather than having to subtract a value first.
+
+***** SP = sp1 - 16
+The stack pointer is at a fixed offset from the =sp1= parameter, which is the stack pointer of the surrounding function prior to the call (and, thus, the canonical frame address)
+
+***** integer arguments
+The first two integer arguments to be passed to the function are stored in the =r0= and =r1= parameters.
+
+***** Return PC
+The PC to which execution will return is passed in the =rpc= parameter. There's a good case to be made that we shouldn't do this and save a parameter instead, but that requires changes to GCC; in any case, it makes debugging easier to have a fast way of accessing the return PC.
+
 All six arguments are 32-bit integers. There are two ways of calling an asm.js function:
 
 **** ordinary calls
@@ -147,10 +196,18 @@ The JavaScript code to call another asm.js function is basically:
         break mainloop;
 #+end_src
 
+changed to:
+
+#+begin_src javascript
+    rp = f_0xYYYY(0, sp, r0, r1, 0xXXXX, 0xYYYY);
+    if (rp & 3)
+        break mainloop;
+#+end_src
+
 Thus, for ordinary calls resulting in an ordinary return, only the lower-most two bits of the asm.js function's return value are ever checked. For special returns, the return value is kept in the =rp= variable and handled by the code outside the main loop.
 
 **** basic blocks and labels
-The basic blocks that make up the main code for a function are generated by GCC; basic blocks are separated by labels, which represent potential points where control enters another basic block. The basic form of a basic block is thus:
+The basic blocks that make up the main code for a function are generated by GCC; basic blocks are separated by labels, which represent points where control potentially enters another basic block. The basic form of a basic block is thus:
 
 #+begin_src javascript
     case 0xYYY:
@@ -166,13 +223,20 @@ Control continues to another basic block either by a fall-through to the next ba
     continue mainloop;
 #+end_src
 
+changed to:
+
+#+begin_src javascript
+    dpc = 0xYYY;
+    continue mainloop;
+#+end_src
+
 Recall that the main loop is an infinite loop wrapped around a switch statement, so control will eventually (after an indirect jump, which we're trying to eliminate) continue at the corresponding label in the switch statement.
 
 A conditional branch corresponds to the JavaScript code:
 
 #+begin_src javascript
     if (<condition>) {
-        pc = 0xYYY;
+        dpc = 0xYYY;
         continue mainloop;
     }
 #+end_src
@@ -238,7 +302,7 @@ The price to pay for this is two-fold: in terms of performance, it requires all 
 In addition to allowing asynchronous operations, this stack design gives us the opportunity to inspect the VM stack of a running program (perhaps by first instructing the program to store its state on the VM stack rather than the JavaScript stack). This means a program can inspect its own VM stack, which is useful for printing backtraces, unwinding exception frames, and implementing the =__builtin_return_address= and =__builtin_frame_address= GCC macros, but it also means that we can use GDB on our asm.js code to interpret the contents of the VM stack.
 
 ***** stack layout
-The stack grows downwards. 8-byte alignment is maintained. When a function is called, the initial =sp= value points to a 16-byte area of reserved VM stack space; when the JavaScript stack is saved to the VM stack, the =fp= of the previous function will be stored at offset 4 in this reserved VM stack area.
+The stack grows downwards. 8-byte alignment is maintained. When a function is called, the initial =sp1= value points to (just above) a 16-byte area of reserved VM stack space; when the JavaScript stack is saved to the VM stack, the =fp= of the previous function will be stored at offset 4 in this reserved VM stack area.
 
 ***** frame layout: register save area
 There is a register save area in the stack frame to store local registers in case of a special return. Since it is unused for ordinary returns, GCC does not usually know about it.
@@ -287,7 +351,7 @@ The asm.js target currently requires a little-endian JavaScript VM, and the ELF 
 The machine identifier used for the ELF files is 0x534a ("JS" in little-endian notation).
 
 *** 32-bit
-Currently, asm.js allows only for 32-bit integers, and the asm.js target uses the 32-bit ELF format.
+Currently, asm.js allows only for 32-bit addresses, and the asm.js target uses the 32-bit ELF format.
 
 *** entry point
 The entry point of the program is not specified by the relevant field of the ELF header but by the global symbol =__entry=.  This is because =ld -Obinary= provides no way of extracting the entry point address.
