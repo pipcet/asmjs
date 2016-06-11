@@ -1,0 +1,2 @@
+        .data
+        .asciz "A string"

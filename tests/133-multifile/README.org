@@ -1,0 +1,1 @@
+This illustrates how to build a linked list using linker scripts and objcopy. The idea is that this way we'll be able to link a non-relocatable executable plus a relocatable object file into a new non-relocatable executable
