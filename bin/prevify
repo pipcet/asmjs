@@ -1,0 +1,2 @@
+#!/bin/bash
+asmjs-virtual-asmjs-objcopy --prefix-sections .prev -N __data_start -N __data_end -N __multifile_init_array_start -N __multifile_init_array_end -N __multifile_preinit_array_start -N __multifile_preinit_array_end -N __multifile_fini_array_start -N __multifile_fini_array_end -N __terminator $1 $2

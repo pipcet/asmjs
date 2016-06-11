@@ -1,4 +1,5 @@
 #!/bin/bash
+# XXX broken
 TMP1=$(mktemp);
 TMP2=$(mktemp);
 TMP3=$(mktemp);
