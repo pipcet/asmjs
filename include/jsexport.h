@@ -457,11 +457,11 @@ public:
 };
 
 /* Register a function or method. JSNAME is the JavaScript identifier
-   to be used; SUFFIX is a unique symbol suffix for this function;
-   FUNCTION is a function pointer; CLASSTYPE is the typeid string for
-   either void or a pointer to the class of which this function is a
-   method; RETTYPE is the typeid string for the function's return
-   type; TYPE is the typeid string for the entire function pointer. */
+   to be used; FUNCTION is a function pointer; CLASSTYPE is the typeid
+   string for either void or a pointer to the class of which this
+   function is a method; RETTYPE is the typeid string for the
+   function's return type; TYPE is the typeid string for the entire
+   function pointer. */
 
 #define PASTE2(a,b) a ## b
 #define PASTE(a,b) PASTE2(a, b)

@@ -1,0 +1,16 @@
+#!/bin/bash
+TMP1=$(mktemp);
+TMP2=$(mktemp);
+TMP3=$(mktemp);
+TMP4=$(mktemp);
+TMP5=$(mktemp);
+TMP6=$(mktemp);
+TMP7=$(mktemp);
+TMP8=$(mktemp);
+TMPD=$(mktemp -d);
+if [ x"$ASMJSDIR" = x ]; then
+    ASMJSDIR=$HOME/git/asmjs
+fi
+$ASMJSDIR/bin/prevify "$1" $TMP6
+asmjs-virtual-asmjs-ld -T $ASMJSDIR/lds/asmjs-multifile.x $TMP6 "$2" $ASMJSDIR/asmjs-virtual-asmjs/asmjs-virtual-asmjs/lib/libstdc++.a $ASMJSDIR/asmjs-virtual-asmjs/asmjs-virtual-asmjs/lib/libc.a $ASMJSDIR/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a -o $TMP4 || exit 1
+mv $TMP4 "$1"

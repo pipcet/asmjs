@@ -1175,7 +1175,7 @@ if (typeof(os) !== "undefined" &&
             fd = this.fds[ThinThin.openat.call(this, dirfdno, pathptr, 0)];
 
         if (!fd)
-            return %{EBADF};
+            return -%{EBADF};
 
         var argv = CStringsAt(argvptr);
         var envp = CStringsAt(envpptr);
@@ -1185,7 +1185,10 @@ if (typeof(os) !== "undefined" &&
 
 ThinThin.queue_peek = function ()
 {
-    //console.log('queue_peek length ' + this.queue.length);
+    if (typeof window === "undefined")
+        return -%{ENOENT};
+
+    console.log('queue_peek length ' + this.queue.length);
 
     // if (this.queue.length == 0)
     //     return new Promise((resolve,reject) => {

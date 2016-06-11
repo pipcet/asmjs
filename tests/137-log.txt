@@ -1,0 +1,51 @@
+$ asmjs-virtual-asmjs-gcc 131-jsexport.c
+$ asmjs-virtual-asmjs-gcc -c 136-multifile.c 
+$ asmjs-virtual-asmjs-gcc -c 137-jsexport-loop.cc
+$ (cd ../unsorted-experimentation/; ../bin/jsexport ../tests/a.out )
+$ ../bin/multifile-add1 a.out 136-multifile.o 
+$ ../bin/multifile-add1 a.out 137-jsexport-loop.o 
+$ ./a.out 
+header at 0x4000:
+ data start at 0000000000004040
+ terminator at 0000000000023780
+ start of P at 0000000000000000
+ end   of P at 0000000000000000
+ start of I at 0000000000000000
+ end   of I at 0000000000000000
+ start of F at 0000000000000000
+ end   of F at 0000000000000000
+header at 0x23780:
+ data start at 00000000000237c0
+ terminator at 0000000000025c60
+ start of P at 0000000000025c60
+ end   of P at 0000000000025c60
+ start of I at 0000000000025c40
+ end   of I at 0000000000025c48
+  initialization at 0x4037b000
+  initialization at 0x403b2000
+ start of F at 0000000000025c50
+ end   of F at 0000000000025c50
+header at 0x25c60:
+ data start at 0000000000025ca0
+ terminator at 0000000000025e40
+ start of P at 0000000000025e40
+ end   of P at 0000000000025e40
+ start of I at 0000000000025e30
+ end   of I at 0000000000025e34
+  initialization at 0x403fc000
+ start of F at 0000000000025e40
+ end   of F at 0000000000025e40
+header at 0x25e40:
+ data start at 0000000000025e80
+ terminator at 0000000000025fa0
+ start of P at 0000000000025fa0
+ end   of P at 0000000000025fa0
+ start of I at 0000000000025f90
+ end   of I at 0000000000025f94
+  initialization at 0x40402000
+ start of F at 0000000000025fa0
+ end   of F at 0000000000025fa0
+main
+looping...
+unexporting.
+unexporting.

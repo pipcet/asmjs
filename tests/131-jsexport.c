@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #if 0
 struct __attribute__((jsexport)) {
   int x;
@@ -28,5 +30,6 @@ __attribute__((jsexport)) s2 s5;
 
 int main(void)
 {
+  printf("main\n");
   return 0;
 }
