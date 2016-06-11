@@ -45,6 +45,12 @@ SECTIONS
   .javascript.special.define : { *(.prev.javascript.special.define*) }
   .javascript.special.fpswitch : { *(.prev.javascript.special.fpswitch*) }
 
+  .jsexport 0 :
+  {
+    *(.prev.jsexport)
+    *(.jsexport)
+  }
+
   /* DWARF debug sections.
      Symbols in the DWARF debugging sections are relative to the beginning
      of the section so we begin them at 0.  */
@@ -124,6 +130,7 @@ SECTIONS
      . = ALIGN(., 16);
      *(.gnu.linkonce.d.*)
      . = ALIGN(., 16);
+     *(.rodata*)
      . = ALIGN(., 16);
      *(.jcr*)
      . = ALIGN(., 16);
@@ -156,11 +163,10 @@ SECTIONS
     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
     KEEP (*(.fini_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .dtors))
     __multifile_fini_array_end = .;
-  }
-  .bss :
-  {
+    . = ALIGN(., 16);
      *(COMMON)
      *(.tbss*)
+    . = ALIGN(., 16);
   }
   .preinit_array     :
   {
