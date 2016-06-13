@@ -42,7 +42,11 @@ public:
 
       __thinthin_queue_pop(&apply, &fun, stack+1);
 
-      printf("applying...\n");
+#if 0
+      printf("applying... %f %f %f %f %f %f\n",
+             stack[0], stack[1], stack[2],
+             stack[3], stack[4], stack[5]);
+#endif
       apply(0, 0, fun, stack);
 
       __thinthin_queue_return(stack);
