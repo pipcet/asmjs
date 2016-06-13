@@ -294,7 +294,7 @@ Lift<R, Ts...> lift(R f(Ts...))
   return Lift<R, Ts...>(f);
 }
 
-asm(".include \"import-macros.s\"");
+asm(".include \"asmjs-import-macros.s\"");
 asm(".import3 thinthin,export,__thinthin_export");
 asm(".import3 thinthin,export_type,__thinthin_export_type");
 asm(".import3 thinthin,export_field,__thinthin_export_field");

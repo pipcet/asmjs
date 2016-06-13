@@ -336,4 +336,15 @@ tests/%.o.exe: tests/%.o build/gcc-final.make
 tests/%.exe.js: tests/%.exe build/gcc-final.make
 	./bin/prepare $< > $@
 
+intermediate/dot: asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/dot_static lib/mfinfo.o lib/loop.o | build/graphviz.make
+	./bin/jsexport $< intermediate/dot-export
+	./bin/multifile-add1 intermediate/dot-export lib/mfinfo.o intermediate/dot-export-mfinfo
+	./bin/multifile-add1 intermediate/dot-export-mfinfo lib/loop.o $@
+
+lib/%.o: lib/%.c
+	asmjs-virtual-asmjs-gcc -c -o $@ $<
+
+lib/%.o: lib/%.cc
+	asmjs-virtual-asmjs-g++ -c -o $@ $<
+
 .PHONY: FORCE clean fetch
