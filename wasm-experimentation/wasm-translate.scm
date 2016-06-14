@@ -35,7 +35,7 @@
    ((not (list? e))
     (list 'get_local e))
    ((eq? (car e) 'return)
-    (list 'return))
+    (cons 'return (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
    ((eq? (car e) 'jump)
     (list 'br (car f-labels)))
    ((eq? (car e) 'throw)
@@ -72,15 +72,15 @@
          (gen-block-labels (1+ (length f)) "$block$" uniq)))
     (list 'loop while-out-label while-in-label
           (list 'block switch-default-label
-                (emblocken (reverse (cons '((return)) f))
+                (emblocken (reverse (cons '((return (i32.const 0))) f))
                            block-labels
                            (cons 'br_table
                                  (append (reverse block-labels) (list switch-default-label
                                                                       (list 'get_local '$dpc))))
                            (list while-in-label while-out-label)))
-
-          (list 'br while-out-label)
-          )))
+          )
+    (list 'return '(i32.const 0))
+          ))
 
 (define (write-module f)
   (let* ((ucnt 0)
@@ -147,9 +147,12 @@
 
 (define (make-module fdef)
   (list 'module
+        (list 'memory 32 32)
         (list 'import '$cp "console" "print" '(param i32))
+        `(func $peek (param $addr i32) (i32.load (get_local $addr)))
         fdef
-        (list 'memory 32 32)))
+        (list 'export "memory" 'memory)
+        ))
 
 (write (let* ((ucnt 0)
               (uniq (lambda ()
@@ -158,7 +161,7 @@
          (car (map make-module (map (lambda (fdef)
                 (let* ((str (string-delete (car fdef) #\ 0))
                        (sym (string->symbol (string-append "$" str))))
-                  (list 'func str sym '(param $dpc i32) '(param $sp1 i32) '(param $r0 i32) '(param $r1 i32) '(param $rpc i32) '(param $pc0 i32) '(local $sp i32) '(local $fp i32) '(local $rv i32) (xlat-function (split-blocks (cdr fdef)) uniq))))
+                  (list 'func str sym '(param $dpc i32) '(param $sp1 i32) '(param $r0 i32) '(param $r1 i32) '(param $rpc i32) '(param $pc0 i32) '(result i32) '(local $sp i32) '(local $fp i32) '(local $r2 i32) '(local $r3 i32) '(local $r4 i32) '(local $r5 i32) '(local $r6 i32) '(local $r7 i32) '(local $i0 i32) '(local $i1 i32) '(local $i2 i32) '(local $i3 i32) '(local $i4 i32) '(local $i5 i32) '(local $i6 i32) '(local $i7 i32) '(local $f0 f64) '(local $f1 f64) '(local $f2 f64) '(local $f3 f64) '(local $f4 f64) '(local $f5 f64) '(local $f6 f64) '(local $f7 f64) (xlat-function (split-blocks (cdr fdef)) uniq))))
               (eval (read) (interaction-environment)))))))
 
 ;; (define (split-blocks f)
