@@ -78,8 +78,8 @@
                                  (append (reverse block-labels) (list switch-default-label
                                                                       (list 'get_local '$dpc))))
                            (list while-in-label while-out-label)))
-          )
-    (list 'return '(i32.const 0))
+          
+          (list 'return '(i32.const 0)))
           ))
 
 (define (write-module f)
