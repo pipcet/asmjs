@@ -16,6 +16,8 @@
 
 (define (xlat-set lhs rhs f-labels)
   (cond
+   ((eq? lhs '$rv)
+    (list 'i32.store '(i32.const 4096) (xlat-expr rhs f-labels)))
    ((not (list? lhs))
     (list 'set_local lhs (xlat-expr rhs f-labels)))
    ((eq? (car lhs) 'mem)
@@ -28,6 +30,8 @@
   (cond
    ((number? e)
     (list 'i32.const e))
+   ((eq? e '$rv)
+    (xlat-expr (list 'mem '(i32.const 4096))))
    ((not (list? e))
     (list 'get_local e))
    ((eq? (car e) 'return)
