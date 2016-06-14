@@ -1,0 +1,11 @@
+((
+        "main"
+        (if (i32.eq (get_local $r0) (i32.const 0))
+        (return)
+        (nop))
+        (label)
+        (call_import $cp (get_local $r0))
+        (set $r0 (i32.add (get_local $r0) (i32.const -1)))
+        (jump)
+))
+        

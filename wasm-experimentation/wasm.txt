@@ -1,0 +1,6 @@
+fetch("file:///home/pip/wasm.wasm").then(p => p.arrayBuffer()).then(b => b).then(ab => w = Wasm.instantiateModule(new Uint8Array(q = ab), { console: { print: x => console.log(x) }}));
+
+$ asmjs-virtual-asmjs-gcc -nostdlib ./example.s
+$ asmjs-virtual-asmjs-ld -T wasm-pwasify.lds a.out -o example.s.pwas
+$ guile-2.0 ./wasm-translate.scm < example.s.pwas > example.s.wast
+$ ~/git/binaryen/bin/wasm-as example.s.wast -o example.s.wasm
