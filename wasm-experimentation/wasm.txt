@@ -4,3 +4,23 @@ $ asmjs-virtual-asmjs-gcc -nostdlib ./example.s
 $ asmjs-virtual-asmjs-ld -T wasm-pwasify.lds a.out -o example.s.pwas
 $ guile-2.0 ./wasm-translate.scm < example.s.pwas > example.s.wast
 $ ~/git/binaryen/bin/wasm-as example.s.wast -o example.s.wasm
+
+$ PATH=~/git/asmjs/build/gcc-preliminary-wasm/gcc/:$PATH ../build/gcc-preliminary-wasm/gcc/xgcc -nostdlib -S hello-world.c 
+
+$ PATH=~/git/asmjs/build/gcc-preliminary-wasm/gcc/:$PATH ./build/gcc-preliminary-wasm/gcc/xgcc -nostdlib -O3 -S wasm-experimentation/hello-world.c 
+$ asmjs-virtual-asmjs-gcc -c ./hello-world.s 
+$ asmjs-virtual-asmjs-ld -T ./wasm-experimentation/wasm-pwasify.lds ./hello-world.o
+$ guile-2.0 ./wasm-experimentation/wasm-translate.scm < out.pwas > out.wast
+
+PATH=~/git/asmjs/build/gcc-preliminary-wasm/gcc/:$PATH ./build/gcc-preliminary-wasm/gcc/xgcc -nostdlib -O3 -S wasm-experimentation/hello-world.c 
+$ asmjs-virtual-asmjs-gcc -nostdlib ./hello-world.s 
+/home/pip/git/asmjs/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/bin/ld: warning: cannot find entry symbol _start; defaulting to 0000000040010000
+$ asmjs-virtual-asmjs-ld -T ./wasm-experimentation/wasm-pwasify.lds ./a.out -o out.pwas
+$ guile-2.0 ./wasm-experimentation/wasm-translate.scm < out.pwas > out.wast
+
+Some deprecated features have been used.  Set the environment
+variable GUILE_WARN_DEPRECATED to "detailed" and rerun the
+program to get more information.  Set it to "no" to suppress
+this message.
+$ ~/git/binaryen/bin/wasm-as out.wast -o out.wasm
+$ cp out.wasm  ~/wasm.wasm 

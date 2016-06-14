@@ -20,6 +20,10 @@ build/gcc-preliminary.dir: build/.dir
 	test -d build/gcc-preliminary || $(MKDIR) build/gcc-preliminary
 	touch $@
 
+build/gcc-preliminary-wasm.dir: build/.dir
+	test -d build/gcc-preliminary-wasm || $(MKDIR) build/gcc-preliminary-wasm
+	touch $@
+
 build/glibc.dir: build/.dir
 	test -d build/glibc || $(MKDIR) build/glibc
 	touch $@
@@ -93,6 +97,22 @@ build/gcc-preliminary.clean: FORCE
 	rm -f src/gcc-preliminary.dir
 	rm -f build/gcc-preliminary.configure
 	rm -f build/gcc-preliminary.make
+
+build/gcc-preliminary-wasm.configure: src/gcc-preliminary.dir build/gcc-preliminary-wasm.dir | build/binutils-gdb.make
+	(cd build/gcc-preliminary-wasm; ../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm-virtual-wasm --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm-virtual-wasm)
+	touch $@
+
+build/gcc-preliminary-wasm.make: build/gcc-preliminary-wasm.dir build/gcc-preliminary-wasm.configure
+	$(MAKE) -C build/gcc-preliminary-wasm
+	$(MAKE) -C build/gcc-preliminary-wasm install
+	touch $@
+
+build/gcc-preliminary-wasm.clean: FORCE
+	rm -rf build/gcc-preliminary-wasm src/gcc-preliminary
+	rm -f build/gcc-preliminary-wasm.dir
+	rm -f src/gcc-preliminary.dir
+	rm -f build/gcc-preliminary-wasm.configure
+	rm -f build/gcc-preliminary-wasm.make
 
 build/glibc.configure: src/glibc.dir build/glibc.dir | build/gcc-preliminary.make
 	(cd build/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)

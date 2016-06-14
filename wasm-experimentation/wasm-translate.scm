@@ -26,8 +26,10 @@
 
 (define (xlat-expr e f-labels)
   (cond
+   ((number? e)
+    (list 'i32.const e))
    ((not (list? e))
-    (list 'get-local e))
+    (list 'get_local e))
    ((eq? (car e) 'return)
     (list 'return))
    ((eq? (car e) 'jump)
@@ -38,6 +40,12 @@
     (list 'nop))
    ((eq? (car e) 'set)
     (xlat-set (cadr e) (caddr e) f-labels))
+   ((eq? (car e) 'if)
+    (cons 'if (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
+   ((eq? (car e) 'then)
+    (cons 'then (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
+   ((eq? (car e) 'else)
+    (cons 'else (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
    ((eq? (car e) 'mem)
     (list 'i32.load (xlat-expr (cadr e) f-labels)))
    (#t
@@ -95,7 +103,8 @@
 (define (scan-for-jump x)
   (if (and (list? x) (not (null? x)))
       (or (scan-for-jump (car x)) (scan-for-jump (cdr x)))
-      (or (eq? x 'jump) (eq? x 'throw) (eq? x 'label))))
+      (or ;;(eq? x 'jump) (eq? x 'throw)
+       (eq? x 'label))))
 
 (define (split-blocks-r f)
   (if (null? f) (list '() '())
@@ -135,7 +144,8 @@
 (define (make-module fdef)
   (list 'module
         (list 'import '$cp "console" "print" '(param i32))
-        fdef))
+        fdef
+        (list 'memory 32 32)))
 
 (write (let* ((ucnt 0)
               (uniq (lambda ()
@@ -144,7 +154,7 @@
          (car (map make-module (map (lambda (fdef)
                 (let* ((str (string-delete (car fdef) #\ 0))
                        (sym (string->symbol (string-append "$" str))))
-                  (list 'func str sym '(param $dpc i32) '(param $sp i32) '(param $r0 i32) '(param $r1 i32) '(param $pc0 i32) '(param $rpc i32) (xlat-function (split-blocks (cdr fdef)) uniq))))
+                  (list 'func str sym '(param $dpc i32) '(param $sp1 i32) '(param $r0 i32) '(param $r1 i32) '(param $rpc i32) '(param $pc0 i32) '(local $sp i32) '(local $fp i32) '(local $rv i32) (xlat-function (split-blocks (cdr fdef)) uniq))))
               (eval (read) (interaction-environment)))))))
 
 ;; (define (split-blocks f)
