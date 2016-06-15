@@ -14,29 +14,52 @@
              (string-append prefix (uniq)))
             (gen-block-labels (1- n) prefix uniq))))
 
+(define (thread-reg-addr reg)
+  (cond
+   ((eq? reg '$rv) 4096)
+   ((eq? reg '$a0) 4104)
+   ((eq? reg '$a1) 4112)
+   ((eq? reg '$a2) 4120)
+   ((eq? reg '$a3) 4128)
+   ((eq? reg '$tp) 4136)))
+
 (define (xlat-set lhs rhs f-labels)
   (cond
-   ((eq? lhs '$rv)
-    (list 'i32.store '(i32.const 4096) (xlat-expr rhs f-labels)))
+   ((memq lhs '($rv $a0 $a1 $a2 $a3 $tp))
+    (list 'i32.store `(i32.const ,(thread-reg-addr lhs)) (xlat-expr rhs f-labels)))
    ((not (list? lhs))
     (list 'set_local lhs (xlat-expr rhs f-labels)))
-   ((eq? (car lhs) 'mem)
+   ((memq (car lhs) '(i8.mem i8.mem_u))
+    (list 'i8.store (xlat-expr (cadr lhs) f-labels)
+          (xlat-expr rhs f-labels)))
+   ((memq (car lhs) '(i16.mem i16.mem_u))
+    (list 'i16.store (xlat-expr (cadr lhs) f-labels)
+          (xlat-expr rhs f-labels)))
+   ((memq (car lhs) '(i32.mem i32.mem_u))
     (list 'i32.store (xlat-expr (cadr lhs) f-labels)
+          (xlat-expr rhs f-labels)))
+   ((memq (car lhs) '(i64.mem i64.mem_u))
+    (list 'i64.store (xlat-expr (cadr lhs) f-labels)
           (xlat-expr rhs f-labels)))
    (#t
     (error))))
+
+(define (i32.neg e)
+  `(i32.sub (i32.const 0) ,e))
+
+(define (i32.not e)
+  `(i32.xor (i32.const -1) ,e))
 
 (define (xlat-expr e f-labels)
   (cond
    ((number? e)
     (list 'i32.const e))
    ((eq? e '$rv)
-    (xlat-expr (list 'mem '(i32.const 4096)) f-labels))
+    (xlat-expr (list 'i32.mem '(i32.const 4096)) f-labels))
    ((not (list? e))
     (list 'get_local e))
    ((and (eq? (car e) 'br) (eq? (cadr e) '$mainloop))
-;;    `(br ,(cadr f-labels))) XXX
-    `(br ,(car f-labels)))
+    `(br ,(cadr f-labels)))
    ((eq? (car e) 'return)
     (cons 'return (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
    ((eq? (car e) 'jump)
@@ -47,21 +70,37 @@
     (list 'nop))
    ((eq? (car e) 'set)
     (xlat-set (cadr e) (caddr e) f-labels))
+   ((memq (car e) '(i32.add i32.sub i32.mul_u i32.mul_s i32.div_u i32.div_s))
+    (cons (car e) (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
    ((eq? (car e) 'if)
     (cons 'if (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
    ((eq? (car e) 'then)
     (cons 'then (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
    ((eq? (car e) 'else)
     (cons 'else (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
-   ((eq? (car e) 'mem)
+   ((eq? (car e) 'i8.mem)
+    (list 'i32.load8 (xlat-expr (cadr e) f-labels)))
+   ((eq? (car e) 'i16.mem)
+    (list 'i32.load16 (xlat-expr (cadr e) f-labels)))
+   ((eq? (car e) 'i32.mem)
     (list 'i32.load (xlat-expr (cadr e) f-labels)))
+   ((eq? (car e) 'i8.mem_u)
+    (list 'i32.load8_u (xlat-expr (cadr e) f-labels)))
+   ((eq? (car e) 'i16.mem_u)
+    (list 'i32.load16_u (xlat-expr (cadr e) f-labels)))
+   ((eq? (car e) 'i32.mem_u)
+    (list 'i32.load (xlat-expr (cadr e) f-labels)))
+   ((eq? (car e) 'i32.not)
+    `(i32.xor ,e (i32.const -1)))
+   ((eq? (car e) 'i32.neg)
+    `(i32.sub (i32.const 0) ,e))
    (#t
     e)))
 
 (define (xlat-block b f-labels )
   (map (lambda (e) (xlat-expr e f-labels)) b))
 
-(define (xlat-function f uniq)
+(define (xlat-function f uniq restore)
   (let ((while-out-label
          (string->symbol
           (string-append "$while-out$" (uniq))))
@@ -73,6 +112,7 @@
           (string-append "$switch-default$" (uniq))))
         (block-labels
          (gen-block-labels (1+ (length f)) "$block$" uniq)))
+    (list 'block
     (list 'loop while-out-label while-in-label
           (list 'block switch-default-label
                 (emblocken (reverse (cons '((return (i32.const 0))) f))
@@ -82,7 +122,7 @@
                                                                       (list 'get_local '$dpc))))
                            (list while-in-label while-out-label)))
           (list 'return '(i32.const 0)))
-          ))
+    restore)))
 
 (define (emblocken rev-f labels s f-labels)
   (if (null? labels)
@@ -162,7 +202,7 @@
          (make-module (map (lambda (fdef)
                             (let* ((str (string-delete (car fdef) #\ 0))
                                    (sym (string->symbol (string-append "$" str))))
-                              (list 'func str sym '(param $dpc i32) '(param $sp1 i32) '(param $r0 i32) '(param $r1 i32) '(param $rpc i32) '(param $pc0 i32) '(result i32) '(local $sp i32) '(local $fp i32) '(local $r2 i32) '(local $r3 i32) '(local $r4 i32) '(local $r5 i32) '(local $r6 i32) '(local $r7 i32) '(local $i0 i32) '(local $i1 i32) '(local $i2 i32) '(local $i3 i32) '(local $i4 i32) '(local $i5 i32) '(local $i6 i32) '(local $i7 i32) '(local $f0 f64) '(local $f1 f64) '(local $f2 f64) '(local $f3 f64) '(local $f4 f64) '(local $f5 f64) '(local $f6 f64) '(local $f7 f64) '(local $rp i32) (xlat-function (split-blocks (cdr fdef)) uniq))))
+                              (list 'func str sym '(param $dpc i32) '(param $sp1 i32) '(param $r0 i32) '(param $r1 i32) '(param $rpc i32) '(param $pc0 i32) '(result i32) '(local $sp i32) '(local $fp i32) '(local $r2 i32) '(local $r3 i32) '(local $r4 i32) '(local $r5 i32) '(local $r6 i32) '(local $r7 i32) '(local $i0 i32) '(local $i1 i32) '(local $i2 i32) '(local $i3 i32) '(local $i4 i32) '(local $i5 i32) '(local $i6 i32) '(local $i7 i32) '(local $f0 f64) '(local $f1 f64) '(local $f2 f64) '(local $f3 f64) '(local $f4 f64) '(local $f5 f64) '(local $f6 f64) '(local $f7 f64) '(local $rp i32) (xlat-function (split-blocks (cddr fdef)) uniq (cadr fdef)))))
               (eval (read) (interaction-environment))))))
 
 ;; (define (split-blocks f)

@@ -1,5 +1,7 @@
 var w;
 var imprts = {};
+var HEAPU8;
+var HEAPU32;
 
 function CStringAt(heap, offset)
 {
@@ -15,12 +17,23 @@ function CStringAt(heap, offset)
 imprts.console = {};
 imprts.console.print = function (x) { console.log(x); };
 
+var counter = 0;
+
 imprts.thinthin = {};
 imprts.thinthin.extcall = function (r0, r1, a0, a1) {
     console.log(r0);
+    console.log(r1);
+    console.log(a0);
+    console.log(a1);
     console.log(CStringAt(new Uint8Array(w.exports.memory), r0));
+    console.log(CStringAt(new Uint8Array(w.exports.memory), r1));
+    console.log(CStringAt(HEAPU8, HEAPU32[a1 + 28 >> 2]));
 
-    return 0;
+    console.log(counter);
+    if (counter++ & 1)
+        return 3;
+    else
+        return 0;
 };
 
 imprts.thinthin.indcall = function (r0, r1, a0, a1, x0, x1) {
@@ -46,12 +59,13 @@ window.setInterval(function () {
     } else if (stage == 1) {
         if (w) {
             var i;
-            var oh = new Uint8Array(w.exports.memory);
+            var oh = HEAPU8 = new Uint8Array(w.exports.memory);
+            HEAPU32 = new Uint32Array(w.exports.memory);
             for (i = 0; i < data.byteLength; i++)
                 oh[16384 + 0x40 + i] = data[i];
             stage = 2;
         }
     } else if (stage == 2) {
-        w.exports.f_0x40010000(0, 1024, 0, 0, 0, 0);
+        console.log(w.exports.f_0x40011000(0, 1024, 0, 0, 0, 0));
     }
 }, 5000);

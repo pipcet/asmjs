@@ -71,6 +71,14 @@ build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
 	$(MAKE) -C build/binutils-gdb install
 	touch $@
 
+build/binutils-gdb-wasm.make: build/binutils-gdb.make
+	ln -sf asmjs-virtual-asmjs-ld asmjs-virtual-asmjs/bin/wasm-virtual-wasm-ld
+	ln -sf asmjs-virtual-asmjs-ranlib asmjs-virtual-asmjs/bin/wasm-virtual-wasm-ranlib
+	ln -sf asmjs-virtual-asmjs-ar asmjs-virtual-asmjs/bin/wasm-virtual-wasm-ar
+	ln -sf asmjs-virtual-asmjs-nm asmjs-virtual-asmjs/bin/wasm-virtual-wasm-nm
+	ln -sf asmjs-virtual-asmjs-as asmjs-virtual-asmjs/bin/wasm-virtual-wasm-as
+	touch $@
+
 build/binutils-gdb.clean: FORCE
 	rm -rf build/binutils-gdb src/binutils-gdb
 	rm -f build/binutils-gdb.dir
