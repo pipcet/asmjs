@@ -26,3 +26,5 @@ $ ~/git/binaryen/bin/wasm-as out.wast -o out.wasm
 $ cp out.wasm  ~/wasm.wasm 
 
 make -kj6 build/gcc-preliminary-wasm.make; PATH=~/git/asmjs/build/gcc-preliminary-wasm/gcc/:$PATH ./build/gcc-preliminary-wasm/gcc/xgcc -nostdlib -O0 -S tests/139-function-call.c ; asmjs-virtual-asmjs-gcc -nostdlib 139-function-call.s ; asmjs-virtual-asmjs-ld -T ./wasm-experimentation/wasm-pwasify.lds ./a.out -o out.pwas ; guile-2.0 ./wasm-experimentation/wasm-translate.scm < out.pwas > out.wast; ~/git/binaryen/bin/wasm-as out.wast -o out.wasm
+
+make -kj6 build/gcc-preliminary-wasm.make; PATH=~/git/asmjs/build/gcc-preliminary-wasm/gcc/:$PATH ./build/gcc-preliminary-wasm/gcc/xgcc -nostdlib -O1 -S tests/141-extcall.c ; asmjs-virtual-asmjs-gcc -nostdlib 141-extcall.s ; asmjs-virtual-asmjs-ld -T ./wasm-experimentation/wasm-pwasify.lds ./a.out -o out.pwas ; guile-2.0 ./wasm-experimentation/wasm-translate.scm < out.pwas > out.wast; ~/git/binaryen/bin/wasm-as out.wast -o out.wasm ; cat out.wast; asmjs-virtual-asmjs-objcopy --dump-section .data=wasm-experimentation/wasm.data ./a.out; cp out.wasm wasm-experimentation/wasm.wasm

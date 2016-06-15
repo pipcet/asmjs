@@ -27,9 +27,31 @@ imprts.thinthin.indcall = function (r0, r1, a0, a1, x0, x1) {
     return 0;
 };
 
-fetch("file:///home/pip/git/asmjs/wasm-experimentation/wasm.wasm").then(p => p.arrayBuffer()).then(b => b).then(ab => w = Wasm.instantiateModule(new Uint8Array(q = ab), imprts));
+var stage = 0;
+var data;
+fetch("file:///home/pip/git/asmjs/wasm-experimentation/wasm.data").then(p => p.arrayBuffer()).then(ab => {
+    var i;
+    var heap = new Uint8Array(ab);
+
+    data = heap;
+})
+
 
 window.setInterval(function () {
-    if (w)
+    if (stage == 0) {
+        if (data) {
+            fetch("file:///home/pip/git/asmjs/wasm-experimentation/wasm.wasm").then(p => p.arrayBuffer()).then(b => b).then(ab => w = Wasm.instantiateModule(new Uint8Array(q = ab), imprts));
+            stage = 1;
+        }
+    } else if (stage == 1) {
+        if (w) {
+            var i;
+            var oh = new Uint8Array(w.exports.memory);
+            for (i = 0; i < data.byteLength; i++)
+                oh[16384 + 0x40 + i] = data[i];
+            stage = 2;
+        }
+    } else if (stage == 2) {
         w.exports.f_0x40010000(0, 1024, 0, 0, 0, 0);
+    }
 }, 5000);
