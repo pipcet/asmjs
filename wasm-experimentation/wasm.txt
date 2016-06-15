@@ -24,3 +24,5 @@ program to get more information.  Set it to "no" to suppress
 this message.
 $ ~/git/binaryen/bin/wasm-as out.wast -o out.wasm
 $ cp out.wasm  ~/wasm.wasm 
+
+make -kj6 build/gcc-preliminary-wasm.make; PATH=~/git/asmjs/build/gcc-preliminary-wasm/gcc/:$PATH ./build/gcc-preliminary-wasm/gcc/xgcc -nostdlib -O0 -S tests/139-function-call.c ; asmjs-virtual-asmjs-gcc -nostdlib 139-function-call.s ; asmjs-virtual-asmjs-ld -T ./wasm-experimentation/wasm-pwasify.lds ./a.out -o out.pwas ; guile-2.0 ./wasm-experimentation/wasm-translate.scm < out.pwas > out.wast; ~/git/binaryen/bin/wasm-as out.wast -o out.wasm
