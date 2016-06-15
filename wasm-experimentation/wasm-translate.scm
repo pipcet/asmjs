@@ -148,7 +148,10 @@
   `(module
     (memory 32 32)
     (import $cp "console" "print" (param i32))
-    (func $peek (param $addr i32) (i32.load (get_local $addr)))
+    (import $extcall "thinthin" "extcall" (param i32 i32 i32 i32) (result i32))
+    (import $indcall "thinthin" "indcall" (param i32 i32 i32 i32 i32 i32) (result i32))
+    (func "peek" $peek (param $addr i32) (result i32) (return (i32.load8_u (get_local $addr))))
+    (func "poke" $poke (param $addr i32) (param $data i32) (i32.store8 (get_local $addr) (get_local $data)))
     ,@fdefs
     (export "memory" memory)))
 
