@@ -16,6 +16,10 @@ build/binutils-gdb.dir: build/.dir
 	test -d build/binutils-gdb || $(MKDIR) build/binutils-gdb
 	touch $@
 
+build/binutils-gdb-wasm.dir: build/.dir
+	test -d build/binutils-gdb-wasm || $(MKDIR) build/binutils-gdb-wasm
+	touch $@
+
 build/gcc-preliminary.dir: build/.dir
 	test -d build/gcc-preliminary || $(MKDIR) build/gcc-preliminary
 	touch $@
@@ -26,6 +30,10 @@ build/gcc-preliminary-wasm.dir: build/.dir
 
 build/glibc.dir: build/.dir
 	test -d build/glibc || $(MKDIR) build/glibc
+	touch $@
+
+build/glibc-wasm.dir: build/.dir
+	test -d build/glibc-wasm || $(MKDIR) build/glibc-wasm
 	touch $@
 
 build/gcc-final.dir: build/.dir
@@ -66,17 +74,19 @@ build/binutils-gdb.configure: src/binutils-gdb.dir build/binutils-gdb.dir
 	(cd build/binutils-gdb; ../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs CFLAGS=$(OPT_NATIVE))
 	touch $@
 
-build/binutils-gdb.make: build/binutils-gdb.dir build/binutils-gdb.configure
+build/binutils-gdb-wasm.configure: src/binutils-gdb.dir build/binutils-gdb-wasm.dir
+	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
+	(cd build/binutils-gdb-wasm; ../../src/binutils-gdb/configure --target=wasm-virtual-wasm --prefix=$(PWD)/wasm-virtual-wasm CFLAGS=$(OPT_NATIVE))
+	touch $@
+
+build/binutils-gdb.make: build/binutils-gdb-wasm.dir build/binutils-gdb-wasm.configure
 	$(MAKE) -C build/binutils-gdb
 	$(MAKE) -C build/binutils-gdb install
 	touch $@
 
 build/binutils-gdb-wasm.make: build/binutils-gdb.make
-	ln -sf asmjs-virtual-asmjs-ld asmjs-virtual-asmjs/bin/wasm-virtual-wasm-ld
-	ln -sf asmjs-virtual-asmjs-ranlib asmjs-virtual-asmjs/bin/wasm-virtual-wasm-ranlib
-	ln -sf asmjs-virtual-asmjs-ar asmjs-virtual-asmjs/bin/wasm-virtual-wasm-ar
-	ln -sf asmjs-virtual-asmjs-nm asmjs-virtual-asmjs/bin/wasm-virtual-wasm-nm
-	ln -sf asmjs-virtual-asmjs-as asmjs-virtual-asmjs/bin/wasm-virtual-wasm-as
+	$(MAKE) -C build/binutils-gdb-wasm
+	$(MAKE) -C build/binutils-gdb-wasm install
 	touch $@
 
 build/binutils-gdb.clean: FORCE
@@ -106,13 +116,15 @@ build/gcc-preliminary.clean: FORCE
 	rm -f build/gcc-preliminary.configure
 	rm -f build/gcc-preliminary.make
 
-build/gcc-preliminary-wasm.configure: src/gcc-preliminary.dir build/gcc-preliminary-wasm.dir | build/binutils-gdb.make
+build/gcc-preliminary-wasm.configure: src/gcc-preliminary.dir build/gcc-preliminary-wasm.dir | build/binutils-gdb-wasm.make
 	(cd build/gcc-preliminary-wasm; ../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm-virtual-wasm --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm-virtual-wasm)
 	touch $@
 
 build/gcc-preliminary-wasm.make: build/gcc-preliminary-wasm.dir build/gcc-preliminary-wasm.configure
 	$(MAKE) -C build/gcc-preliminary-wasm
 	$(MAKE) -C build/gcc-preliminary-wasm install
+	cp wasm-virtual-wasm/lib/gcc/wasm-virtual-wasm/7.0.0/libgcc.a wasm-virtual-wasm/lib/gcc/wasm-virtual-wasm/7.0.0/libgcc_eh.a
+	cp wasm-virtual-wasm/lib/gcc/wasm-virtual-wasm/7.0.0/libgcc.a wasm-virtual-wasm/lib/gcc/wasm-virtual-wasm/7.0.0/libgcc_s.a
 	touch $@
 
 build/gcc-preliminary-wasm.clean: FORCE
@@ -137,6 +149,22 @@ build/glibc.clean: FORCE
 	rm -f src/glibc.dir
 	rm -f build/glibc.configure
 	rm -f build/glibc.make
+
+build/glibc-wasm.configure: src/glibc.dir build/glibc-wasm.dir | build/gcc-preliminary-wasm.make
+	(cd build/glibc-wasm; CC=wasm-virtual-wasm-gcc PATH=$(PWD)/wasm-virtual-wasm/bin:$$PATH ../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=wasm-virtual-wasm --target=wasm-virtual-wasm --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/wasm-virtual-wasm/wasm-virtual-wasm)
+	touch $@
+
+build/glibc-wasm.make: build/glibc-wasm.dir build/glibc-wasm.configure
+	CC=wasm-virtual-wasm-gcc PATH=$(PWD)/wasm-virtual-wasm/bin:$$PATH $(MAKE) -C build/glibc-wasm
+	CC=wasm-virtual-wasm-gcc PATH=$(PWD)/wasm-virtual-wasm/bin:$$PATH $(MAKE) -C build/glibc-wasm install
+	touch $@
+
+build/glibc-wasm.clean: FORCE
+	rm -rf build/glibc-wasm src/glibc
+	rm -f build/glibc-wasm.dir
+	rm -f src/glibc.dir
+	rm -f build/glibc-wasm.configure
+	rm -f build/glibc-wasm.make
 
 build/gcc-final.configure: src/gcc-final.dir build/gcc-final.dir | build/glibc.make
 	(cd build/gcc-final; ../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
@@ -235,6 +263,7 @@ build/graphviz.make: build/graphviz.configure
 
 build/binfmt_misc.install:
 	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/interpreter || true
+	sudo ./binfmt_misc/binfmt_misc-wasm $(PWD)/bin/interpreter-wasm || true
 	touch $@
 
 build/binfmt_misc-caching.install:

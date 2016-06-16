@@ -27,16 +27,26 @@ imprts.thinthin.extcall = function (r0, r1, a0, a1) {
     console.log(a1);
     console.log(CStringAt(new Uint8Array(w.exports.memory), r0));
     console.log(CStringAt(new Uint8Array(w.exports.memory), r1));
+    console.log(HEAPU32[a1 + 32 >> 2]);
     console.log(CStringAt(HEAPU8, HEAPU32[a1 + 28 >> 2]));
+    console.log(HEAPU32[a1 + 24 >> 2]);
+    HEAPU32[4096>>2] = HEAPU32[a1 + 32 >> 2];
 
+    if (CStringAt(new Uint8Array(w.exports.memory), r1) == "exit")
+        throw 0;
     console.log(counter);
     if (counter++ & 1)
-        return 3;
+        return 0; //3;
     else
         return 0;
 };
 
-imprts.thinthin.indcall = function (r0, r1, a0, a1, x0, x1) {
+imprts.thinthin.indcall = function (dpc, sp, r0, r1, rpc, pc0) {
+    console.log("indcall " + pc0);
+    return w.exports["f_0x" + pc0.toString(16) + "0"](dpc, sp, r0, r1, rpc, pc0);
+};
+
+imprts.thinthin.eh_return = function (a0, a1, a2) {
     return 0;
 };
 
@@ -66,6 +76,6 @@ window.setInterval(function () {
             stage = 2;
         }
     } else if (stage == 2) {
-        console.log(w.exports.f_0x40011000(0, 1024, 0, 0, 0, 0));
+        console.log(w.exports.f_0x40025000(0, 2*1024*1024, 0, 0, 0, 0x4002500));
     }
 }, 5000);

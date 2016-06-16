@@ -30,10 +30,10 @@
    ((not (list? lhs))
     (list 'set_local lhs (xlat-expr rhs f-labels)))
    ((memq (car lhs) '(i8.mem i8.mem_u))
-    (list 'i8.store (xlat-expr (cadr lhs) f-labels)
+    (list 'i32.store8 (xlat-expr (cadr lhs) f-labels)
           (xlat-expr rhs f-labels)))
    ((memq (car lhs) '(i16.mem i16.mem_u))
-    (list 'i16.store (xlat-expr (cadr lhs) f-labels)
+    (list 'i32.store16 (xlat-expr (cadr lhs) f-labels)
           (xlat-expr rhs f-labels)))
    ((memq (car lhs) '(i32.mem i32.mem_u))
     (list 'i32.store (xlat-expr (cadr lhs) f-labels)
@@ -41,14 +41,67 @@
    ((memq (car lhs) '(i64.mem i64.mem_u))
     (list 'i64.store (xlat-expr (cadr lhs) f-labels)
           (xlat-expr rhs f-labels)))
+   ((memq (car lhs) '(f32.mem))
+    (list 'f32.store (xlat-expr (cadr lhs) f-labels)
+          (list 'f32.demote_f64 (xlat-expr rhs f-labels))))
+   ((memq (car lhs) '(f64.mem))
+    (list 'f64.store (xlat-expr (cadr lhs) f-labels)
+          (xlat-expr rhs f-labels)))
+   ((memq (car lhs) '(get_local))
+    (list 'set_local (cadr lhs)
+          (xlat-expr rhs f-labels)))
    (#t
-    (error))))
+    (error "argh %S" lhs))))
+
+(define (i8.mem_u e)
+  `(i32.load8_u ,e))
+
+(define (i16.mem_u e)
+  `(i32.load16_u ,e))
+
+(define (i32.mem_u e)
+  `(i32.load ,e))
+
+(define (i64.mem_u e)
+  `(i64.load ,e))
+
+(define (i8.mem e)
+  `(i32.load8 ,e))
+
+(define (i16.mem e)
+  `(i32.load16 ,e))
+
+(define (i32.mem e)
+  `(i32.load ,e))
+
+(define (i64.mem e)
+  `(i64.load ,e))
+
+(define (f32.mem e)
+  `(f64.promote_f32 (f32.load ,e)))
+
+(define (f64.mem e)
+  `(f64.load ,e))
+
 
 (define (i32.neg e)
   `(i32.sub (i32.const 0) ,e))
 
 (define (i32.not e)
   `(i32.xor (i32.const -1) ,e))
+
+(define (i32.eq a b)
+  `(f64.eq ,a ,b))
+(define (i32.ne a b)
+  `(f64.ne ,a ,b))
+(define (i32.le a b)
+  `(f64.le ,a ,b))
+(define (i32.ge a b)
+  `(f64.ge ,a ,b))
+(define (i32.lt a b)
+  `(f64.lt ,a ,b))
+(define (i32.gt a b)
+  `(f64.gt ,a ,b))
 
 (define (xlat-expr e f-labels)
   (cond
@@ -70,7 +123,7 @@
     (list 'nop))
    ((eq? (car e) 'set)
     (xlat-set (cadr e) (caddr e) f-labels))
-   ((memq (car e) '(i32.add i32.sub i32.mul_u i32.mul_s i32.div_u i32.div_s))
+   ((memq (car e) '(i32.add i32.sub i32.mul_u i32.mul_s i32.div_u i32.div_s i32.and i32.or i32.gt_u i32.ge_u i32.shr_u i32.ne))
     (cons (car e) (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
    ((eq? (car e) 'if)
     (cons 'if (map (lambda (x) (xlat-expr x f-labels)) (cdr e))))
@@ -124,10 +177,18 @@
           (list 'return '(i32.const 0)))
     restore)))
 
+(define (emblocken2 rev-f labels s f-labels)
+  (let* ((res s))
+    (while (not (null? rev-f))
+           (set! res `(block ,(car labels) ,res ,@(xlat-block (car rev-f) f-labels)))
+           (set! rev-f (cdr rev-f))
+           (set! labels (cdr labels)))
+    res))
+
 (define (emblocken rev-f labels s f-labels)
   (if (null? labels)
       s
-      (append (list 'block (car labels) (emblocken (cdr rev-f) (cdr labels) s f-labels))
+      (append `(block ,(car labels) ,(emblocken (cdr rev-f) (cdr labels) s f-labels))
               (xlat-block (car rev-f) f-labels))))
 
 ;; (write-module '(((call_import $cp (i32.const 42)))
@@ -162,38 +223,47 @@
 (define (split-blocks f)
   (reverse (map reverse (split-blocks-2 f))))
 
-(if #f (write (split-blocks '((call_import $cp (i32.const 42))
-                              (call_import $cp (i32.const 43))
-                              (jump)
-                              (throw)
-                              (call_import $cp (i32.const 44))
-                              (call_import $cp (i32.const 45))
-                              (return)))))
+;; (if #f (write (split-blocks '((call_import $cp (i32.const 42))
+;;                               (call_import $cp (i32.const 43))
+;;                               (jump)
+;;                               (throw)
+;;                               (call_import $cp (i32.const 44))
+;;                               (call_import $cp (i32.const 45))
+;;                               (return)))))
 
-(if #f (write-module (split-blocks '((call_import $cp (i32.const 42))
-                              (call_import $cp (i32.const 43))
-                              (jump)
-                              (throw)
-                              (call_import $cp (i32.const 44))
-                              (call_import $cp (i32.const 45))
-                              (return)))))
+;; (if #f (write-module (split-blocks '((call_import $cp (i32.const 42))
+;;                               (call_import $cp (i32.const 43))
+;;                               (jump)
+;;                               (throw)
+;;                               (call_import $cp (i32.const 44))
+;;                               (call_import $cp (i32.const 45))
+;;                               (return)))))
 
-(if #f (write (split-blocks '((call_import $cp (i32.const 42))
-                              (call_import $cp (i32.const 43))
-                              (call_import $cp (i32.const 44))
-                              (call_import $cp (i32.const 45))
-                              (return)))))
+;; (if #f (write (split-blocks '((call_import $cp (i32.const 42))
+;;                               (call_import $cp (i32.const 43))
+;;                               (call_import $cp (i32.const 44))
+;;                               (call_import $cp (i32.const 45))
+;;                               (return)))))
 
 (define (make-module fdefs)
   `(module
-    (memory 32 32)
+    (memory 1024 1024)
     (import $cp "console" "print" (param i32))
     (import $extcall "thinthin" "extcall" (param i32 i32 i32 i32) (result i32))
     (import $indcall "thinthin" "indcall" (param i32 i32 i32 i32 i32 i32) (result i32))
+    (import $eh_return "thinthin" "eh_return" (param i32 i32 i32) (result i32))
+    (func "f_0x0" $f_0x0 (param $pc0 i32) (param $sp1 i32) (param $r0 i32) (param $r1 i32) (param $pc0 i32) (param $rpc i32) (result i32) (return (i32.const 0)))
     (func "peek" $peek (param $addr i32) (result i32) (return (i32.load8_u (get_local $addr))))
     (func "poke" $poke (param $addr i32) (param $data i32) (i32.store8 (get_local $addr) (get_local $data)))
     ,@fdefs
     (export "memory" memory)))
+
+(define (string-delete a &rest args)
+  (string-replace a " " ""))
+
+(define (1+ x) (+ 1 x))
+
+(define (1- x) (- x 1))
 
 (write (let* ((ucnt 0)
               (uniq (lambda ()
@@ -203,7 +273,7 @@
                             (let* ((str (string-delete (car fdef) #\ 0))
                                    (sym (string->symbol (string-append "$" str))))
                               (list 'func str sym '(param $dpc i32) '(param $sp1 i32) '(param $r0 i32) '(param $r1 i32) '(param $rpc i32) '(param $pc0 i32) '(result i32) '(local $sp i32) '(local $fp i32) '(local $r2 i32) '(local $r3 i32) '(local $r4 i32) '(local $r5 i32) '(local $r6 i32) '(local $r7 i32) '(local $i0 i32) '(local $i1 i32) '(local $i2 i32) '(local $i3 i32) '(local $i4 i32) '(local $i5 i32) '(local $i6 i32) '(local $i7 i32) '(local $f0 f64) '(local $f1 f64) '(local $f2 f64) '(local $f3 f64) '(local $f4 f64) '(local $f5 f64) '(local $f6 f64) '(local $f7 f64) '(local $rp i32) (xlat-function (split-blocks (cddr fdef)) uniq (cadr fdef)))))
-              (eval (read) (interaction-environment))))))
+              (eval (read))))))
 
 ;; (define (split-blocks f)
 ;;   (let ((blocks ())
