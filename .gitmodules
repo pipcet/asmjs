@@ -38,3 +38,6 @@
 	path = subrepos/graphviz
 	url = https://github.com/pipcet/graphviz
         branch = asmjs
+[submodule "subrepos/binaryen"]
+	path = subrepos/binaryen
+	url = https://github.com/pipcet/binaryen
