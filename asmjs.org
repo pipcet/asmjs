@@ -508,26 +508,26 @@ uses .dpc
 ***** DONE test
 ** DONE ordinary calls
 ** DONE indirect calls
-** TODO trampolines
-** TODO exceptions
+** DONE trampolines
+** DONE exceptions
 ** DONE __builtin_setjmp
 ***** DONE appears to work
 ** DONE setjmp()
-** TODO MI thunks
-** TODO other nonlocal gotos
-** TODO __builtin_return_address(0)
+** DONE MI thunks
+** DONE other nonlocal gotos
+** DONE __builtin_return_address(0)
 ***** DONE implement
 ***** DONE test
 ** DONE __builtin_return_address(N)
 ***** DONE implement
 ***** DONE test
-** TODO __builtin_frame_address(0)
-** TODO __builtin_frame_address(N)
+** DONE __builtin_frame_address(0)
+** DONE __builtin_frame_address(N)
 ** TODO fix GDB
 ** TODO wasm
-*** TODO make %S0 expand to "set_local $r0" or "i32.store %0"
-*** TODO make .dpc produce an i32.const
-*** TODO new section namespacing.
+*** DONE make %S0 expand to "set_local $r0" or "i32.store %0"
+*** DONE make .dpc produce an i32.const
+*** DONE new section namespacing.
 
 .javascript.text: JavaScript text section
 .wasm-ast.text: WebAssembly AST, as defined by the standard
