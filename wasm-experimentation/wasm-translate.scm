@@ -177,6 +177,25 @@
           (list 'return '(i32.const 0)))
     restore)))
 
+;; XXX a jump to the first function will go wrong because of the
+;; off-by-one hack below.
+
+(define (xlat-fpswitch fpswitch uniq)
+  (let ((switch-default-label
+         (string->symbol
+          (string-append "$switch-default$" (uniq))))
+        (block-labels
+         (gen-block-labels (length fpswitch) "$block$" uniq)))
+    (list 'block switch-default-label
+          (emblocken (reverse fpswitch)
+                     block-labels
+                     (cons 'br_table
+                           (append (reverse block-labels) (list switch-default-label
+                                                                (list 'i32.shr_u '(i32.sub (get_local $pc0) (i32.const 67117312)) '(i32.const 8))))) ;; XXX for the constant
+                     (list '() '()))
+          (list 'return '(i32.const 0)))
+    ))
+
 (define (emblocken2 rev-f labels s f-labels)
   (let* ((res s))
     (while (not (null? rev-f))
@@ -245,20 +264,25 @@
 ;;                               (call_import $cp (i32.const 45))
 ;;                               (return)))))
 
-(define (make-module fdefs)
+(define (make-module fpswitch fdefs uniq)
   `(module
     (memory 1024 1024)
     (import $cp "console" "print" (param i32))
     (import $extcall "thinthin" "extcall" (param i32 i32 i32 i32) (result i32))
     (import $indcall "thinthin" "indcall" (param i32 i32 i32 i32 i32 i32) (result i32))
     (import $eh_return "thinthin" "eh_return" (param i32 i32 i32) (result i32))
-    (func "f_indcall" $f_indcall (param $dpc i32) (param $sp1 i32) (param $r0 i32) (param $r1 i32) (param $pc0 i32) (param $rpc i32) (result i32) (return (call_import $indcall (get_local $dpc) (get_local $sp1) (get_local $r0) (get_local $r1) (get_local $pc0) (get_local $rpc))))
     (func "f_0x0" $f_0x0 (param $dpc i32) (param $sp1 i32) (param $r0 i32) (param $r1 i32) (param $pc0 i32) (param $rpc i32) (result i32) (return (i32.const 0)))
     (func "peek" $peek (param $addr i32) (result i32) (return (i32.load8_u (get_local $addr))))
     (func "poke" $poke (param $addr i32) (param $data i32) (i32.store8 (get_local $addr) (get_local $data)))
     (func "shl" $shl (param $x i32) (param $count i32) (result i32) (if (i32.gt_u (get_local $count) (i32.const 31)) (then (return (i32.const 0)))) (return (i32.shl (get_local $x) (get_local $count))))
     (func "shr_s" $shr_s (param $x i32) (param $count i32) (result i32) (if (i32.gt_u (get_local $count) (i32.const 31)) (then (set_local $count (i32.const 31)))) (return (i32.shr_s (get_local $x) (get_local $count))))
     (func "shr_u" $shr_u (param $x i32) (param $count i32) (result i32) (if (i32.gt_u (get_local $count) (i32.const 31)) (then (return (i32.const 0)))) (return (i32.shr_u (get_local $x) (get_local $count))))
+    (func "f_indcall" $f_indcall (param $dpc i32) (param $sp1 i32) (param $r0 i32) (param $r1 i32) (param $rpc i32) (param $pc0 i32) (result i32)
+          (call_import $cp (i32.const -1))
+          (call_import $cp (get_local $pc0))
+          ;;(return (call_import $indcall (get_local $dpc) (get_local $sp1) (get_local $r0) (get_local $r1) (get_local $rpc) (get_local $pc0)))
+          ,(xlat-fpswitch (split-blocks fpswitch) uniq)
+          (return (i32.const 3)))
     ,@fdefs
     (export "memory" memory)))
 
@@ -272,16 +296,19 @@
 (define (hex x)
   (string->number (string-replace x " " "") 16))
 
-(write (let* ((nuclear #f) ;; nuclear option for debugging, trace all calls.
+(write (let* ((nuclear #t) ;; nuclear option for debugging, trace all calls.
               (ucnt 0)
               (uniq (lambda ()
                       (set! ucnt (1+ ucnt))
-                      (number->string ucnt))))
-         (make-module (map (lambda (fdef)
+                      (number->string ucnt)))
+              (sexp (eval (read)))
+              (fpswitch (car sexp))
+              (fdefs (cdr sexp)))
+         (make-module fpswitch (map (lambda (fdef)
                             (let* ((str (string-delete (car fdef) #\ 0))
                                    (sym (string->symbol (string-append "$" str))))
                               (list 'func str sym '(param $dpc i32) '(param $sp1 i32) '(param $r0 i32) '(param $r1 i32) '(param $rpc i32) '(param $pc0 i32) '(result i32) '(local $sp i32) '(local $fp i32) '(local $r2 i32) '(local $r3 i32) '(local $r4 i32) '(local $r5 i32) '(local $r6 i32) '(local $r7 i32) '(local $i0 i32) '(local $i1 i32) '(local $i2 i32) '(local $i3 i32) '(local $i4 i32) '(local $i5 i32) '(local $i6 i32) '(local $i7 i32) '(local $f0 f64) '(local $f1 f64) '(local $f2 f64) '(local $f3 f64) '(local $f4 f64) '(local $f5 f64) '(local $f6 f64) '(local $f7 f64) '(local $rp i32) (xlat-function (split-blocks (if nuclear (cons '(call_import $cp (get_local $pc0)) (cddr fdef)) (cddr fdef))) uniq (cadr fdef)))))
-              (eval (read))))))
+              fdefs) uniq)))
 
 ;; (define (split-blocks f)
 ;;   (let ((blocks ())
