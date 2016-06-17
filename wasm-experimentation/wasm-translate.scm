@@ -187,7 +187,7 @@
 
 (define (emblocken rev-f labels s f-labels)
   (if (null? labels)
-      s
+      (if (null? rev-f) s (error "too much code"))
       (append `(block ,(car labels) ,(emblocken (cdr rev-f) (cdr labels) s f-labels))
               (xlat-block (car rev-f) f-labels))))
 
@@ -252,9 +252,13 @@
     (import $extcall "thinthin" "extcall" (param i32 i32 i32 i32) (result i32))
     (import $indcall "thinthin" "indcall" (param i32 i32 i32 i32 i32 i32) (result i32))
     (import $eh_return "thinthin" "eh_return" (param i32 i32 i32) (result i32))
-    (func "f_0x0" $f_0x0 (param $pc0 i32) (param $sp1 i32) (param $r0 i32) (param $r1 i32) (param $pc0 i32) (param $rpc i32) (result i32) (return (i32.const 0)))
+    (func "f_indcall" $f_indcall (param $dpc i32) (param $sp1 i32) (param $r0 i32) (param $r1 i32) (param $pc0 i32) (param $rpc i32) (result i32) (return (call_import $indcall (get_local $dpc) (get_local $sp1) (get_local $r0) (get_local $r1) (get_local $pc0) (get_local $rpc))))
+    (func "f_0x0" $f_0x0 (param $dpc i32) (param $sp1 i32) (param $r0 i32) (param $r1 i32) (param $pc0 i32) (param $rpc i32) (result i32) (return (i32.const 0)))
     (func "peek" $peek (param $addr i32) (result i32) (return (i32.load8_u (get_local $addr))))
     (func "poke" $poke (param $addr i32) (param $data i32) (i32.store8 (get_local $addr) (get_local $data)))
+    (func "shl" $shl (param $x i32) (param $count i32) (result i32) (if (i32.gt_u (get_local $count) (i32.const 31)) (then (return (i32.const 0)))) (return (i32.shl (get_local $x) (get_local $count))))
+    (func "shr_s" $shr_s (param $x i32) (param $count i32) (result i32) (if (i32.gt_u (get_local $count) (i32.const 31)) (then (set_local $count (i32.const 31)))) (return (i32.shr_s (get_local $x) (get_local $count))))
+    (func "shr_u" $shr_u (param $x i32) (param $count i32) (result i32) (if (i32.gt_u (get_local $count) (i32.const 31)) (then (return (i32.const 0)))) (return (i32.shr_u (get_local $x) (get_local $count))))
     ,@fdefs
     (export "memory" memory)))
 
@@ -265,14 +269,18 @@
 
 (define (1- x) (- x 1))
 
-(write (let* ((ucnt 0)
+(define (hex x)
+  (string->number (string-replace x " " "") 16))
+
+(write (let* ((nuclear #f) ;; nuclear option for debugging, trace all calls.
+              (ucnt 0)
               (uniq (lambda ()
                       (set! ucnt (1+ ucnt))
                       (number->string ucnt))))
          (make-module (map (lambda (fdef)
                             (let* ((str (string-delete (car fdef) #\ 0))
                                    (sym (string->symbol (string-append "$" str))))
-                              (list 'func str sym '(param $dpc i32) '(param $sp1 i32) '(param $r0 i32) '(param $r1 i32) '(param $rpc i32) '(param $pc0 i32) '(result i32) '(local $sp i32) '(local $fp i32) '(local $r2 i32) '(local $r3 i32) '(local $r4 i32) '(local $r5 i32) '(local $r6 i32) '(local $r7 i32) '(local $i0 i32) '(local $i1 i32) '(local $i2 i32) '(local $i3 i32) '(local $i4 i32) '(local $i5 i32) '(local $i6 i32) '(local $i7 i32) '(local $f0 f64) '(local $f1 f64) '(local $f2 f64) '(local $f3 f64) '(local $f4 f64) '(local $f5 f64) '(local $f6 f64) '(local $f7 f64) '(local $rp i32) (xlat-function (split-blocks (cddr fdef)) uniq (cadr fdef)))))
+                              (list 'func str sym '(param $dpc i32) '(param $sp1 i32) '(param $r0 i32) '(param $r1 i32) '(param $rpc i32) '(param $pc0 i32) '(result i32) '(local $sp i32) '(local $fp i32) '(local $r2 i32) '(local $r3 i32) '(local $r4 i32) '(local $r5 i32) '(local $r6 i32) '(local $r7 i32) '(local $i0 i32) '(local $i1 i32) '(local $i2 i32) '(local $i3 i32) '(local $i4 i32) '(local $i5 i32) '(local $i6 i32) '(local $i7 i32) '(local $f0 f64) '(local $f1 f64) '(local $f2 f64) '(local $f3 f64) '(local $f4 f64) '(local $f5 f64) '(local $f6 f64) '(local $f7 f64) '(local $rp i32) (xlat-function (split-blocks (if nuclear (cons '(call_import $cp (get_local $pc0)) (cddr fdef)) (cddr fdef))) uniq (cadr fdef)))))
               (eval (read))))))
 
 ;; (define (split-blocks f)
