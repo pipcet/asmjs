@@ -394,9 +394,13 @@ Signals are not currently supported.
 * Links
 ** Emscripten
 http://emscripten.org
+*** Relooper algorithm
+https://github.com/kripken/emscripten/raw/master/docs/paper.pdf
 ** asm.js standard
 http://asmjs.org
 
+** WebAssembly
+http://webassembly.github.io/
 * Future design
 ** asm.js calling convention
 I think the best calling convention to use is:
@@ -429,33 +433,6 @@ rp = indcall(0, sp, r0, r1, 0xYYYY, 0xXXXX);
 
 In theory, we could do without the last argument for non-PIE code, and without the second-to-last one for functions not using __builtin_return_address(0).
 
-*** TODO todo list
-**** DONE unconditional branches
-***** DONE implement
-uses .dpc
-***** DONE test
-**** DONE conditional branches
-***** DONE implement
-uses .dpc
-***** DONE test
-**** DONE ordinary calls
-**** DONE indirect calls
-**** TODO trampolines
-**** TODO exceptions
-**** DONE __builtin_setjmp
-***** DONE appears to work
-**** DONE setjmp()
-**** TODO MI thunks
-**** TODO other nonlocal gotos
-**** TODO __builtin_return_address(0)
-***** DONE implement
-***** DONE test
-**** DONE __builtin_return_address(N)
-***** DONE implement
-***** DONE test
-**** TODO __builtin_frame_address(0)
-**** TODO __builtin_frame_address(N)
-**** TODO fix GDB
 ** register save area
 *** pointer to rfp = . + length of register save area
 *** pc0
@@ -514,3 +491,47 @@ function blah(x)
     }
 }
 #+end_src
+* Rationale
+Our design is significantly simpler than Emscripten's; in particular, we have no need of a relooper algorithm, and we limit the number of JS local variables to those of a simulated register file.
+
+In essence, we admit that we are treating the asm.js target as a hostile environment which makes simulat
+
+The proposed specification for WebAssembly lacks the equivalent of a switch statement; the nearest match is the br_table opcode, which requires 
+* TODO todo list
+** DONE unconditional branches
+***** DONE implement
+uses .dpc
+***** DONE test
+** DONE conditional branches
+***** DONE implement
+uses .dpc
+***** DONE test
+** DONE ordinary calls
+** DONE indirect calls
+** TODO trampolines
+** TODO exceptions
+** DONE __builtin_setjmp
+***** DONE appears to work
+** DONE setjmp()
+** TODO MI thunks
+** TODO other nonlocal gotos
+** TODO __builtin_return_address(0)
+***** DONE implement
+***** DONE test
+** DONE __builtin_return_address(N)
+***** DONE implement
+***** DONE test
+** TODO __builtin_frame_address(0)
+** TODO __builtin_frame_address(N)
+** TODO fix GDB
+** TODO wasm
+*** TODO make %S0 expand to "set_local $r0" or "i32.store %0"
+*** TODO make .dpc produce an i32.const
+*** TODO new section namespacing.
+
+.javascript.text: JavaScript text section
+.wasm-ast.text: WebAssembly AST, as defined by the standard
+.wasm-pwas.text: wasm-translate.scm input, as not defined by a standard
+.wasm.text: WebAssembly binary code
+*** TODO fpswitch for wasm
+**** TODO test .rept hack for multi-page functions
