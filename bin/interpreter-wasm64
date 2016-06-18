@@ -1,0 +1,48 @@
+#!/bin/bash
+TMP1=$(mktemp);
+TMP2=$(mktemp);
+TMP3=$(mktemp);
+TMP4=$(mktemp);
+TMP5=$(mktemp);
+TMP6=$(mktemp);
+TMP7=$(mktemp);
+TMP8=$(mktemp);
+TMP9=$(mktemp);
+TMPD=$(mktemp -d);
+if [ x"$JS" = x ]; then
+    JS=$(which js)
+fi
+if [ x"$ASMJSDIR" = x ]; then
+    ASMJSDIR=$HOME/git/asmjs
+fi
+if [ x"$DELAY" = x ]; then
+    DELAY=1
+fi
+wasm64-virtual-wasm64-objcopy --dump-section .wasm_pwas.special.fpswitch=$TMP5 "$1"
+(LANG=C sort | perl ./fix-fpswitch | while read; do echo "$REPLY"; echo "(label)"; done) < $TMP5 > $TMP6
+wasm64-virtual-wasm64-ld -T $ASMJSDIR/wasm-experimentation/wasm-pwasify.lds "$1" -o $TMP1 || exit 1
+(echo "\`(("; cat $TMP6; echo ")"; cat $TMP1; echo ")") > $TMP7
+racket -f $ASMJSDIR/wasm-experimentation/wasm64-translate.scm < $TMP7 > $TMP2
+~/git/binaryen/bin/wasm-as $TMP2 -o $TMP3.wasm
+cp $TMP2 $ASMJSDIR/wasm-experimentation/wasm.ast
+wasm64-virtual-wasm64-objcopy --dump-section .data=$TMP4 "$1"
+cp $TMP3.wasm $ASMJSDIR/wasm-experimentation/wasm.wasm
+cp $TMP4 $ASMJSDIR/wasm-experimentation/wasm.data
+
+# wasm-virtual-wasm-objcopy --dump-section .data=$TMP2 --dump-section .prev.data=$TMP8 --dump-section .asmjs.header=$TMP9 $1 $TMP1
+# cat $TMP8 $TMP9 $TMP2 | $ASMJSDIR/bin/hexify > $TMP3
+# wasm-virtual-wasm-objcopy --add-section .javascript.data=$TMP3 $1 $TMP4
+# wasm-virtual-wasm-ld -T $ASMJSDIR/lds/wasm.lds $ASMJSDIR/lib/wasm.o $TMP4 -o $TMP5 || exit 1
+# wasm-virtual-wasm-ld -T $ASMJSDIR/lds/wasm-js1ify.lds $ASMJSDIR/lib/wasm.o $TMP5 -o $TMP6 || exit 1
+# cat $ASMJSDIR/js/wasm.js $TMP6 > $TMP7
+# rm $TMP1 $TMP2 $TMP3 $TMP4 $TMP5 $TMP6
+# (sleep $DELAY && rm $TMP7) & disown
+# chmod u+x $TMP7
+# if [ x"$GDB" != x ]; then
+#     mkfifo $TMPD/in
+#     mkfifo $TMPD/out
+#     (dd bs=1 if=$TMPD/out | nc -l -p 7777 | dd bs=1 of=$TMPD/in) &
+#     exec $JS $JSFLAGS $TMP7 "$@" 3<$TMPD/in 4>$TMPD/out
+# else
+#     exec $JS $JSFLAGS $TMP7 "$@"
+# fi
