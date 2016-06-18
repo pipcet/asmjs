@@ -138,7 +138,7 @@ build/asmjs/gcc-preliminary.configure: src/gcc-preliminary.dir build/asmjs/gcc-p
 	(cd build/asmjs/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
-build/wasm/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm/gcc-preliminary.dir | build/binutils-gdb.make
+build/wasm/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm/gcc-preliminary.dir | build/wasm/binutils-gdb.make
 	(cd build/wasm/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm-virtual-wasm --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm-virtual-wasm)
 	touch $@
 
@@ -264,7 +264,7 @@ build/asmjs/perl.configure: src/perl.dir build/asmjs/perl.dir | build/asmjs/gcc-
 
 build/common/spidermonkey.configure: src/spidermonkey.dir build/common/spidermonkey.dir
 	(cd src/spidermonkey/js/src; autoconf2.13)
-	(cd build/common/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/asmjs-virtual-asmjs/spidermonkey --without-system-zlib)
+	(cd build/common/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/common/spidermonkey --without-system-zlib)
 	touch $@
 
 build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
@@ -274,7 +274,7 @@ build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
 build/common/spidermonkey.make: build/common/spidermonkey.configure
 	$(MAKE) -C build/common/spidermonkey
 	$(MAKE) -C build/common/spidermonkey install
-	test -L $(PWD)/asmjs-virtual-asmjs/bin/js || ($(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/bin; ln -sf ../spidermonkey/bin/js $(PWD)/asmjs-virtual-asmjs/bin/js)
+	test -L $(PWD)/common/bin/js || ($(MKDIR) -p $(PWD)/common/bin; ln -sf ../spidermonkey/bin/js $(PWD)/common/bin/js)
 	touch $@
 
 build/spidermonkey.clean: build/spidermonkey.make
@@ -308,6 +308,7 @@ build/asmjs/graphviz.make: build/asmjs/graphviz.configure
 build/binfmt_misc.install:
 	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/interpreter || true
 	sudo ./binfmt_misc/binfmt_misc-wasm $(PWD)/bin/interpreter-wasm || true
+	sudo ./binfmt_misc/binfmt_misc-wasm64 $(PWD)/bin/interpreter-wasm64 || true
 	touch $@
 
 build/binfmt_misc-caching.install:
