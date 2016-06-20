@@ -122,6 +122,7 @@ function logi64(x)
 var stage = 0;
 var data;
 if (typeof window === "undefined") {
+if (0) {
     var ab = os.file.readFile("wasm.data", "binary");
     var i;
 
@@ -133,7 +134,10 @@ if (typeof window === "undefined") {
     HEAPU32 = new Uint32Array(w.exports.memory);
     for (i = 0; i < data.byteLength; i++)
         oh[16384 + 0x40 + i] = data[i];
-
+}
+    w = Wasm.instantiateModule(os.file.readFile("wasm.wasm", "binary"), imprts);
+    var oh = HEAPU8 = new Uint8Array(w.exports.memory);
+    HEAPU32 = new Uint32Array(w.exports.memory);
     logi64(w.exports.f_0x4000000000025000({ low: 0, high: 0}, {low: 2*1024*1024, high: 0 }, { low: 0, high: 0 }, { low: 0, high: 0 }, {low: 0, high: 0 }, {low: 0x2500, high: 0x4000000 }));
 } else {
     fetch("file:///home/pip/git/asmjs/wasm-experimentation/wasm.data").then(p => p.arrayBuffer()).then(ab => {

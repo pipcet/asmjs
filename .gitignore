@@ -6,3 +6,5 @@ src/
 asmjs-virtual-asmjs/
 cache/
 js/
+/wasm-virtual-wasm
+/wasm64-virtual-wasm64/
