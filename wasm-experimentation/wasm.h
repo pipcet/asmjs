@@ -134,6 +134,11 @@ i32 load_i32_i32_s(i32 ptr)
   return *(i32 *)(mem + ptr);
 }
 
+i64 load_i64_i64(i32 ptr)
+{
+  return *(i64 *)(mem + ptr);
+}
+
 f32 load_f32_f32(i32 ptr)
 {
   return *(f32 *)(mem + ptr);
@@ -172,6 +177,11 @@ i32 store_i32_i16(i32 ptr, i32 value)
 i32 store_i32_i32(i32 ptr, i32 value)
 {
   return *(i32 *)(mem + ptr) = value;
+}
+
+i64 store_i64_i64(i32 ptr, i64 value)
+{
+  return *(i64 *)(mem + ptr) = value;
 }
 
 f64 store_f64_f64(i32 ptr, f64 value)
