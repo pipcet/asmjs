@@ -914,8 +914,10 @@ if (typeof(os) !== "undefined" &&
 
         return fd.write(this.HEAPU8, ptr, len);
     };
-    ThinThin.open = function (ptr, flags, mode) {
+    ThinThin.openat = function (fdno, ptr, flags, mode) {
         var path = CStringAt(this.HEAPU8, ptr);
+        console.log("openat?! " + path);
+        return -%{ENOENT};
 
         path = path.replace(/^.*[\/]/, "");
 
@@ -1185,10 +1187,11 @@ if (typeof(os) !== "undefined" &&
 
 ThinThin.queue_peek = function ()
 {
-    if (typeof window === "undefined")
+    if (typeof window === "undefined" &&
+        typeof do_peek === "undefined")
         return -%{ENOENT};
 
-    console.log('queue_peek length ' + this.queue.length);
+    //console.log('queue_peek length ' + this.queue.length);
 
     // if (this.queue.length == 0)
     //     return new Promise((resolve,reject) => {
@@ -1234,6 +1237,7 @@ function queue_entry_size(data)
 function unpack_queue_entry(entry, where)
 {
     var data = entry.data;
+    //console.log("data " + data);
     var nd = 0;
     var nc = 0;
     var i;
