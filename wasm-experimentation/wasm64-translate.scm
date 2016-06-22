@@ -277,7 +277,7 @@
     (func "shl" $shl (param $x i64) (param $count i64) (result i64) (if (i64.gt_u (get_local $count) (i64.const 63)) (then (return (i64.const 0)))) (return (i64.shl (get_local $x) (get_local $count))))
     (func "shr_s" $shr_s (param $x i64) (param $count i64) (result i64) (if (i64.gt_u (get_local $count) (i64.const 63)) (then (set_local $count (i64.const 63)))) (return (i64.shr_s (get_local $x) (get_local $count))))
     (func "shr_u" $shr_u (param $x i64) (param $count i64) (result i64) (if (i64.gt_u (get_local $count) (i64.const 63)) (then (return (i64.const 0)))) (return (i64.shr_u (get_local $x) (get_local $count))))
-    (func "i64_load" $i64_load (param $addr i32) (result i64) (return (i64.load (get_local $addr))))
+    (func "i64_load" $i64_load (param $addr i32) (result i64) (return (i64.reinterpret_f64 (f64.load (get_local $addr)))))
     (func "i64_load32_s" $i64_load32_s (param $addr i32) (result i64) (return (i64.extend_s_i32 (i32.load (get_local $addr)))))
     (func "i64_load_i32_s" $i64_load_i32 (param $addr i32) (result i64) (return (i64.extend_s_i32 (i32.load (get_local $addr)))))
     (func "i64_load16_s" $i64_load16_s (param $addr i32) (result i64) (return (i64.extend_s_i16 (i32.load16_s (get_local $addr)))))
@@ -285,7 +285,7 @@
     (func "i64_load32_u" $i64_load32_u (param $addr i32) (result i64) (return (i64.extend_u_i32 (i32.load (get_local $addr)))))
     (func "i64_load16_u" $i64_load16_u (param $addr i32) (result i64) (return (i64.extend_u_i16 (i32.load16_u (get_local $addr)))))
     (func "i64_load8_u" $i64_load8_u (param $addr i32) (result i64) (return (i64.extend_u_i8 (i32.load8_u (get_local $addr)))))
-    (func "i64_store" $i64_store (param $addr i32) (param $v i64) (i64.store (get_local $addr) (get_local $v)))
+    (func "i64_store" $i64_store (param $addr i32) (param $v i64) (f64.store (get_local $addr) (f64.reinterpret_i64 (get_local $v))))
     (func "i64_store_i32" $i64_store_i32 (param $addr i32) (param $v i64) (i32.store (get_local $addr) (i32.wrap_i64 (get_local $v))))
     (func "i64_store32" $i64_store32 (param $addr i32) (param $v i64) (i32.store (get_local $addr) (i32.wrap_i64 (get_local $v))))
     (func "i64_store16" $i64_store16 (param $addr i32) (param $v i64) (i32.store16 (get_local $addr) (i32.wrap_i64 (get_local $v))))
@@ -307,7 +307,7 @@
 (define (hex x)
   (string->number (string-replace x " " "") 16))
 
-(write (let* ((nuclear #t) ;; nuclear option for debugging, trace all calls.
+(write (let* ((nuclear #f) ;; nuclear option for debugging, trace all calls.
               (ucnt 0)
               (uniq (lambda ()
                       (set! ucnt (1+ ucnt))
