@@ -2,7 +2,7 @@
 #include<stdio.h>
 #include<math.h>
 int main(int argc, char **argv) {
-  int arg = argc > 1 ? argv[1][0] - '0' : 3;
+  int arg = argc > 1 ? argv[1][0] - '0' : 5;
   switch(arg) {
     case 0: return 0; break;
     case 1: arg = 33000; break;
