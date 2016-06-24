@@ -16,6 +16,10 @@ build/common/.dir: build/.dir
 	test -d build/common || $(MKDIR) build/common
 	touch $@
 
+build/debug/.dir: build/.dir
+	test -d build/debug || $(MKDIR) build/debug
+	touch $@
+
 build/asmjs/.dir: build/.dir
 	test -d build/asmjs || $(MKDIR) build/asmjs
 	touch $@
@@ -80,6 +84,10 @@ build/common/spidermonkey.dir: build/common/.dir
 	test -d build/common/spidermonkey || $(MKDIR) build/common/spidermonkey
 	touch $@
 
+build/debug/spidermonkey.dir: build/debug/.dir
+	test -d build/debug/spidermonkey || $(MKDIR) build/debug/spidermonkey
+	touch $@
+
 build/asmjs/bash.dir: build/asmjs/.dir
 	test -d build/asmjs/bash || $(MKDIR) build/asmjs/bash
 	touch $@
@@ -109,7 +117,7 @@ build/wasm/binutils-gdb.configure: src/binutils-gdb.dir build/wasm/binutils-gdb.
 
 build/wasm64/binutils-gdb.configure: src/binutils-gdb.dir build/wasm64/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/wasm64/binutils-gdb; ../../../src/binutils-gdb/configure --target=wasm64-virtual-wasm64 --prefix=$(PWD)/wasm64-virtual-wasm64 CFLAGS=$(OPT_NATIVE))
+	(cd build/wasm64/binutils-gdb; ../../../src/binutils-gdb/configure --target=wasm64-virtual-wasm64 --prefix=$(PWD)/wasm64-virtual-wasm64 CFLAGS="-g -O0")
 	touch $@
 
 build/asmjs/binutils-gdb.make: build/asmjs/binutils-gdb.dir build/asmjs/binutils-gdb.configure
@@ -262,19 +270,29 @@ build/asmjs/perl.configure: src/perl.dir build/asmjs/perl.dir | build/asmjs/gcc-
 	(cd build/asmjs/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel)
 	touch $@
 
+build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/perl
+	touch $@
+
 build/common/spidermonkey.configure: src/spidermonkey.dir build/common/spidermonkey.dir
 	(cd src/spidermonkey/js/src; autoconf2.13)
 	(cd build/common/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/common/spidermonkey --without-system-zlib)
-	touch $@
-
-build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/perl
 	touch $@
 
 build/common/spidermonkey.make: build/common/spidermonkey.configure
 	$(MAKE) -C build/common/spidermonkey
 	$(MAKE) -C build/common/spidermonkey install
 	test -L $(PWD)/common/bin/js || ($(MKDIR) -p $(PWD)/common/bin; ln -sf ../spidermonkey/bin/js $(PWD)/common/bin/js)
+	touch $@
+
+build/debug/spidermonkey.configure: src/spidermonkey.dir build/debug/spidermonkey.dir
+	(cd src/spidermonkey/js/src; autoconf2.13)
+	(cd build/debug/spidermonkey; ../../../src/spidermonkey/js/src/configure --disable-optimize --enable-debug --disable-tests --prefix=$(PWD)/debug/spidermonkey --without-system-zlib)
+	touch $@
+
+build/debug/spidermonkey.make: build/debug/spidermonkey.configure
+	$(MAKE) -C build/debug/spidermonkey
+	$(MAKE) -C build/debug/spidermonkey install
 	touch $@
 
 build/spidermonkey.clean: build/spidermonkey.make

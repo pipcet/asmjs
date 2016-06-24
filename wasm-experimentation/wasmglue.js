@@ -92,7 +92,7 @@ function extcall(a0, a1, a2, a3)
 }
 
 w = buildInstance(os.file.readFile("../wasm-experimentation/wasm.wasm", "binary"),
-                  {extcall: extcall, log:x => console.log(x)}, "../wasm-experimentation/wasm.so");
+                  {extcall: extcall, log:x =>{ console.log(x); return {low:0, high: 0}}}, "../wasm-experimentation/wasm.so");
 
 HEAP8 = w.HEAP8;
 HEAPU32 = w.HEAPU32;
