@@ -17,6 +17,7 @@ __wasm_chars_\name\():
         section function
         section memory
         section export
+        section table
         section start
         section code
         section data
@@ -39,6 +40,7 @@ __wasm_chars_\name\():
         .globl $shr_s
         .globl $shr_u
 
+        .if 0
         defun $i64_store8 i32 i64
         get_local 0
         get_local 1
@@ -188,7 +190,9 @@ __wasm_chars_\name\():
         defun x16 i64 i64 result i64
         i64.const 0
         endefun x16
+        .endif
 
+        .if 0
         .pushsection .wasm.chars.export
         .byte 0x00
         .popsection
@@ -223,3 +227,4 @@ __wasm_import_extcall:
         lstring thinthin
         lstring extcall
         .popsection
+        .endif
