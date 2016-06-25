@@ -50,7 +50,9 @@ function dump(addr)
 }
 
 imprts.console = {};
-imprts.console.print = function (x) { console.log(hex64(x)); };
+imprts.console.print = function (x) {
+    console.log("print: " + hex64(x));
+};
 
 var counter = 0;
 
@@ -60,7 +62,7 @@ imprts.thinthin.extcall = function (r0, r1, a0, a1) {
     logi64(r1);
     logi64(a0);
     logi64(a1);
-    dump(a1.low);
+    //dump(a1.low);
     console.log(CStringAt(new Uint8Array(w.exports.memory), r0.low));
     console.log(CStringAt(new Uint8Array(w.exports.memory), r1.low));
     console.log(HEAPU32[a1.low + 0x20 >> 2]);
@@ -75,7 +77,6 @@ imprts.thinthin.extcall = function (r0, r1, a0, a1) {
     if (name == "write") {
         console.log(CStringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2]));
         console.log(StringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2], HEAPU32[a1.low+0x30>>2]));
-        console.log(CStringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2] + 23));
         HEAPU32[4096>>2] = HEAPU32[a1.low + 0x30 >> 2];
         HEAPU32[4100>>2] = 0;
     } else if (name == "fcntl_v") {
@@ -163,7 +164,7 @@ if (0) {
                 stage = 2;
             }
         } else if (stage == 2) {
-            console.log(w.exports.f_0x4000000000025000({ low: 0, high: 0}, {low: 2*1024*1024, high: 0 }, { low: 0, high: 0 }, { low: 0, high: 0 }, {low: 0, high: 0 }, {low: 0x2500, high: 0x4000000 }));
+            console.log(w.exports.f_0x4000000000025000({ low: 0, high: 0}, {low: 2*1024*1024, high: 0 }, { low: 0, high: 0 }, { low: 0, high: 0 }, {low: 0, high: 0 }, {low: 0, high: 0 }));
         }
     }, 5000);
 }
