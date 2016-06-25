@@ -41,6 +41,22 @@
        __wasm_chars_##name##_end = .;           \
   }
 
+/* The order of wasm sections is distressingly fickle. What appears to
+ * work is:
+ *
+ *  0. wasm header
+ *  1. type
+ *  2. import
+ *  3. function
+ *  4. table
+ *  5. memory
+ *  6. export
+ *  7. code
+ *  8. start
+ *  9. data
+ * 10. name
+ */
+
 SECTIONS
 {
   .output : {
@@ -49,6 +65,7 @@ SECTIONS
     SECTION_SIZED(type)
     SECTION_SIZED(import)
     SECTION_SIZED(function)
+    SECTION_SIZED(table)
     SECTION_UNSIZED(memory, LONG(0x008080c0); LONG(0x008080c0); BYTE(1);)
     SECTION_SIZED(export)
     SECTION_SIZED(code)
@@ -59,6 +76,7 @@ SECTIONS
   SECTION_CHARS(type)
   SECTION_CHARS(import)
   SECTION_CHARS(function)
+  SECTION_CHARS(table)
   SECTION_CHARS(export)
   SECTION_CHARS(code)
   SECTION_CHARS(data)
