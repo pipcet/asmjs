@@ -39,11 +39,13 @@ void msetchar(unsigned long off, int c)
 
 void msetuleb128(unsigned long off, unsigned long value)
 {
+  int i = 0;
   do {
     u8 c = value & 0x7f;
     value >>= 7;
+    i++;
     if (gmask[off]) {
-      fprintf(stderr, "msetuleb128\n");
+      fprintf(stderr, "msetuleb128 %d %ld\n", i, off);
       abort();
     }
     gbuf[off] = (c | (value?0x80:0));
@@ -72,8 +74,10 @@ unsigned long mgetuleb128(void)
   int c;
   long value = 0;
   long shift = 0;
+  int i = 0;
 
   while (1) {
+    i++;
     c = mgetchar();
     if (c == EOF)
       exit(1);
@@ -81,8 +85,10 @@ unsigned long mgetuleb128(void)
     value += (c & 0x7fL) << shift;
     shift += 7;
 
-    if (!(c & 0x80))
+    if (!(c & 0x80)) {
+      //fprintf(stderr, "read %d-byte uleb at %ld\n", i, roff);
       return value;
+    }
   }
 }
 
@@ -90,7 +96,6 @@ void mputsleb128(long value)
 {
   u8 c;
   int more;
-  fprintf(stderr, "put %lx\n", value);
   do {
     c = value & 0x7fL;
     value >>= 7;
@@ -119,7 +124,6 @@ long mgetsleb128(void)
     value += (c & 0x7fL) << shift;
     shift += 7;
 
-  fprintf(stderr, "read %lx\n", value);
     if (!(c & 0x80)) {
       if (c & 0x40)
         return value | (-1 << shift);
@@ -286,10 +290,13 @@ void ast(unsigned long len)
       break;
 
     default:
-      fprintf(stderr, "ast\n");
+      fprintf(stderr, "ast %02x %lx\n", (int)c, roff);
+      for(;;);
       abort();
     }
   }
+  static int index = 0;
+  fprintf(stderr, "ast read %ld bytes ending at %ld %lx\n", len, roff, index++);
 }
 
 void local_entry(void)
@@ -429,6 +436,25 @@ void section_export(char *name)
   }
 }
 
+void section_table(char *name)
+{
+  unsigned long off0, off1;
+  unsigned long len = mgetsize(&off0, &off1);
+  unsigned long count;
+
+  if (len) {
+    mputstring(name);
+    msynch();
+    mputuleb128(count = mgetuleb128());
+    msynch();
+    while (count--) {
+      mputuleb128(mgetuleb128());
+      msynch();
+    }
+    msetsize(off0, off1);
+  }
+}
+
 void section_function(char *name)
 {
   unsigned long off0, off1;
@@ -463,7 +489,6 @@ void section(void)
 {
   char *name = mgetstring();
 
-  fprintf(stderr, "section %s\n", name);
   if (strcmp(name, "type") == 0) {
     section_type(name);
   } else if (strcmp(name, "import") == 0) {
@@ -474,6 +499,8 @@ void section(void)
     section_simple(name);
   } else if (strcmp(name, "export") == 0) {
     section_export(name);
+  } else if (strcmp(name, "table") == 0) {
+    section_table(name);
   } else if (strcmp(name, "code") == 0) {
     section_code(name);
   } else if (strcmp(name, "start") == 0) {
@@ -486,14 +513,15 @@ void section(void)
     abort();
   }
 }
-int main(void)
+int main(int argc, char **argv)
 {
   size_t size = 4096;
   gbuf = xmalloc(size);
   size_t off = 0;
   size_t res = 0;
+  FILE *f = fopen(argv[1], "r");
 
-  while (res = fread(gbuf+off, 1, size-off, stdin)) {
+  while (res = fread(gbuf+off, 1, size-off, f)) {
     off += res;
     size *= 2;
     gbuf = xrealloc(gbuf, size);
@@ -511,7 +539,6 @@ int main(void)
   mputchar(mgetchar());
   mputchar(mgetchar());
   while (roff < off) {
-    fprintf(stderr, "%ld < %ld\n", roff, off);
     section();
   }
 
