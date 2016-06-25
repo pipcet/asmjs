@@ -497,6 +497,13 @@ Our design is significantly simpler than Emscripten's; in particular, we have no
 In essence, we admit that we are treating the asm.js target as a hostile environment which makes simulat
 
 The proposed specification for WebAssembly lacks the equivalent of a switch statement; the nearest match is the br_table opcode, which requires 
+* wasm support
+** assembly language
+Unlike the text-based asm.js backend, the wasm target uses a conventional assembler approach: the wasm opcodes are used as though they were assembly instructions.
+
+Notation is in RPN order: child nodes of the AST are described first, then their parent node. This can also be read as instructions for a stack machine.
+
+Immediate arguments follow the instruction, with the exception of an immediate argument specifying the number of stack slots to use, which is written in brackets. Thus, we have "return\[0]" and "return\[1]", "br\[0]" and "br\[1]", and "call[n]" for all n. In the case of call_indirect, the argument specifies the arity of the function, which is one less than the number of stack slots used.
 * TODO todo list
 ** DONE unconditional branches
 ***** DONE implement
