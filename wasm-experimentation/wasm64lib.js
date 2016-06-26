@@ -58,6 +58,7 @@ var counter = 0;
 
 imprts.thinthin = {};
 imprts.thinthin.extcall = function (r0, r1, a0, a1) {
+    a1.low -= 0x10;
     logi64(r0);
     logi64(r1);
     logi64(a0);
@@ -73,7 +74,6 @@ imprts.thinthin.extcall = function (r0, r1, a0, a1) {
     HEAPU32[4096>>2] = -1;
     HEAPU32[4100>>2] = -1;
 
-    console.log(CStringAt(HEAPU8, 0x161ec));
     if (name == "write") {
         console.log(CStringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2]));
         console.log(StringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2], HEAPU32[a1.low+0x30>>2]));
@@ -123,7 +123,7 @@ function logi64(x)
 var stage = 0;
 var data;
 if (typeof window === "undefined") {
-if (0) {
+if (1) {
     var ab = os.file.readFile("wasm.data", "binary");
     var i;
 
@@ -135,8 +135,9 @@ if (0) {
     HEAPU32 = new Uint32Array(w.exports.memory);
     for (i = 0; i < data.byteLength; i++)
         oh[16384 + 0x40 + i] = data[i];
-}
+} else {
     w = Wasm.instantiateModule(os.file.readFile("wasm.wasm", "binary"), imprts);
+}
     var oh = HEAPU8 = new Uint8Array(w.exports.memory);
     HEAPU32 = new Uint32Array(w.exports.memory);
     logi64(w.exports.f_0x4000000000025000({ low: 0, high: 0}, {low: 2*1024*1024, high: 0 }, { low: 0, high: 0 }, { low: 0, high: 0 }, {low: 0, high: 0 }, {low: 0x2500, high: 0x4000000 }));
