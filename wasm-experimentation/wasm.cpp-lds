@@ -24,6 +24,19 @@
   *(.wasm.payload.name*);                                            \
   __wasm_##name##_payload_end = .;
 
+#define SECTION_DATA(name)                                           \
+  wasm-headers.o(.wasm.header.name);                                 \
+  LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
+  __wasm_##name##_payload = .;                                       \
+  BYTE(1);                                                           \
+  LONGLEB128(0x4000);                                                \
+  LONGLEB128(__wasm_##name##_segment_end - __wasm_##name##_segment); \
+  __wasm_##name##_segment = .;                                       \
+  *(.asmjs.header);                                                  \
+  *(.data);                                                          \
+  __wasm_##name##_segment_end = .;                                   \
+  __wasm_##name##_payload_end = .;
+
 #define SECTION_UNSIZED(name, contents)                              \
   wasm-headers.o(.wasm.header.name);                                 \
   LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
@@ -52,9 +65,9 @@
  *  5. memory
  *  6. export
  *  7. code
- *  8. start
- *  9. data
- * 10. name
+ *  8. data
+ *  9. name
+ * 10. start
  */
 
 SECTIONS
@@ -69,9 +82,9 @@ SECTIONS
     SECTION_UNSIZED(memory, LONG(0x0080c080); LONG(0x0080c080); BYTE(1);)
     SECTION_SIZED(export)
     SECTION_SIZED(code)
-    SECTION_UNSIZED(start, LONGLEB128(_start))
-    SECTION_SIZED(data)
+    SECTION_DATA(data)
     SECTION_SIZED(name)
+    SECTION_UNSIZED(start, LONGLEB128(_start>>32))
   }
   SECTION_CHARS(type)
   SECTION_CHARS(import)
