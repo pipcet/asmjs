@@ -504,6 +504,15 @@ Unlike the text-based asm.js backend, the wasm target uses a conventional assemb
 Notation is in RPN order: child nodes of the AST are described first, then their parent node. This can also be read as instructions for a stack machine.
 
 Immediate arguments follow the instruction, with the exception of an immediate argument specifying the number of stack slots to use, which is written in brackets. Thus, we have "return\[0]" and "return\[1]", "br\[0]" and "br\[1]", and "call[n]" for all n. In the case of call_indirect, the argument specifies the arity of the function, which is one less than the number of stack slots used.
+
+The software-visible PC is split into a function index in the upper 32 bits and a relative PC in the lower 32 bits.
+
+** ELF format
+*** machine identification
+For wasm, we use an id of 0x4157, which corresponds to "WA" if formatted in little-endian mode.
+*** relocations
+Two extra relocations are provided, one for LEB128 constants and one for LEB128 constants right-shifted by 32 bits, in order to extract the function index from a 32-plus-32-bit PC.
+
 * TODO todo list
 ** DONE unconditional branches
 ***** DONE implement
