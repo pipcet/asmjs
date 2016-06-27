@@ -51,7 +51,7 @@ function dump(addr)
 
 imprts.console = {};
 imprts.console.print = function (x) {
-    console.log("print: " + hex64(x));
+    //console.log("print: " + hex64(x));
 };
 
 var counter = 0;
