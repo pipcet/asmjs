@@ -26,15 +26,42 @@ function StringAt(heap, offset, length)
     return ret;
 }
 
+function CStringsAt(heap, ptr)
+{
+    var HEAP32 = new Int32Array(heap);
+    var HEAP8 = new Int8Array(heap);
+    var res = [];
+
+    while (HEAP32[ptr>>2]) {
+        res.push(HEAP8, HEAP32[ptr>>2]);
+        ptr += 4;
+    }
+
+    return res;
+}
+
+function CStringTo(str, heap, offset)
+{
+    var i0;
+
+    for (i0 = 0; i0 < str.length; i0++) {
+        heap[offset + i0] = str.charCodeAt(i0);
+    }
+
+    heap[offset + i0] = 0;
+
+    return i0+1;
+}
+
 function hex64(x)
 {
     if (x.high == 0)
-        return x.low.toString(16);
+        return (x.low>>>0).toString(16);
     else {
-        low = x.low.toString(16);
+        low = (x.low>>>0).toString(16);
         while (low.length < 8)
             low = "0" + low;
-        return x.high.toString(16) + low;
+        return (x.high>>>0).toString(16) + low;
     }
 }
 
@@ -140,7 +167,7 @@ if (1) {
 }
     var oh = HEAPU8 = new Uint8Array(w.exports.memory);
     HEAPU32 = new Uint32Array(w.exports.memory);
-    logi64(w.exports.f_0x4000000000025000({ low: 0, high: 0}, {low: 2*1024*1024, high: 0 }, { low: 0, high: 0 }, { low: 0, high: 0 }, {low: 0, high: 0 }, {low: 0x2500, high: 0x4000000 }));
+    //logi64(w.exports.f_0x4000000000025000({ low: 0, high: 0}, {low: 2*1024*1024, high: 0 }, { low: 0, high: 0 }, { low: 0, high: 0 }, {low: 0, high: 0 }, {low: 0x2500, high: 0x4000000 }));
 } else {
     fetch("file:///home/pip/git/asmjs/wasm-experimentation/wasm.data").then(p => p.arrayBuffer()).then(ab => {
         var i;
@@ -165,7 +192,48 @@ if (1) {
                 stage = 2;
             }
         } else if (stage == 2) {
-            console.log(w.exports.f_0x4000000000025000({ low: 0, high: 0}, {low: 2*1024*1024, high: 0 }, { low: 0, high: 0 }, { low: 0, high: 0 }, {low: 0, high: 0 }, {low: 0, high: 0 }));
+            step();
+            //console.log(w.exports.f_0x4000000000025000({ low: 0, high: 0}, {low: 2*1024*1024, high: 0 }, { low: 0, high: 0 }, { low: 0, high: 0 }, {low: 0, high: 0 }, {low: 0, high: 0 }));
         }
     }, 5000);
 }
+
+var pc = { high: 0x15, low: 0 };
+var sp = { high: 0, low: 2 * 1024 * 1024 };
+var rpc = { high: 0, low: 0 };
+
+function dumpregblock(block)
+{
+    console.log("RP  @ " + block.toString(16));
+    console.log("PFP:  " + HEAPU32[block+0>>2].toString(16) + " " + HEAPU32[block+4>>2].toString(16));
+    console.log("PC0:  " + HEAPU32[block+8>>2].toString(16) + " " +  HEAPU32[block+12>>2].toString(16));
+    console.log("DPC:  " + HEAPU32[block+16>>2].toString(16) + " " +  HEAPU32[block+20>>2].toString(16));
+    console.log("RPC:  " + HEAPU32[block+24>>2].toString(16) + " " +  HEAPU32[block+28>>2].toString(16));
+    console.log("SP:   " + HEAPU32[block+32>>2].toString(16) + " " +  HEAPU32[block+36>>2].toString(16));
+    console.log("mask: " + HEAPU32[block+40>>2].toString(16) + " " +  HEAPU32[block+44>>2].toString(16));
+}
+
+function step()
+{
+    console.log("pc " + hex64(pc) + " sp " + hex64(sp) + " rpc " + hex64(rpc));
+    var rp = w.exports.indcall({ low: pc.low, high: pc.high }, sp, { low: 0, high: 0 }, { low: 0, high: 0 }, rpc, { low: 0, high: pc.high });
+    console.log("call to " + hex64(pc) + " returned " + hex64(rp));
+    dumpregblock(rp.low);
+    dumpregblock(rp.low);
+    sp = rp;
+    if (sp.low & 3) {
+        sp.low &= -4;
+        pc.high = HEAPU32[sp.low+12>>2];
+        pc.low = -1;
+        sp.low += 16;
+    } else {
+        dumpregblock(rp.low);
+        sp = { low: HEAPU32[rp.low>>2], high: 0 };
+        dumpregblock(sp.low);
+        pc = { low: -1, high: HEAPU32[sp.low+20>>2] };
+        sp.low += 16;
+    }
+}
+
+while (1)
+    step();

@@ -9,11 +9,13 @@ int main(void)
   printf("fp %p\n", __builtin_frame_address(0));
   if (setjmp(env)) {
     printf("second return\n");
+    fflush(stdout);
   } else {
     printf("first return\n");
     fflush(stdout);
     longjmp(env, 1);
     printf("notreached\n");
+    fflush(stdout);
   }
 
   return 0;
