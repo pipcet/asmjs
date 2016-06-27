@@ -72,6 +72,10 @@ build/asmjs/gcc-final.dir: build/asmjs/.dir
 	test -d build/asmjs/gcc-final || $(MKDIR) build/asmjs/gcc-final
 	touch $@
 
+build/wasm64/gcc-final.dir: build/wasm64/.dir
+	test -d build/wasm64/gcc-final || $(MKDIR) build/wasm64/gcc-final
+	touch $@
+
 build/asmjs/ncurses.dir: build/asmjs/.dir
 	test -d build/asmjs/ncurses || $(MKDIR) build/asmjs/ncurses
 	touch $@
@@ -222,6 +226,10 @@ build/asmjs/gcc-final.configure: src/gcc-final.dir build/asmjs/gcc-final.dir | b
 	(cd build/asmjs/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
+build/wasm64/gcc-final.configure: src/gcc-final.dir build/wasm64/gcc-final.dir | build/wasm64/glibc.make
+	(cd build/wasm64/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=wasm64-virtual-wasm64 --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/wasm64-virtual-wasm64)
+	touch $@
+
 build/asmjs/gcc-final.make: build/asmjs/gcc-final.dir build/asmjs/gcc-final.configure
 	test -d build/asmjs/gcc-final/gcc || $(MKDIR) build/asmjs/gcc-final/gcc
 	cp build/asmjs/gcc-preliminary/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_eh.a
@@ -230,6 +238,16 @@ build/asmjs/gcc-final.make: build/asmjs/gcc-final.dir build/asmjs/gcc-final.conf
 	cp build/asmjs/gcc-final/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_eh.a
 	cp build/asmjs/gcc-final/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_s.a
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/gcc-final install
+	touch $@
+
+build/wasm64/gcc-final.make: build/wasm64/gcc-final.dir build/wasm64/gcc-final.configure
+	test -d build/wasm64/gcc-final/gcc || $(MKDIR) build/wasm64/gcc-final/gcc
+	cp build/wasm64/gcc-preliminary/gcc/libgcc.a build/wasm64/gcc-final/gcc/libgcc_eh.a
+	cp build/wasm64/gcc-preliminary/gcc/libgcc.a build/wasm64/gcc-final/gcc/libgcc_s.a
+	PATH=$(PWD)/wasm64-virtual-wasm64/bin:$$PATH $(MAKE) -C build/wasm64/gcc-final
+	cp build/wasm64/gcc-final/gcc/libgcc.a build/wasm64/gcc-final/gcc/libgcc_eh.a
+	cp build/wasm64/gcc-final/gcc/libgcc.a build/wasm64/gcc-final/gcc/libgcc_s.a
+	PATH=$(PWD)/wasm64-virtual-wasm64/bin:$$PATH $(MAKE) -C build/wasm64/gcc-final install
 	touch $@
 
 build/asmjs/ncurses.configure: src/ncurses.dir build/asmjs/ncurses.dir | build/asmjs/gcc-final.make
