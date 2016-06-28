@@ -1,0 +1,7 @@
+make -kj6
+cp cmd/dot/dot_static .
+~/git/asmjs/bin/jsexport ./dot_static ./dot-001
+~/git/asmjs/bin/multifile-add1 ./dot-001 ~/git/asmjs/lib/mfinfo.o ./dot-002
+~/git/asmjs/bin/multifile-add1 ./dot-002 ~/git/asmjs/lib/loop.o ./dot-003
+~/git/asmjs/bin/prepare dot-003 > dot-003.js
+cp dot-003.js ~/git/ankol/uni/

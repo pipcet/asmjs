@@ -1,0 +1,2 @@
+(module (memory 32 32)
+ (func "f" $f (local $l i32) (return (get_local +))))

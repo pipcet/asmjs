@@ -1,0 +1,2 @@
+(module
+  (function "f" $f (param $x i32) (param $x i32)))

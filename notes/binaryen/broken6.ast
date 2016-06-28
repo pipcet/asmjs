@@ -1,0 +1,1 @@
+(i32.gt (get_local $x) (get_local $y)) compiles to (f64.gt ...)
