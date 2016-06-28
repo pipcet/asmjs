@@ -372,8 +372,8 @@ Wasm64Thread.prototype.eh_return = function (fp, sp, handler)
 
     fp = { low: this.HEAP32[this.HEAP32[fp.low>>2]>>2], high: 0 };
 
-    this.HEAP32[fp+8>>2] = handler.low;
-    this.HEAP32[fp+12>>2] = handler.high;
+    this.HEAP32[fp+16>>2] = handler.low;
+    this.HEAP32[fp+20>>2] = handler.high;
 
     fp.low |= 3;
 
