@@ -5,12 +5,8 @@ use File::Temp;
 
 my $dir = File::Temp->newdir;
 my $cache;
+my $prefix;
 
-if (-e "cache/interpolate-cache.pl") {
-    $cache = eval(read_file("cache/interpolate-cache.pl")) // {};
-} else {
-    $cache = {};
-}
 my $cache_changed;
 
 sub do_subst {
@@ -30,7 +26,7 @@ int main(void) {
     return $ret if defined($ret);
 
     write_file("$dir/tmp.cc", $preamble . "\n\n" . $program);
-    system("asmjs-virtual-asmjs-g++ --std=gnu++1z -Iinclude $dir/tmp.cc -o $dir/a.out") and die;
+    system("${prefix}-g++ --std=gnu++1z -Iinclude $dir/tmp.cc -o $dir/a.out") and die;
 
     $cache_changed = 1;
     return $cache->{$program} = `$dir/a.out`;
@@ -54,9 +50,10 @@ int main(void) {
 
     write_file("$dir/tmp.cc", $preamble . "\n\n" . $program);
     #system("asmjs-virtual-asmjs-g++ --std=gnu++1z -Iinclude $dir/tmp.cc -o $dir/a.out") and die;
-    system("asmjs-virtual-asmjs-g++ -static -fconcepts -fpermissive --std=gnu++1z -Iinclude $dir/tmp.cc -o $dir/a.out") and die;
+    system("${prefix}-g++ -static -fconcepts -fpermissive --std=gnu++1z -Iinclude $dir/tmp.cc -o $dir/a.out") and die;
 
     $cache_changed = 1;
+    system($dir . "/a.out");
     $cache->{$c} = `$dir/a.out`;
 
     print STDERR "$c => " . $cache->{$c} . "\n";
@@ -64,7 +61,15 @@ int main(void) {
     return $cache->{$c};
 }
 
-my $in = join("", <>);
+$prefix = $ARGV[0] // "asmjs-virtual-asmjs";
+
+if (-e "cache/interpolate-cache-${prefix}.pl") {
+    $cache = eval(read_file("cache/interpolate-cache-${prefix}.pl")) // {};
+} else {
+    $cache = {};
+}
+
+my $in = join("", <STDIN>);
 my $preamble = "";
 
 while ($in =~ s/\#(\{(((?>[^\{\}]+)|(?-3))*)\})\n//m) {
@@ -78,5 +83,5 @@ while ($in =~ s/\%(\{((?:(?>[^\{\}]+)|(?-2))*)\})/do_cpp_subst($2, $preamble)/me
 print $in;
 
 if ($cache_changed) {
-    write_file("cache/interpolate-cache.pl", Data::Dumper->new([$cache])->Sortkeys(1)->Dump());
+    write_file("cache/interpolate-cache-${prefix}.pl", Data::Dumper->new([$cache])->Sortkeys(1)->Dump());
 }
