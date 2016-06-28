@@ -1,0 +1,1703 @@
+#{#define _GNU_SOURCE}
+#{#include <stdio.h>}
+#{#include <sys/stat.h>}
+#{#include <fcntl.h>}
+#{#include <sys/fcntl.h>}
+#{#include <unistd.h>}
+#{#include <sys/types.h>}
+#{#include <errno.h>}
+#{#include <sys/ioctl.h>}
+#{#include <sys/poll.h>}
+#{#include <dirent.h>}
+#{#include "zeropage.h"}
+#{#define AT_FDROOTD -101}
+#{#define offsetof(type, field) ((unsigned)&((type *)0)->field)}
+#{#include "js3.h"}
+
+#{Heap thisheap("this.HEAP");}
+#{Context context(&thisheap);}
+
+#{JSV<zeropage*> zp("4096");}
+#{JSV<timeval*> tvptr("tvptr");}
+#{JSV<struct stat*> statbufptr("statbufptr");}
+#{JSV<dirent*> direntp("direntp");}
+#{JSV<pollfd*> fdsptr("fdsptr");}
+#{JSV<int*> intptr("intptr");}
+#{JSV<size_t> i("i");}
+
+var ThinThin = {};
+
+ThinThin.sbrk = function (size)
+{
+    size = (size + 4095) & -4096;
+    var ret = %{zp[&zeropage::top_of_sbrk]};
+
+    %{zp[&zeropage::top_of_sbrk]} += size;
+
+    if (%{zp[&zeropage::top_of_sbrk]} > %{zp[&zeropage::top_of_memory]}) {
+        throw "OOM";
+    }
+
+    return ret;
+};
+
+ThinThin.brk = function (addr)
+{
+    return 0;
+};
+
+var data = {};
+var offsets = {};
+
+var data_sections = [];
+var gFunctions = {};
+var main_pc;
+var premain_pc;
+var gdbstub_pc;
+var initsp;
+
+var MyCode;
+
+var debug_queued_data = [];
+var debug_queued_writedata = [];
+var gServer;
+var gSocket;
+var gReqs = [];
+var debug_log = "";
+var args;
+
+if (typeof print === "function") {
+}
+else {
+    print = function (str) {
+        console.log(str);
+    }
+}
+
+if (args) {
+}
+else if (typeof process !== "undefined") {
+    args = process.argv.slice(1);
+}
+else if (typeof scriptArgs !== "undefined") {
+    args = scriptArgs.slice(0);
+} else {
+    args = ["<this program>"];
+}
+
+function checkQueuedData(force)
+{
+    if (gReqs.length == 0 &&
+        (force || debug_queued_writedata.length != 0)) {
+        var str = "";
+        for (var i in debug_queued_writedata) {
+            str += String.fromCharCode(debug_queued_writedata[i]);
+        }
+
+        debug_queued_writedata = [];
+
+        var req = new XMLHttpRequest();
+
+        req.onreadystatechange = function () {
+            if (req.readyState !== XMLHttpRequest.DONE) {
+                return;
+            }
+            gReqs.shift();
+            var data = req.responseText;
+            if (req.status !== 200) {
+                return;
+            }
+
+            if (data != "") {
+                for (var i = 0; i < data.length; i++) {
+                    debug_queued_data.push(data.charCodeAt(i));
+                }
+            }
+
+            checkQueuedData();
+        }
+
+        req.open("POST", "http://127.0.0.1/cgi-bin/debug.cgi");
+
+        gReqs.push(req);
+        req.send(str);
+    }
+}
+
+function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
+{
+    var argspecs = [];
+    if (argspec0 !== undefined) argspecs.push(argspec0);
+    if (argspec1 !== undefined) argspecs.push(argspec1);
+    if (argspec2 !== undefined) argspecs.push(argspec2);
+    if (argspec3 !== undefined) argspecs.push(argspec3);
+    if (argspec4 !== undefined) argspecs.push(argspec4);
+    return function(arg0, arg1, arg2, arg3, arg4, arg5) {
+        var args = [arg0, arg1, arg2, arg3, arg4, arg5];
+        var rargs = [number];
+        var i;
+        var ret;
+        for (i = 0; i < argspecs.length; i++) {
+            var spec = argspecs[i];
+            if (spec == "ptr") {
+                rargs.push(this.HEAPU8);
+                //console.log('string arg ' + CStringAt(this.HEAPU8, args[i]));
+            } else {
+                //console.log('integer arg ' + args[i].toString(16));
+            }
+            rargs.push(args[i]);
+        }
+        ret = os.sys.call.apply(undefined, rargs);
+        //print("syscall " + number + " ret " + ret);
+        return ret;
+    };
+}
+
+function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
+                   argspec4, argspec5)
+{
+    var argspecs = [];
+    if (argspec0 !== undefined) argspecs.push(argspec0);
+    if (argspec1 !== undefined) argspecs.push(argspec1);
+    if (argspec2 !== undefined) argspecs.push(argspec2);
+    if (argspec3 !== undefined) argspecs.push(argspec3);
+    if (argspec4 !== undefined) argspecs.push(argspec4);
+    if (argspec5 !== undefined) argspecs.push(argspec5);
+    return function(arg0, arg1, arg2, arg3, arg4, arg5) {
+        var args = [arg0, arg1, arg2, arg3, arg4, arg5];
+        var rargs = [number, 0];
+        var i;
+        var ret;
+        for (i = 0; i < argspecs.length; i++) {
+            var spec = argspecs[i];
+            switch (spec) {
+            case "fd":
+            case "u64":
+                rargs.push(args[i]);
+                rargs.push(0);
+                break;
+
+            case "ptr":
+            case "str":
+            case "path":
+                rargs.push(this.HEAPU8);
+                rargs.push(args[i]);
+                //console.log('str arg ' + CStringAt(this.HEAPU8, args[i]));
+                break;
+
+            case "ptrs":
+            case "strs":
+                var arg = [];
+                var j;
+
+                for (j = 0; this.HEAP32[args[i]+4*j>>2]; j++) {
+                    arg.push(this.HEAPU8);
+                    arg.push(this.HEAP32[args[i]+4*j>>2]);
+                    //console.log('strs arg ' + CStringAt(this.HEAPU8, this.HEAP32[args[i]+4*j>>2]));
+                }
+                arg.push(0);
+                arg.push(0);
+
+                //console.log(arg);
+                rargs.push(arg);
+            }
+        }
+        //console.log(argspecs);
+        //console.log(args);
+        //console.log(rargs);
+        ret = os.sys.call64.call(undefined, rargs);
+        //print("syscall " + number + " ret " + ret);
+        return ret;
+    };
+}
+
+var Syscalls = {
+    read:         new Syscall(  0, "fd", "ptr", "u64"),
+    write:        new Syscall(  1, "fd", "ptr", "u64"),
+    open:         new Syscall(  2, "ptr", "u64", "u64"),
+    close:        new Syscall(  3, "fd"),
+    stat:         new Syscall(  4, "ptr", "ptr"),
+    fstat:        new Syscall(  5, "u64", "ptr"),
+    lseek:        new Syscall(  8, "u64", "u64", "u64"),
+    ioctl_p:      new Syscall( 16, "u64", "u64", "ptr"),
+    access:       new Syscall( 21, "ptr", "u64"),
+    select:       new Syscall( 23, "u64", "ptr", "ptr", "ptr", "ptr"),
+    sched_yield:  new Syscall( 24),
+    dup:          new Syscall( 32, "u64"),
+    dup2:         new Syscall( 33, "u64", "u64"),
+    getpid:       new Syscall( 39),
+    clone:        new Syscall( 56, "u64", "ptr", "ptr", "ptr", "ptr"),
+    fork:         new Syscall( 57),
+    execve:       new Syscall64( 59, "path", "strs", "strs"),
+    exit:         new Syscall( 60, "u64"),
+    wait4:        new Syscall( 61, "u64", "ptr", "u64", "ptr"),
+    kill:         new Syscall( 62, "u64", "u64"),
+    fcntl_v:      new Syscall( 72, "u64", "u64"),
+    fcntl_i:      new Syscall( 72, "u64", "u64", "u64"),
+    fcntl_p:      new Syscall( 72, "u64", "u64", "ptr"),
+    ftruncate:    new Syscall( 77, "u64", "u64"),
+    getcwd:       new Syscall( 79, "ptr", "u64"),
+    chdir:        new Syscall( 80, "ptr"),
+    fchdir:       new Syscall( 81, "u64"),
+    rename:       new Syscall( 82, "ptr", "ptr"),
+    mkdir:        new Syscall( 83, "ptr", "u64"),
+    rmdir:        new Syscall( 84, "ptr"),
+    unlink:       new Syscall( 87, "ptr"),
+    rename:       new Syscall( 82, "ptr", "ptr"),
+    chdir:        new Syscall( 80, "ptr"),
+    fchmod:       new Syscall( 91, "fd", "u64"),
+    gettimeofday: new Syscall( 96, "ptr", "u64"),
+    getuid:       new Syscall(102),
+    getgid:       new Syscall(104),
+    geteuid:      new Syscall(107),
+    getegid:      new Syscall(108),
+    getdents:     new Syscall(217, "fd", "ptr", "u64"),
+    clock_gettime:new Syscall(227, "u64", "ptr"),
+    openat:       new Syscall(257, "fd", "ptr", "u64", "u64"),
+    mkdirat:      new Syscall(258, "fd", "ptr", "u64"),
+    newfstatat:   new Syscall(262, "fd", "ptr", "ptr", "u64"),
+    unlinkat:     new Syscall(263, "fd", "ptr", "u64"),
+    linkat:       new Syscall(265, "fd", "ptr", "fd", "ptr", "u64"),
+    readlinkat:   new Syscall(267, "fd", "ptr", "ptr", "u64"),
+    fchmodat:     new Syscall(268, "fd", "ptr", "u64", "u64"),
+    faccessat:    new Syscall(269, "fd", "ptr", "u64", "u64"),
+    ppoll:        new Syscall(271, "ptr", "u64", "ptr", "ptr"),
+    utimensat:    new Syscall(280, "fd", "ptr", "ptr", "u64"),
+    pipe2:        new Syscall(293, "ptr", "u64"),
+    renameat2:    new Syscall(316, "fd", "ptr", "fd", "ptr", "u64"),
+    execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64"),
+};
+
+var SyscallSignatures = {
+    read:         [  0, "fd", "ptr", "u64"],
+    write:        [  1, "fd", "ptr", "u64"],
+    open:         [  2, "ptr", "u64", "u64"],
+    close:        [  3, "fd"],
+    stat:         [  4, "ptr", "ptr"],
+    fstat:        [  5, "u64", "ptr"],
+    lseek:        [  8, "u64", "u64", "u64"],
+    ioctl_p:      [ 16, "u64", "u64", "ptr"],
+    access:       [ 21, "ptr", "u64"],
+    select:       [ 23, "u64", "ptr", "ptr", "ptr", "ptr"],
+    sched_yield:  [ 24],
+    dup:          [ 32, "u64"],
+    dup2:         [ 33, "u64", "u64"],
+    getpid:       [ 39],
+    clone:        [ 56, "u64", "ptr", "ptr", "ptr", "ptr"],
+    fork:         [ 57],
+    execve:       [ 59, "path", "strs", "strs"],
+    exit:         [ 60, "u64"],
+    wait4:        [ 61, "u64", "ptr", "u64", "ptr"],
+    kill:         [ 62, "u64", "u64"],
+    fcntl_v:      [ 72, "u64", "u64"],
+    fcntl_i:      [ 72, "u64", "u64", "u64"],
+    fcntl_p:      [ 72, "u64", "u64", "ptr"],
+    ftruncate:    [ 77, "u64", "u64"],
+    getcwd:       [ 79, "ptr", "u64"],
+    chdir:        [ 80, "ptr"],
+    fchdir:       [ 81, "u64"],
+    rename:       [ 82, "ptr", "ptr"],
+    mkdir:        [ 83, "ptr", "u64"],
+    rmdir:        [ 84, "ptr"],
+    unlink:       [ 87, "ptr"],
+    rename:       [ 82, "ptr", "ptr"],
+    chdir:        [ 80, "ptr"],
+    gettimeofday: [ 96, "ptr", "u64"],
+    getuid:       [102],
+    getgid:       [104],
+    geteuid:      [107],
+    getegid:      [108],
+    getdents:     [217, "fd", "ptr", "u64"],
+    clock_gettime:[227, "u64", "ptr"],
+    openat:       [257, "fd", "ptr", "u64", "u64"],
+    mkdirat:      [258, "fd", "ptr", "u64"],
+    newfstatat:   [262, "fd", "path", "wptr", "u64"],
+    unlinkat:     [263, "fd", "ptr", "u64"],
+    linkat:       [265, "fd", "ptr", "fd", "ptr", "u64"],
+    readlinkat:   [267, "fd", "ptr", "ptr", "u64"],
+    fchmodat:     [268, "fd", "ptr", "u64", "u64"],
+    faccessat:    [269, "fd", "ptr", "u64", "u64"],
+    ppoll:        [271, "ptr", "u64", "ptr", "ptr"],
+    utimensat:    [280, "fd", "ptr", "ptr", "u64"],
+    pipe2:        [293, "ptr", "u64"],
+    renameat2:    [316, "fd", "ptr", "fd", "ptr", "u64"],
+    execveat:     [333, "fd", "ptr", "aptr", "aptr", "u64"],
+};
+
+function InputPromise(fd, output = undefined)
+{
+    var done = false;
+    output = undefined;
+
+    if (done)
+        return Promise.resolve("");
+
+    done = true;
+
+    if (output === undefined)
+        output = document.getElementById("output");
+
+    output = new ImmediatePromise(output);
+
+    return output.then(o => {
+        return new Promise((resolve, reject) => {
+            var node = document.createElement("div");
+            var node_ta = document.createElement("textarea");
+            var node_b = document.createElement("button");
+            node_b.innerHTML = "EOF";
+
+            var node_send = document.createElement("button");
+            node_send.innerHTML = "Send";
+
+            node.appendChild(node_ta);
+            node.appendChild(node_send);
+            node.appendChild(node_b);
+
+            var forget;
+            var destroy;
+
+            destroy = function () {
+                if (node.parentNode)
+                    node.parentNode.removeChild(node);
+
+                fd.forgetInputPromises.delete(forget);
+                reject();
+            };
+
+            forget = function () {
+                if (node_ta.value === "")
+                    destroy();
+            };
+
+            fd.forgetInputPromises.add(forget);
+
+            if (0) node_ta.onchange = function (e) {
+                var value = node_ta.value;
+                if (value == "")
+                    fd.EOF = true;
+                resolve(value == "" ? "" : (value + "\n"));
+
+                if (node.parentNode)
+                    node.parentNode.removeChild(node);
+
+                e.stopPropagation();
+                e.preventDefault();
+            };
+
+            node_b.onclick = function (e) {
+                var value = node_ta.value;
+                fd.EOF = true;
+                resolve(value == "" ? "" : (value + "\n"));
+
+                destroy();
+
+                e.stopPropagation();
+                e.preventDefault();
+            };
+
+            node_send.onclick = function (e) {
+                var value = node_ta.value;
+                resolve(value == "" ? "" : (value + "\n"));
+
+                destroy();
+
+                e.stopPropagation();
+                e.preventDefault();
+            };
+
+            o.appendChild(node);
+
+            node.focus();
+        });
+    });
+}
+
+function TimeoutPromise(timeout)
+{
+    return new Promise((resolve, reject) => {
+        window.setTimeout(resolve, timeout);
+    });
+}
+
+function SplitPromise(n, promise)
+{
+    var resolve_lhs, resolve_rhs;
+    var reject_lhs, reject_rhs;
+
+    var promise_lhs = new Promise((resolve, reject) => {
+        resolve_lhs = resolve;
+        reject_lhs = reject;
+    });
+
+    var promise_rhs = new Promise((resolve, reject) => {
+        resolve_rhs = resolve;
+        reject_rhs = reject;
+    });
+
+    promise.then(value => {
+        var lhs = value.substr(0, n);
+        var rhs = value.substr(n);
+
+        resolve_rhs(rhs);
+        resolve_lhs(lhs);
+    });
+
+    return [promise_lhs, promise_rhs];
+}
+
+function DissectedPromise()
+{
+    this.promise = new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+    });
+}
+
+DissectedPromise.prototype.then = function (consequence)
+{
+    return this.promise.then(consequence);
+};
+
+function ImmediatePromise(v)
+{
+    if (v instanceof Promise)
+        return v;
+
+    this.value = v;
+}
+
+ImmediatePromise.prototype.then = function (consequence)
+{
+    return consequence(this.value);
+};
+
+function ThinThinFetchDD(process, parent, stem, fdno = undefined)
+{
+    ThinThinDD.call(this, process, parent);
+    this.stem = stem;
+}
+
+ThinThinFetchDD.prototype = Object.create(ThinThinDD.prototype);
+
+ThinThinDD.prototype.walk = function (component, isdir = false)
+{
+    if (component in this.entries)
+        return this.entries[component];
+
+    var ret = Promise.resolve(this.discover(component, isdir));
+
+    return ret.then(entry => {
+        if (entry)
+            this.entries[component] = entry;
+    });
+};
+
+ThinThinFetchDD.prototype.discover = function (component, isdir = false)
+{
+    var url = this.stem + "/" + component;
+    var ret;
+
+    if (isdir) {
+        ret = new ThinThinFetchDD(this.process, this, url, -1);
+    } else {
+        ret = new ThinThinFetchFD(this.process, this, url, -1);
+    }
+
+    return ret;
+};
+
+function ThinThinDD(process, fdno = undefined)
+{
+    ThinThinFD.call(this, process, fdno);
+    this.entries = {
+        ".": this,
+        "..": this.parent,
+    }
+}
+ThinThinDD.prototype = Object.create(ThinThinFD.prototype);
+
+ThinThinDD.prototype.mode = function ()
+{
+    return %{S_IFDIR + 0777};
+};
+
+ThinThinDD.prototype.openat = function (path)
+{
+};
+
+function ThinThinFD(process, fdno = undefined)
+{
+    if (fdno === undefined)
+        for (fdno = 0; process.fds[fdno]; fdno++)
+            ;
+    this.fdno = fdno;
+    this.readData = [];
+    this.readPosition = 0;
+    this.forgetInputPromises = new Set();
+    if (fdno >= 0)
+        process.fds[fdno] = this;
+    this.process = process;
+}
+
+ThinThinFD.prototype.mode = function ()
+{
+    return %{__S_IFCHR + 0666};
+};
+
+ThinThinFD.prototype.size = function ()
+{
+    return this.readData.length;
+}
+
+ThinThinFD.prototype.open = function ()
+{
+    return this.fdno;
+};
+
+ThinThinFD.prototype.close = function ()
+{
+    delete this.process.fds[this.fdno];
+
+    return Promise.resolve(0);
+};
+
+ThinThinFD.prototype.consume = function (i)
+{
+    this.readData = this.readData.substr(i);
+};
+
+ThinThinFD.prototype.stuff = function (data)
+{
+    this.readData += data;
+
+    if (this.activeInputPromise) {
+        var activeInputPromise = this.activeInputPromise;
+        delete this.activeInputPromise;
+        activeInputPromise.resolve(data);
+    }
+
+    var forgetInputPromises = this.forgetInputPromises;
+    this.forgetInputPromises = new Set();
+
+    for (var forget of forgetInputPromises)
+        forget();
+};
+
+ThinThinFD.prototype.makeSeekable = function ()
+{
+    this.consume = i => {
+        this.readPosition += i;
+    };
+};
+
+/* .read(undefined, 0, 0) returns a promise that resolves to 0 when
+ * data is available to read. */
+ThinThinFD.prototype.read = function(heap = undefined, ptr = 0, len = 0)
+{
+    if (this.readData.length > this.readPosition ||
+        this.EOF) {
+        var i;
+
+        for (i=0; i<len && i<this.readData.length - this.readPosition; i++) {
+            var cc = this.readData.charCodeAt(this.readPosition+i);
+            if (cc >= 0x80 || cc <= 0 || cc != cc) {
+                //console.log("UTF-8 char in " + this.readData.substr(this.readPosition+i, 32));
+            }
+            heap[ptr+i] = cc;
+        }
+        this.consume(i);
+
+        if (i == 0 || i == len)
+            return i;
+
+        return Promise.resolve(this.read(heap, ptr+i, len-i)).then(j => i+j);
+    }
+
+    return this.wrappedInputPromise().then(data => {
+        if (data === undefined)
+            return -2;
+
+        if (data === "" && !this.EOF)
+            return 0;
+
+        return this.read(heap, ptr, len);
+    });
+};
+
+ThinThinFD.prototype.available = function ()
+{
+    if (this.readData.length > this.readPosition)
+        return Promise.resolve(this.readData.length - this.readPosition);
+
+    this.wrappedInputPromise();
+
+    return Promise.resolve(0);
+};
+
+ThinThinFD.prototype.wrappedInputPromise = function ()
+{
+    if (!this.activeInputPromise) {
+        this.activeInputPromise = new DissectedPromise();
+
+        this.inputPromise().then((data) => {
+            this.stuff(data);
+        });
+    }
+
+    return this.activeInputPromise;
+};
+
+ThinThinFD.prototype.inputPromise = function ()
+{
+    return new InputPromise(this, this.domPromise());
+};
+
+ThinThinFD.prototype.write = function (heap = undefined, ptr = 0, len = 0)
+{
+    if (len == 0)
+        return Promise.resolve(0);
+
+    if ("async hack") {
+        this.outputPromise(heap, ptr, len).then
+        (i =>
+         this.write(heap, ptr+i, len-i).then(j => i+j));
+
+        return len;
+    } else {
+        return this.outputPromise(heap, ptr, len).then
+        (i =>
+         this.write(heap, ptr+i, len-i).then(j => i+j));
+    }
+};
+
+ThinThinFD.prototype.outputPromise = function (heap, ptr, len)
+{
+    var data = "";
+
+    for (i=0; i<len; i++)
+        data += String.fromCharCode(heap[ptr+i]);
+
+    putstr(data);
+
+    return Promise.resolve(len);
+};
+
+ThinThinFD.prototype.domPromise = function ()
+{
+    return document.getElementById("output");
+};
+
+ThinThinFD.prototype.clone = function ()
+{
+    return this;
+};
+
+ThinThinFD.prototype.freeze = function ()
+{
+    return new FrozenThinThinFD(this);
+};
+
+var gRemoteFDs = {};
+
+function FrozenThinThinFD(fd)
+{
+    var rfdno;
+
+    for (rfdno = 0; rfdno in gRemoteFDs; rfdno++);
+
+    gRemoteFDs[rfdno] = fd;
+
+    this.rfdno = rfdno;
+    this.fdno = fd.fdno;
+}
+
+FrozenThinThinFD.prototype.thaw = function (process, target)
+{
+    var fd = new RemoteFD(process, target, this.rfdno, this.fdno);
+    gRemoteFDs[this.rfdno] = fd;
+    fd.target = target;
+
+    return fd;
+};
+
+function ThinThinFetchFD(process, url, fdno = undefined)
+{
+    ThinThinFD.call(this, process, fdno);
+    this.url = url;
+    this.makeSeekable();
+}
+
+ThinThinFetchFD.prototype = Object.create(ThinThinFD.prototype);
+
+ThinThinFetchFD.prototype.open = function ()
+{
+    return this.inputPromise().then(() => this.fdno);
+};
+
+ThinThinFetchFD.prototype.inputPromise = function ()
+{
+    var url = this.url;
+
+    delete this.url;
+
+    if (!url) {
+        return Promise.resolve("");
+    }
+
+    return fetch(url).then(response => {
+        var abp = response.arrayBuffer();
+
+        return abp.then(abuf => {
+            var view = new Uint8Array(abuf);
+            var text = "";
+
+            for (var i = 0; i < abuf.byteLength; i++) {
+                var cc = view[i];
+                if (cc & 0x80) cc += 0x100;
+                text += String.fromCharCode(cc);
+            }
+
+            return text;
+        });
+    }).catch(error => undefined);
+};
+
+function ArrayBufferFD(process, abufPromise, fdno = undefined)
+{
+    ThinThinFD.call(this, process, fdno);
+
+    this.abufPromise = abufPromise;
+}
+ArrayBufferFD.prototype = Object.create(ThinThinFD.prototype);
+
+ArrayBufferFD.prototype.inputPromise = function ()
+{
+    this.abufPromise.then((abuf) => {
+    })
+}
+
+function PipeFD(process, fdno = undefined)
+{
+    ThinThinFD.call(this, process, fdno);
+}
+
+PipeFD.prototype.connect = function (other)
+{
+    this.other = other;
+};
+
+function PipeConnection(ipipe, opipe)
+{
+    this.i = ipipe;
+    this.o = opipe;
+}
+
+function IPipeFD(process, fdno = undefined)
+{
+    PipeFD.call(this, process, fdno);
+}
+IPipeFD.prototype = Object.create(PipeFD.prototype);
+
+function OPipeFD(process, fdno = undefined)
+{
+    PipeFD.call(this, process, fdno);
+}
+OPipeFD.prototype = Object.create(PipeFD.prototype);
+
+OPipeFD.prototype.outputPromise = function (heap, ptr, len)
+{
+    if (len == 0)
+        return 0;
+
+    if (this.other.ready) {
+        var l = Math.min(len, this.other.len);
+
+        for (var i = 0; i < l; i++)
+            this.other.heap[this.other.ptr + i] = heap[ptr + i];
+
+        this.other.resolve(l);
+    } else {
+        
+    }
+};
+
+function RemoteFD(process, target, rfdno, fdno = undefined)
+{
+    ThinThinFD.call(this, process, fdno);
+
+    gRemoteFDs[rfdno] = this;
+    this.target = target;
+    this.rfdno = rfdno;
+}
+
+RemoteFD.prototype = Object.create(ThinThinFD.prototype);
+
+RemoteFD.prototype.inputPromise = function ()
+{
+    console.log("RemoteFD.inputPromise");
+    return new Promise((resolve, reject) => {
+        this.target(["read", this.rfdno], "*");
+        this.stuff = (data) => {
+            resolve(data);
+            delete this.stuff;
+        };
+    });
+};
+
+RemoteFD.prototype.outputPromise = function (heap, ptr, len)
+{
+    console.log("RemoteFD.outputPromise " + heap + " " + ptr + " " + len);
+    var buf = new ArrayBuffer(len);
+    var buf8 = new Uint8Array(buf);
+    for (var i = 0; i < buf.byteLength; i++)
+        buf8[i] = heap[ptr+i];
+
+    this.target(["send", this.rfdno, buf]);
+
+    return Promise.resolve(len);
+};
+
+if (typeof(os) !== "undefined" &&
+    typeof(os.sys) !== "undefined") {
+    for (var syscall in Syscalls)
+        ThinThin[syscall] = Syscalls[syscall];
+    ThinThin.exit = function (code) {
+        quit(code);
+        if (code != 0 && code !== undefined)
+            throw "Exit Status " + code;
+        else
+            throw new SuccessException();
+    };
+    ThinThin.gethostname = function (addr, len) {
+        this.HEAP8[addr] = 0;
+
+        return 0;
+    };
+    ThinThin.isatty = function () { return 1 };
+    ThinThin.restart = function (dst, src, len, entry)
+    {
+        return this.restart(dst, src, len, entry);
+    };
+    ThinThin.fork = function () {
+        return os.sys.fork();
+    };
+} else {
+    ThinThin.isatty = function (fdno) {
+        return fdno <= 2 ? 1 : 0;
+    };
+    ThinThin.gethostname = function (addr, len) {
+        this.HEAP8[addr] = 0;
+
+        return 0;
+    };
+    ThinThin.read = function (fdno, ptr, len) {
+        var fd = this.fds[fdno];
+
+        if (!fd)
+            return -%{EBADF};
+
+        if (len == 0)
+            return 0;
+
+        var ret = fd.read(this.HEAPU8, ptr, len);
+
+        return ret;
+    },
+    ThinThin.write = function (fdno, ptr, len) {
+        var fd = this.fds[fdno];
+
+        if (!fd)
+            return -%{EBADF};
+
+        if (len == 0)
+            return 0;
+
+        return fd.write(this.HEAPU8, ptr, len);
+    };
+    ThinThin.openat = function (fdno, ptr, flags, mode) {
+        var path = CStringAt(this.HEAPU8, ptr);
+        console.log("openat?! " + path);
+        return -%{ENOENT};
+
+        path = path.replace(/^.*[\/]/, "");
+
+        if (path.match(/\.elc$/) ||
+            path.match(/\.el\.el$/) ||
+            path.match(/\.el\.e$/))
+            return -2;
+
+        var fd = new ThinThinFetchFD(this.process, path);
+
+        return fd.fdno;
+    },
+    ThinThin.close = function (fdno) {
+        var fd = this.fds[fdno];
+
+        if (!fd)
+            return -%{EBADF};
+
+        return fd.close();
+    },
+    ThinThin.faccessat = function (fdno, ptr, flags, mode) {
+        return 0;
+    };
+    ThinThin.newfstatat = function (fdno, pathstr, statbufptr, flags) {
+        var fd = this.fds[fdno];
+        var path = CStringAt(this.HEAPU8, pathstr);
+
+        var off;
+        for (off = 0; off < %{sizeof(struct stat)}; off += 4)
+            this.HEAP32[statbufptr+off>>2] = 0;
+
+        %{statbufptr[&stat::st_nlink] = 1LL}
+        %{statbufptr[&stat::st_mode] = "fd.mode()"}
+        %{statbufptr[&stat::st_size] = "fd.size()"}
+        %{statbufptr[&stat::st_blksize] = "fd.size()"}
+        %{statbufptr[&stat::st_blocks] = "1"}
+
+        return 0;
+    };
+    ThinThin.stat = function (ptr, bufptr) {
+        var path = CStringAt(this.HEAPU8, ptr);
+
+        path = path.replace(/^.*[\/]/, "");
+
+        /* st_dev: 64 bits */
+        this.HEAP32[bufptr+ 0>>2] = 0;
+        this.HEAP32[bufptr+ 4>>2] = 0;
+        /* pad1: 32 bits */
+        this.HEAP32[bufptr+ 8>>2] = 0;
+        /* __st_ino: 32 bits */
+        this.HEAP32[bufptr+12>>2] = 0;
+        /* st_mode: 32 bits */
+        this.HEAP32[bufptr+16>>2] = 0;
+        /* st_nlink: 64 bits */
+        this.HEAP32[bufptr+20>>2] = 0;
+        this.HEAP32[bufptr+24>>2] = 0;
+        this.HEAP32[bufptr+28>>2] = 0;
+        this.HEAP32[bufptr+32>>2] = 0;
+        this.HEAP32[bufptr+36>>2] = 0;
+        this.HEAP32[bufptr+40>>2] = 0;
+        this.HEAP32[bufptr+44>>2] = 0;
+
+        if (path == "terminfo") {
+            this.HEAP32[bufptr+6*4>>2] = 4 << 12;
+        } else if (path.match(/\.elc$/)) {
+            return -2;
+        } else {
+            //console.log("statting " + CStringAt(ptr));
+        }
+
+        return 0;
+    };
+    var first = 3;
+    ThinThin.getdents = function (fdno, direntp, count)
+    {
+        if (first) {
+            %{direntp[&dirent::d_ino] = "0"}
+            %{direntp[&dirent::d_off] = "0"}
+            %{direntp[&dirent::d_reclen] = 9}
+
+            CStringTo(this.HEAP8, %{direntp+&dirent::d_name}, "words.eng");
+            first--;
+            return 26;
+        }
+        return 0;
+    };
+    ThinThin.fstat = function (fdno, bufptr) {
+        var fd = this.fds[fdno];
+        this.HEAP32[bufptr+ 0>>2] = 0;
+        this.HEAP32[bufptr+ 4>>2] = 0;
+        this.HEAP32[bufptr+ 8>>2] = 0;
+        this.HEAP32[bufptr+12>>2] = 0;
+        this.HEAP32[bufptr+16>>2] = 0;
+        this.HEAP32[bufptr+20>>2] = 0;
+        this.HEAP32[bufptr+24>>2] = 0;
+        this.HEAP32[bufptr+28>>2] = 0;
+        this.HEAP32[bufptr+32>>2] = 0;
+        this.HEAP32[bufptr+36>>2] = 0;
+        this.HEAP32[bufptr+40>>2] = 0;
+        this.HEAP32[bufptr+44>>2] = 0;
+        this.HEAP32[bufptr+48>>2] = 0;
+        this.HEAP32[bufptr+52>>2] = 0;
+        this.HEAP32[bufptr+56>>2] = 0;
+        this.HEAP32[bufptr+60>>2] = 0;
+        this.HEAP32[bufptr+64>>2] = 0;
+
+        if (false) {
+            this.HEAP32[bufptr+6*4>>2] = 4 << 12;
+        } else {
+            this.HEAP32[bufptr+6*4>>2] = 1 << 15;
+        }
+
+        return Promise.resolve(fd.read()).then(i => {
+            this.HEAP32[bufptr+0x30>>2] = fd.readData.length;
+            this.HEAP32[bufptr+0x38>>2] = fd.readData.length;
+            this.HEAP32[bufptr+0x40>>2] = fd.readData.length;
+            return 0;
+        });
+    };
+    ThinThin.ioctl_p = function (fdno, code, intptr) {
+        fdno = 0;
+        var fd = this.fds[fdno];
+
+        switch (code) {
+        case %{FIONREAD}:
+            return fd.available().then(avail => {
+                if (avail) {
+                    %{*intptr = "avail"}
+                } else {
+                    %{*intptr = 0}
+                }
+
+                return 0;
+            });
+
+        default:
+            return -%{EINVAL};
+        }
+    };
+    ThinThin.ppoll = function (fdsptr, nfds, tvptr, sigmaskptr) {
+        var incall = true;
+        var retval = 0;
+        var retry = function () {
+            if (incall)
+                return ThinThin.ppoll.call(this,
+                                           fdsptr, nfds, tvptr, sigmaskptr);
+        };
+
+        var all = [];
+        var any = [];
+
+        var ii;
+        for (ii = 0; ii < nfds; ii++) {
+            var i = ii;
+            var fdno = %{fdsptr[i+&pollfd::fd]};
+            var fd = this.fds[fdno];
+            var events = %{fdsptr[i+&pollfd::events]};
+            %{fdsptr[i+&pollfd::revents] = 0}
+            if (events & %{POLLIN}) {
+                all.push(fd.available().then((avail) => {
+                    if (incall) {
+                        if (avail > 0) {
+                            if (%{fdsptr[i+&pollfd::revents]} == 0)
+                                retval++;
+                            %{fdsptr[i+&pollfd::revents]} |= %{POLLIN};
+                        }
+                    }
+                }));
+                any.push(() => fd.read());
+            }
+        }
+
+        return Promise.all(all).then(() => {
+            if (retval)
+                return retval;
+
+            var a = [];
+            a.push(Promise.race(any.map(p => Promise.resolve(p()))).then(() => retry()));
+            if (tvptr) {
+                var s = %{tvptr[&timeval::tv_sec]};
+                var ns = %{tvptr[&timeval::tv_usec]};
+
+                var ms = 1000 * s + 1e-6 * ns;
+
+                a.push(TimeoutPromise(ms).then(() => 0));
+            }
+
+            return Promise.race(a).then(rval => {
+                incall = false;
+                return rval;
+            });
+        });
+    };
+    ThinThin.lseek = function (fdno, pos, whence) {
+        console.log("lseek " + fdno + " " + pos + " " + whence);
+        var fd = this.fds[fdno];
+
+        if (whence == %{SEEK_SET})
+            fd.readPosition = pos;
+        else if (whence == %{SEEK_CUR})
+            fd.readPosition += pos;
+        else if (whence == %{SEEK_END})
+            throw("SEEK_END not supported");
+        else
+            return -%{EINVAL};
+
+        return fd.readPosition;
+    };
+    ThinThin.access = function (ptr, mode) {
+        return ThinThin.stat.call(this, ptr, 0);
+    };
+    ThinThin.exit =         function (code) {
+        if (typeof quit !== "undefined")
+            quit(code);
+        else if (typeof process !== "undefined")
+            process.exit(code);
+        else if (typeof document !== "undefined") {
+            document.getElementById("output").textContent += "Exit Status " + code;
+            this.stop(0xffffffff);
+        }
+        if (code != 0 && code !== undefined)
+            throw "Exit Status " + code;
+        else
+            throw new SuccessException();
+    };
+    //ThinThin.unlink =       Module._unlink;
+    //ThinThin.rename =       Module._rename;
+    //ThinThin.chdir =        Module._chdir;
+    ThinThin.gettimeofday = function (tvptr, tzptr) {
+        var date = new Date();
+        var s = date / 1000.0;
+        var us = (date % 1000.0) * 1000.0;
+
+        %{tvptr[&timeval::tv_sec] = "s"}
+        %{tvptr[&timeval::tv_usec] = "us"}
+
+        return 0;
+    };
+    ThinThin.clone = function (flags, child_stack, ptid, ctid, regs)
+    {
+        var new_process = this.process.clone();
+    };
+    ThinThin.restart = function (dst, src, len, entry)
+    {
+        return this.restart(dst, src, len, entry);
+    };
+    ThinThin.execveat = function (dirfdno, pathptr, argvptr, envpptr, flags)
+    {
+        if (this.HEAP8[pathptr] == "/".charCodeAt(0))
+            dirfdno = %{AT_FDROOTD};
+
+        var fd;
+        if (this.HEAP8[pathptr] == 0 &&
+            flags & %{AT_EMPTY_PATH})
+            fd = this.fds[dirfdno];
+        else
+            fd = this.fds[ThinThin.openat.call(this, dirfdno, pathptr, 0)];
+
+        if (!fd)
+            return -%{EBADF};
+
+        var argv = CStringsAt(argvptr);
+        var envp = CStringsAt(envpptr);
+        var blob = fd.blob();
+    };
+}
+
+ThinThin.queue_peek = function ()
+{
+    if (typeof window === "undefined" &&
+        typeof do_peek === "undefined")
+        return -%{ENOENT};
+
+    //console.log('queue_peek length ' + this.queue.length);
+
+    // if (this.queue.length == 0)
+    //     return new Promise((resolve,reject) => {
+    //         var old_resolve = this.queue_resolve;
+    //         this.queue_resolve = function () {
+    //             delete this.queue_resolve;
+    //             if (old_resolve)
+    //                 old_resolve();
+    //             resolve();
+    //         };
+    //     }).then(x => 0);
+
+    if (this.queue.length == 0)
+        return NaN;
+
+    //console.log('queue_peek size ' + this.queue[0].size);
+    return this.queue[0].size;
+};
+
+function queue_entry_size(data)
+{
+    var nd = 0;
+    var nc = 0;
+    var i;
+    for (i = 0; i < data.length; i++) {
+        if (typeof data[i] === "number" ||
+            typeof data[i] === "object") {
+            nd++;
+        } else if (typeof data[i] === "string") {
+            nd++;
+            nc += data[i].length + 1;
+        } else {
+            throw "unsupported data entry " + data[i];
+        }
+    }
+
+    nc += 7;
+    nc &= -8;
+
+    return nd * 8 + nc;
+}
+
+function unpack_queue_entry(entry, where)
+{
+    var data = entry.data;
+    //console.log("data " + data);
+    var nd = 0;
+    var nc = 0;
+    var i;
+    for (i = 0; i < data.length; i++) {
+        if (typeof data[i] === "number" ||
+            typeof data[i] === "object") {
+            nd++;
+        } else if (typeof data[i] === "string") {
+            nd++;
+            nc += data[i].length + 1;
+        } else {
+            throw "unsupported data entry " + data[i];
+        }
+    }
+
+    nc += 7;
+    nc &= -8;
+
+    var swhere = where + nd * 8;
+
+    var idata = entry.data;
+    var odata = [];
+
+    var i;
+
+    for (i = 0; i < idata.length; i++) {
+        if (typeof(idata[i]) === "number")
+            odata.push(idata[i]);
+        else if (typeof(idata[i]) === "string") {
+            var w = swhere;
+            swhere += CStringTo(idata[i], this.HEAP8, swhere);
+            odata.push(w);
+        } else if ("address" in idata[i]) {
+            odata.push(idata[i].address);
+        } else {
+            throw "unknown data item " + idata[i];
+        }
+    }
+
+    for (i = 0; i < odata.length; i++) {
+        //console.log("pushing " + odata[i] + " to " + where);
+        this.HEAPF64[where>>3] = odata[i];
+        where += 8;
+    }
+}
+
+ThinThin.queue_pop = function (applyp, funp, stackp)
+{
+    var entry = this.queue[0];
+    //console.log("entry " + entry);
+
+    this.HEAP32[applyp>>2] = entry.apply;
+    this.HEAP32[funp>>2] = entry.fun;
+    unpack_queue_entry.call(this, entry, stackp);
+
+    return 0;
+};
+
+ThinThin.queue_return = function (stackp)
+{
+    if (this.queue.length == 0)
+        throw "what";
+    var entry = this.queue[0];
+
+    entry.resolve(this.HEAPF64[stackp>>3]);
+
+    this.queue.shift();
+
+    return 0;
+};
+
+ThinThin.export = function (namep, fp, typep, applyp, demangled_typep, nargs,
+                            rettypep)
+{
+    var type = CStringAt(this.HEAPU8, typep);
+    this.types_by_id[type] = new ThinThin.TypeFunction(type, applyp);
+
+    var name = CStringAt(this.HEAPU8, namep);
+    var demangled_type = CStringAt(this.HEAPU8, demangled_typep);
+    var rettype = CStringAt(this.HEAPU8, rettypep);
+
+    console.log("exporting " + name + " with type " + type + "/" + demangled_type + " rettype " + rettype + " " + nargs + " args" + " applyp " + applyp + " fp " + fp);
+
+    this.exports[name] = function (...args) {
+        // var ret = new Promise((resolve, reject) => {
+        //     this.queue.push({
+        //         apply: applyp,
+        //         fun: fp,
+        //         size: queue_entry_size(args),
+        //         data: args,
+        //         resolve: resolve,
+        //     });
+        //     if (this.queue_resolve)
+        //         this.queue_resolve();
+        // }).then(addr => {
+        //     var t = this.types_by_id[rettype];
+        //     if (!t)
+        //         return addr;
+
+        //     var ret = new t(addr);
+
+        //     return ret.address ? ret : null;
+        // });
+        var sync = false;
+        var res;
+        var postproc = function (addr) {
+            var mytype = rettype;
+
+            mytype = mytype.replace(/^P/, "");
+
+            var t = this.find_type(mytype);
+            if (!t)
+                return addr;
+
+            return t.construct(this, addr);
+        }.bind(this);
+
+        var entry = {
+            apply: applyp,
+            fun: fp,
+            size: queue_entry_size(args),
+            data: args,
+            resolve: function (x) {
+                sync = true;
+                res = x;
+            }
+        };
+
+        this.stop(0);
+        this.queue.push(entry);
+        if (this.queue_resolve)
+            this.queue_resolve();
+
+        while (!sync && sys.runqueue.length)
+            sys.step();
+
+        if (sync) {
+            return postproc(res);
+        }
+
+        console.log("no sync result, giving up.");
+
+        return new Promise((resolve, reject) => {
+            entry.resolve = resolve;
+        }).then(postproc);
+    }.bind(this);
+
+    return 0;
+};
+
+ThinThin.Type = function (typestr)
+{
+    var type = this;
+    this.constructor = function (thread, address) {
+        this.type = type;
+        this.typestr = typestr;
+        this.thread = thread;
+        this.address = address;
+        this.kind = type.kind;
+    };
+    this.kind = "unknown";
+};
+
+ThinThin.Type.prototype.construct = function (thread, address)
+{
+    if (address === 0)
+        return null;
+
+    return new this.constructor(thread, address);
+};
+
+ThinThin.TypeFunction = function (typestr, apply)
+{
+    ThinThin.Type.call(this, typestr);
+    this.kind = "function";
+    this.apply = apply;
+};
+ThinThin.TypeFunction.prototype = Object.create(ThinThin.Type.prototype);
+
+ThinThin.TypeObject = function (typestr)
+{
+    ThinThin.Type.call(this, typestr);
+    this.kind = "object";
+};
+
+ThinThin.TypeObject.prototype = Object.create(ThinThin.Type.prototype);
+
+ThinThin.TypeOpaque = function (typestr)
+{
+    ThinThin.TypeObject.call(this, typestr);
+    this.kind = "opaque";
+};
+ThinThin.TypeOpaque.prototype = Object.create(ThinThin.TypeObject.prototype);
+
+ThinThin.TypeDirect = function (typestr, suffix, shift)
+{
+    ThinThin.Type.call(this, typestr);
+    if (!suffix)
+        throw "abstract!";
+    this.suffix = suffix;
+    this.shift = shift;
+    this.kind = "direct";
+};
+
+ThinThin.TypeDirect.prototype = Object.create(ThinThin.Type.prototype);
+
+ThinThin.TypeDirect.prototype.construct = function (thread, address)
+{
+    return address;
+};
+
+ThinThin.Type8 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "8", 0);
+};
+ThinThin.Type8.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.Type16 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "16", 1);
+};
+ThinThin.Type16.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.Type32 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "32", 2);
+};
+ThinThin.Type32.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeU8 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "U8", 0);
+};
+ThinThin.TypeU8.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeU16 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "U16", 1);
+};
+ThinThin.TypeU16.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeU32 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "U32", 2);
+};
+ThinThin.TypeU32.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeF32 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "F32", 2);
+};
+ThinThin.TypeF32.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeF64 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "F64", 3);
+};
+ThinThin.TypeF64.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypePtr = function (typestr, base)
+{
+    ThinThin.TypeDirect.call(this, typestr, "U32", 2);
+
+    this.constructor.prototype.deref = function () {
+        var t = this.thread.find_type(base);
+        if (!t)
+            return this.address;
+
+        return t.construct(this.thread, this.thread.HEAPU32[this.address>>2]);
+    };
+    this.base = base;
+    this.kind = "pointer";
+};
+ThinThin.TypePtr.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypePtr.prototype.construct = ThinThin.Type.prototype.construct;
+
+ThinThin.Type.prototype.define_field = function (parent, jsname,
+                                                 fieldname, fieldtype,
+                                                 get_value_string,
+                                                 set_value_string,
+                                                 get_pointer_string)
+{
+    var type = this;
+    var props = { enumerable: true, configurable: true };
+    var pprops = { enumerable: true, configurable: true };
+    var prefix = "";
+    if (jsname === "type" ||
+        jsname === "thread" ||
+        jsname === "suffix" ||
+        jsname === "shift" ||
+        jsname === "kind" ||
+        jsname === "address" ||
+        jsname === "typestr")
+        prefix = "$";
+
+    if (get_value_string != "")
+        props.get = function () {
+            return this.thread.exports[get_value_string].call(this.thread, this.address);
+        };
+
+    if (set_value_string != "")
+        props.set = function (x) {
+            this.thread.exports[set_value_string].call(this.thread, this.address,
+                                                       x);
+        };
+
+    if (get_pointer_string != "")
+        pprops.get = function () {
+            return this.thread.exports[get_pointer_string].call(this.thread, this.address);
+        };
+
+    if (props.get)
+        Object.defineProperty(parent, prefix + jsname, props);
+    else
+        console.log("no getter for " + fieldname);
+    if (pprops.get)
+        Object.defineProperty(parent, "$$" + jsname, pprops);
+    else
+        console.log("no pgetter for " + fieldname);
+};
+
+ThinThin.TypeDirect.prototype.define_var = function (thread, parent, jsname,
+                                                     fieldname, fieldtype,
+                                                     address)
+{
+    var type = this;
+    var v = new type.constructor(thread, address);
+    var get = function () {
+        return type.getter().call(this);
+    }.bind(v);
+
+    var set = function (x) {
+        type.setter().call(this, x);
+    }.bind(v);
+
+    Object.defineProperty(parent, jsname, { get: get, set: set, enumerable: true, configurable: true });
+
+    parent["$$" + jsname] = v;
+};
+
+ThinThin.TypeObject.prototype.define_var = function (thread, parent, jsname,
+                                                     fieldname, fieldtype,
+                                                     address)
+{
+    var type = this;
+    var v = new type.constructor(thread, address);
+
+    parent[jsname] = v;
+};
+
+ThinThin.TypeDirect.prototype.getter = function ()
+{
+    var type = this;
+
+    return function () {
+        return type.construct(this.thread, this.thread["HEAP" + this.type.suffix][this.address>>this.type.shift]);
+    };
+};
+
+ThinThin.TypePtr.prototype.getter = function ()
+{
+    var type = this.base;
+
+    return function () {
+        return this.thread.find_type(type).construct(this.thread, this.thread["HEAP" + this.type.suffix][this.address>>this.type.shift]);
+    };
+};
+
+ThinThin.TypeDirect.prototype.setter = function ()
+{
+    return function (x) {
+        this.thread["HEAP" + this.type.suffix][this.address>>this.type.shift] = x;
+    };
+};
+
+/* It's tempting to add a map here so we don't create two wrapper
+ * objects for the same memory address; but we wouldn't know when to
+ * collect entries. */
+
+ThinThin.export_type = function (namep, typeidp)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var typeid = CStringAt(this.HEAPU8, typeidp);
+
+    typeid = typeid.replace(/^P/, "");
+
+    var thread = this;
+
+    console.log("defined type " + name + " " + typeid);
+
+    this.types_by_id[typeid] = this.types[name] = new ThinThin.TypeObject(typeid);
+
+    this.types[name].fields = [];
+
+    // /* do not call this .then, that causes infinite recursion. */
+    // this.types[name].prototype.promise = function () {
+    //     var ret = {};
+    //     var i;
+    //     var promises = [];
+
+    //     for (i = 0; i < this.thread.types[name].fields.length; i++) {
+    //         let field = this.thread.types[name].fields[i];
+
+    //         promises.push(this[field].then(x => ret[field] = x));
+    //     }
+
+    //     return Promise.all(promises).then(x => ret);
+    // };
+
+    return 0;
+};
+
+ThinThin.export_field = function (namep, fieldnamep,
+                                  recordtypep, fieldtypep,
+                                  f1p, f2p, f3p)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var fieldname = CStringAt(this.HEAPU8, fieldnamep);
+    var recordtype = CStringAt(this.HEAPU8, recordtypep);
+    var fieldtype = CStringAt(this.HEAPU8, fieldtypep);
+    var f1 = CStringAt(this.HEAPU8, f1p);
+    var f2 = CStringAt(this.HEAPU8, f2p);
+    var f3 = CStringAt(this.HEAPU8, f3p);
+
+    fieldtype = fieldtype.replace(/^P/, "");
+
+    var type = this.find_type(fieldtype);
+
+    if (!type) {
+        console.log("cannot find type " + fieldtype);
+        return -%{ENOENT};
+    }
+
+    if (!this.find_type(recordtype))
+        throw "cannot find record type " + recordtype;
+
+    type.define_field(this.find_type(recordtype).constructor.prototype,
+                      fieldname, name, fieldtype, f1, f2, f3);
+
+    return 0;
+};
+
+ThinThin.export_var = function (namep, typenamep, address)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var typename = CStringAt(this.HEAPU8, typenamep + 1);
+    var v;
+
+    var type = this.find_type(typename);
+
+    if (!type)
+        throw "no type " + typename;
+
+    type.define_var(this, this.vars, name, "", typename, address);
+
+    return 0;
+};
+
+ThinThin.getuid = ThinThin.geteuid = ThinThin.getgid = ThinThin.getegid = function ()
+{
+    return 0;
+};
