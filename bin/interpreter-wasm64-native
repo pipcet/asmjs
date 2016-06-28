@@ -1,0 +1,26 @@
+#!/bin/bash
+TMP1=$(mktemp);
+TMP2=$(mktemp);
+TMP3=$(mktemp);
+TMP4=$(mktemp);
+TMP5=$(mktemp);
+TMP6=$(mktemp);
+TMP7=$(mktemp);
+TMP8=$(mktemp);
+TMP9=$(mktemp);
+TMPD=$(mktemp -d);
+if [ x"$JS" = x ]; then
+    JS=$(which js)
+fi
+if [ x"$ASMJSDIR" = x ]; then
+    ASMJSDIR=$HOME/git/asmjs
+fi
+if [ x"$DELAY" = x ]; then
+    DELAY=1
+fi
+$ASMJSDIR/wasm64-virtual-wasm64/bin/wasm64-virtual-wasm64-ld -T wasm-experimentation/wasm.lds --no-check-sections "$1" -o $TMP1
+$ASMJSDIR/wasm64-virtual-wasm64/bin/wasm64-virtual-wasm64-ld -T wasm-experimentation/wasm2.lds --no-check-sections $TMP1 -o $TMP2
+$ASMJSDIR/wasmrewrite3 $TMP2 > $TMP3
+cp $TMP3 $ASMJSDIR/wasm-experimentation/wasm.wasm
+$ASMJSDIR/wasm64-virtual-wasm64/bin/wasm64-virtual-wasm64-objcopy --dump-section .data=$ASMJSDIR/wasm-experimentation/wasm.data "$1"
+(cd $ASMJSDIR/wasm-experimentation/; JIT_OPTION_wasmTestMode=true ../common/bin/js ./wasm64lib.js)
