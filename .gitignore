@@ -8,3 +8,7 @@ cache/
 js/
 /wasm-virtual-wasm
 /wasm64-virtual-wasm64/
+common/
+debug/
+foreign/
+intermediate/
