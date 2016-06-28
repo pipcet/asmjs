@@ -1,0 +1,228 @@
+SECTIONS
+{
+  .output : {
+    LONG(0x6d736100)
+    LONG(11)
+    wasm-headers.o(.wasm.header.type)
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>0*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>1*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>2*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>3*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>4*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>5*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>6*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>7*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>8*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>9*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>10*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>11*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>12*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>13*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>14*7)&0x7f)|0x80);
+    BYTE((((__wasm_type_payload_end - __wasm_type_payload)>>15*7)&0x7f)|0x00);
+    __wasm_type_payload = .;
+    BYTE(ABSOLUTE(((__wasm_chars_type_end - __wasm_chars_type)&0x7f)|0x80))
+    BYTE(ABSOLUTE((((__wasm_chars_type_end - __wasm_chars_type)>>7)&0x7f)|0x00))
+
+    *(.wasm.payload.type)
+    __wasm_type_payload_end = .;
+
+    wasm-headers.o(.wasm.header.import)
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>0*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>1*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>2*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>3*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>4*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>5*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>6*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>7*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>8*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>9*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>10*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>11*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>12*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>13*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>14*7)&0x7f)|0x80);
+    BYTE((((__wasm_import_payload_end - __wasm_import_payload)>>15*7)&0x7f)|0x00);
+    __wasm_import_payload = .;
+    BYTE(ABSOLUTE(((__wasm_chars_import_end - __wasm_chars_import)&0x7f)|0x80))
+    BYTE(ABSOLUTE((((__wasm_chars_import_end - __wasm_chars_import)>>7)&0x7f)|0x00))
+    *(.wasm.payload.import)
+    __wasm_import_payload_end = .;
+
+    wasm-headers.o(.wasm.header.function)
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>0*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>1*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>2*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>3*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>4*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>5*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>6*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>7*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>8*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>9*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>10*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>11*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>12*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>13*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>14*7)&0x7f)|0x80);
+    BYTE((((__wasm_function_payload_end - __wasm_function_payload)>>15*7)&0x7f)|0x00);
+    __wasm_function_payload = .;
+    BYTE(ABSOLUTE(((__wasm_chars_function_end - __wasm_chars_function)&0x7f)|0x80))
+    BYTE(ABSOLUTE((((__wasm_chars_function_end - __wasm_chars_function)>>7)&0x7f)|0x00))
+    *(.wasm.payload.function)
+    __wasm_function_payload_end = .;
+
+    wasm-headers.o(.wasm.header.memory)
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>0*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>1*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>2*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>3*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>4*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>5*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>6*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>7*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>8*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>9*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>10*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>11*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>12*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>13*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>14*7)&0x7f)|0x80);
+    BYTE((((__wasm_memory_payload_end - __wasm_memory_payload)>>15*7)&0x7f)|0x00);
+    __wasm_memory_payload = .;
+    LONG(0x008080c0)
+    LONG(0x008080c0)
+    BYTE(1)
+    __wasm_memory_payload_end = .;
+
+    wasm-headers.o(.wasm.header.export)
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>0*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>1*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>2*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>3*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>4*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>5*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>6*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>7*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>8*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>9*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>10*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>11*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>12*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>13*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>14*7)&0x7f)|0x80);
+    BYTE((((__wasm_export_payload_end - __wasm_export_payload)>>15*7)&0x7f)|0x00);
+    __wasm_export_payload = .;
+    BYTE(ABSOLUTE(((__wasm_chars_type_end - __wasm_chars_type)&0x7f)|0x80))
+    BYTE(ABSOLUTE((((__wasm_chars_type_end - __wasm_chars_type)>>7)&0x7f)|0x00))
+    LONG(ABSOLUTE(__wasm_chars_export_end - __wasm_chars_export))
+    *(.wasm.payload.export)
+    __wasm_export_payload_end = .;
+
+    wasm-headers.o(.wasm.header.start)
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>0*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>1*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>2*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>3*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>4*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>5*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>6*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>7*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>8*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>9*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>10*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>11*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>12*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>13*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>14*7)&0x7f)|0x80);
+    BYTE((((__wasm_start_payload_end - __wasm_start_payload)>>15*7)&0x7f)|0x00);
+    __wasm_start_payload = .;
+    LONG(ABSOLUTE(0))
+    __wasm_start_payload_end = .;
+
+    wasm-headers.o(.wasm.header.code)
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>0*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>1*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>2*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>3*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>4*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>5*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>6*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>7*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>8*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>9*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>10*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>11*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>12*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>13*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>14*7)&0x7f)|0x80);
+    BYTE((((__wasm_code_payload_end - __wasm_code_payload)>>15*7)&0x7f)|0x00);
+    __wasm_code_payload = .;
+    BYTE(ABSOLUTE(((__wasm_chars_type_end - __wasm_chars_type)&0x7f)|0x80))
+    BYTE(ABSOLUTE((((__wasm_chars_type_end - __wasm_chars_type)>>7)&0x7f)|0x00))
+    LONG(ABSOLUTE(__wasm_chars_code_end - __wasm_chars_code))
+    *(.wasm.payload.code)
+    __wasm_code_payload_end = .;
+
+    wasm-headers.o(.wasm.header.data)
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>0*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>1*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>2*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>3*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>4*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>5*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>6*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>7*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>8*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>9*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>10*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>11*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>12*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>13*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>14*7)&0x7f)|0x80);
+    BYTE((((__wasm_data_payload_end - __wasm_data_payload)>>15*7)&0x7f)|0x00);
+    __wasm_data_payload = .;
+    BYTE(ABSOLUTE(((__wasm_chars_type_end - __wasm_chars_type)&0x7f)|0x80))
+    BYTE(ABSOLUTE((((__wasm_chars_type_end - __wasm_chars_type)>>7)&0x7f)|0x00))
+    LONG(ABSOLUTE(__wasm_chars_data_end - __wasm_chars_data))
+    *(.wasm.payload.data)
+    __wasm_data_payload_end = .;
+  }
+  .discard.chars.type 0 : {
+    . = 0;
+    __wasm_chars_type = .;
+    *(.wasm.chars.type)
+    __wasm_chars_type_end = .;
+  }
+  .discard.chars.import 0 : {
+    . = 0;
+    __wasm_chars_import = .;
+    *(.wasm.chars.import)
+    __wasm_chars_import_end = .;
+  }
+  .discard.chars.function 0 : {
+    . = 0;
+    __wasm_chars_function = .;
+    *(.wasm.chars.function)
+    __wasm_chars_function_end = .;
+  }
+  .discard.chars.export 0 : {
+    . = 0;
+    __wasm_chars_export = .;
+    *(.wasm.chars.export)
+    __wasm_chars_export_end = .;
+  }
+  .discard.chars.code 0 : {
+    . = 0;
+    __wasm_chars_code = .;
+    *(.wasm.chars.code)
+    __wasm_chars_code_end = .;
+  }
+  .discard.chars.data 0 : {
+    . = 0;
+    __wasm_chars_data = .;
+    *(.wasm.chars.data)
+    __wasm_chars_data_end = .;
+  }
+}

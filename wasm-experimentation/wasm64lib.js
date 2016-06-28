@@ -86,23 +86,23 @@ var counter = 0;
 imprts.thinthin = {};
 imprts.thinthin.extcall = function (r0, r1, a0, a1) {
     a1.low -= 0x10;
-    logi64(r0);
-    logi64(r1);
-    logi64(a0);
-    logi64(a1);
+    //logi64(r0);
+    //logi64(r1);
+    //logi64(a0);
+    //logi64(a1);
     //dump(a1.low);
-    console.log(CStringAt(new Uint8Array(w.exports.memory), r0.low));
-    console.log(CStringAt(new Uint8Array(w.exports.memory), r1.low));
-    console.log(HEAPU32[a1.low + 0x20 >> 2]);
-    console.log(HEAPU32[a1.low + 0x28 >> 2]);
-    console.log(HEAPU32[a1.low + 0x30 >> 2]);
+    //console.log(CStringAt(new Uint8Array(w.exports.memory), r0.low));
+    //console.log(CStringAt(new Uint8Array(w.exports.memory), r1.low));
+    //console.log(HEAPU32[a1.low + 0x20 >> 2]);
+    //console.log(HEAPU32[a1.low + 0x28 >> 2]);
+    //console.log(HEAPU32[a1.low + 0x30 >> 2]);
     var name = CStringAt(new Uint8Array(w.exports.memory), r1.low);
 
     HEAPU32[4096>>2] = -1;
     HEAPU32[4100>>2] = -1;
 
     if (name == "write") {
-        console.log(CStringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2]));
+        //console.log(CStringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2]));
         console.log(StringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2], HEAPU32[a1.low+0x30>>2]));
         HEAPU32[4096>>2] = HEAPU32[a1.low + 0x30 >> 2];
         HEAPU32[4100>>2] = 0;
@@ -112,8 +112,8 @@ imprts.thinthin.extcall = function (r0, r1, a0, a1) {
     } else
         HEAPU32[4096>>2] = -1;
     if (name == "exit")
-        throw 0;
-    console.log(counter);
+        quit(0);
+    //console.log(counter);
     if (counter++ & 1)
         return {low: 0, high: 0}; //3;
     else
@@ -132,9 +132,30 @@ imprts.thinthin.indcall = function (dpc, sp, r0, r1, rpc, pc0) {
     return w.exports["f_0x" + hex64(pc0) + "0"](dpc, sp, r0, r1, rpc, pc0);
 };
 
-imprts.thinthin.eh_return = function (a0, a1, a2) {
-    return 0;
-};
+imprts.thinthin.eh_return = function (fp, sp, handler) {
+    fp = fp.low;
+    this.HEAPU32[4104>>2] = this.HEAPU32[fp+48>>2];
+    this.HEAPU32[4108>>2] = this.HEAPU32[fp+52>>2];
+    this.HEAPU32[4112>>2] = this.HEAPU32[fp+56>>2];
+    this.HEAPU32[4116>>2] = this.HEAPU32[fp+60>>2];
+    this.HEAPU32[4120>>2] = this.HEAPU32[fp+64>>2];
+    this.HEAPU32[4124>>2] = this.HEAPU32[fp+68>>2];
+    this.HEAPU32[4128>>2] = this.HEAPU32[fp+72>>2];
+    this.HEAPU32[4132>>2] = this.HEAPU32[fp+76>>2];
+    //this.set_arg(0, { low: this.HEAPU32[fp+48>>2], high: this.HEAPU32[fp+52>>2] });
+    //this.set_arg(1, { low: this.HEAPU32[fp+56>>2], high: this.HEAPU32[fp+60>>2] });
+    //this.set_arg(2, { low: this.HEAPU32[fp+64>>2], high: this.HEAPU32[fp+68>>2] });
+    //this.set_arg(3, { low: this.HEAPU32[fp+72>>2], high: this.HEAPU32[fp+76>>2] });
+
+    fp = this.HEAPU32[this.HEAPU32[fp>>2]>>2];
+
+    console.log('installing ' + hex64(handler) + " at " + fp.toString(16));
+    
+    this.HEAPU32[fp+16>>2] = handler.low;
+    this.HEAPU32[fp+20>>2] = handler.high;
+    
+    return {low: fp|3, high: 0};
+}.bind(this);
 
 function ddouble(lo, hi) {
     hi = hi | 0;
@@ -198,7 +219,7 @@ if (1) {
     }, 5000);
 }
 
-var pc = { high: 0x15, low: 0 };
+var pc = { high: w.exports.startindex().high, low: 0 };
 var sp = { high: 0, low: 2 * 1024 * 1024 };
 var rpc = { high: 0, low: 0 };
 
@@ -213,13 +234,27 @@ function dumpregblock(block)
     console.log("mask: " + HEAPU32[block+40>>2].toString(16) + " " +  HEAPU32[block+44>>2].toString(16));
 }
 
+function backtrace(block)
+{
+    console.log('backtrace');
+    dumpregblock(block);
+
+    block = HEAPU32[block>>2];
+
+    if (block) {
+        block = HEAPU32[block>>2];
+        if (block)
+            backtrace(block);
+    }
+}
+
 function step()
 {
     console.log("pc " + hex64(pc) + " sp " + hex64(sp) + " rpc " + hex64(rpc));
     var rp = w.exports.indcall({ low: pc.low, high: pc.high }, sp, { low: 0, high: 0 }, { low: 0, high: 0 }, rpc, { low: 0, high: pc.high });
     console.log("call to " + hex64(pc) + " returned " + hex64(rp));
     dumpregblock(rp.low);
-    dumpregblock(rp.low);
+    //dumpregblock(rp.low);
     sp = rp;
     if (sp.low & 3) {
         sp.low &= -4;
@@ -229,7 +264,7 @@ function step()
     } else {
         dumpregblock(rp.low);
         sp = { low: HEAPU32[rp.low>>2], high: 0 };
-        dumpregblock(sp.low);
+        backtrace(sp.low);
         pc = { low: -1, high: HEAPU32[sp.low+20>>2] };
         sp.low += 16;
     }
