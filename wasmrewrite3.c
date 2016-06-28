@@ -325,8 +325,6 @@ long ast(unsigned long len)
       abort();
     }
   }
-  static long int index = 0;
-  fprintf(stderr, "ast read %ld bytes ending at %ld %lx\n", len, roff, index++);
 
   return delta;
 }
@@ -629,6 +627,46 @@ long section_start()
   return delta;
 }
 
+long function_names(void)
+{
+  long delta = 0;
+  unsigned long count;
+
+  mputstring(mgetstring());
+  delta += msynch();
+  mputuleb128(count = mgetuleb128());
+  delta += msynch();
+  while (count--) {
+    mputstring(mgetstring());
+    delta += msynch();
+  }
+
+  return delta;
+}
+
+long section_name()
+{
+  unsigned long off0, off1;
+  unsigned long len;
+  unsigned long count;
+  long delta = 0;
+
+  mputstring(mgetstring());
+  msynch();
+  len = mgetsize(&off0, &off1);
+  if (len) {
+    delta += msynch();
+    mputuleb128(count = mgetuleb128());
+    delta += msynch();
+    while (count--)
+      delta += function_names();
+    delta += msynch();
+    delta += msetsize(off0, off1, delta);
+  } else {
+    delta += msynch();
+  }
+}
+
 long section_simple()
 {
   unsigned long off0, off1;
@@ -673,7 +711,7 @@ long section(void)
   } else if (strcmp(name, "data") == 0) {
     delta += section_data();
   } else if (strcmp(name, "name") == 0) {
-    delta += section_simple();
+    delta += section_name();
   } else {
     abort();
   }
