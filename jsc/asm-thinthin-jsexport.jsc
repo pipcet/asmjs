@@ -1,0 +1,512 @@
+ThinThin.queue_peek = function ()
+{
+    if (typeof window === "undefined" &&
+        typeof do_peek === "undefined")
+        return -%{ENOENT};
+
+    //console.log('queue_peek length ' + this.queue.length);
+
+    // if (this.queue.length == 0)
+    //     return new Promise((resolve,reject) => {
+    //         var old_resolve = this.queue_resolve;
+    //         this.queue_resolve = function () {
+    //             delete this.queue_resolve;
+    //             if (old_resolve)
+    //                 old_resolve();
+    //             resolve();
+    //         };
+    //     }).then(x => 0);
+
+    if (this.queue.length == 0)
+        return NaN;
+
+    //console.log('queue_peek size ' + this.queue[0].size);
+    return this.queue[0].size;
+};
+
+function queue_entry_size(data)
+{
+    var nd = 0;
+    var nc = 0;
+    var i;
+    for (i = 0; i < data.length; i++) {
+        if (typeof data[i] === "number" ||
+            typeof data[i] === "object") {
+            nd++;
+        } else if (typeof data[i] === "string") {
+            nd++;
+            nc += data[i].length + 1;
+        } else {
+            throw "unsupported data entry " + data[i];
+        }
+    }
+
+    nc += 7;
+    nc &= -8;
+
+    return nd * 8 + nc;
+}
+
+function unpack_queue_entry(entry, where)
+{
+    var data = entry.data;
+    //console.log("data " + data);
+    var nd = 0;
+    var nc = 0;
+    var i;
+    for (i = 0; i < data.length; i++) {
+        if (typeof data[i] === "number" ||
+            typeof data[i] === "object") {
+            nd++;
+        } else if (typeof data[i] === "string") {
+            nd++;
+            nc += data[i].length + 1;
+        } else {
+            throw "unsupported data entry " + data[i];
+        }
+    }
+
+    nc += 7;
+    nc &= -8;
+
+    var swhere = where + nd * 8;
+
+    var idata = entry.data;
+    var odata = [];
+
+    var i;
+
+    for (i = 0; i < idata.length; i++) {
+        if (typeof(idata[i]) === "number")
+            odata.push(idata[i]);
+        else if (typeof(idata[i]) === "string") {
+            var w = swhere;
+            swhere += CStringTo(idata[i], this.HEAP8, swhere);
+            odata.push(w);
+        } else if ("address" in idata[i]) {
+            odata.push(idata[i].address);
+        } else {
+            throw "unknown data item " + idata[i];
+        }
+    }
+
+    for (i = 0; i < odata.length; i++) {
+        //console.log("pushing " + odata[i] + " to " + where);
+        this.HEAPF64[where>>3] = odata[i];
+        where += 8;
+    }
+}
+
+ThinThin.queue_pop = function (applyp, funp, stackp)
+{
+    var entry = this.queue[0];
+    //console.log("entry " + entry);
+
+    this.HEAP32[applyp>>2] = entry.apply;
+    this.HEAP32[funp>>2] = entry.fun;
+    unpack_queue_entry.call(this, entry, stackp);
+
+    return 0;
+};
+
+ThinThin.queue_return = function (stackp)
+{
+    if (this.queue.length == 0)
+        throw "what";
+    var entry = this.queue[0];
+
+    entry.resolve(this.HEAPF64[stackp>>3]);
+
+    this.queue.shift();
+
+    return 0;
+};
+
+ThinThin.export = function (namep, fp, typep, applyp, demangled_typep, nargs,
+                            rettypep)
+{
+    var type = CStringAt(this.HEAPU8, typep);
+    this.types_by_id[type] = new ThinThin.TypeFunction(type, applyp);
+
+    var name = CStringAt(this.HEAPU8, namep);
+    var demangled_type = CStringAt(this.HEAPU8, demangled_typep);
+    var rettype = CStringAt(this.HEAPU8, rettypep);
+
+    console.log("exporting " + name + " with type " + type + "/" + demangled_type + " rettype " + rettype + " " + nargs + " args" + " applyp " + applyp + " fp " + fp);
+
+    this.exports[name] = function (...args) {
+        // var ret = new Promise((resolve, reject) => {
+        //     this.queue.push({
+        //         apply: applyp,
+        //         fun: fp,
+        //         size: queue_entry_size(args),
+        //         data: args,
+        //         resolve: resolve,
+        //     });
+        //     if (this.queue_resolve)
+        //         this.queue_resolve();
+        // }).then(addr => {
+        //     var t = this.types_by_id[rettype];
+        //     if (!t)
+        //         return addr;
+
+        //     var ret = new t(addr);
+
+        //     return ret.address ? ret : null;
+        // });
+        var sync = false;
+        var res;
+        var postproc = function (addr) {
+            var mytype = rettype;
+
+            mytype = mytype.replace(/^P/, "");
+
+            var t = this.find_type(mytype);
+            if (!t)
+                return addr;
+
+            return t.construct(this, addr);
+        }.bind(this);
+
+        var entry = {
+            apply: applyp,
+            fun: fp,
+            size: queue_entry_size(args),
+            data: args,
+            resolve: function (x) {
+                sync = true;
+                res = x;
+            }
+        };
+
+        this.stop(0);
+        this.queue.push(entry);
+        if (this.queue_resolve)
+            this.queue_resolve();
+
+        while (!sync && sys.runqueue.length)
+            sys.step();
+
+        if (sync) {
+            return postproc(res);
+        }
+
+        console.log("no sync result, giving up.");
+
+        return new Promise((resolve, reject) => {
+            entry.resolve = resolve;
+        }).then(postproc);
+    }.bind(this);
+
+    return 0;
+};
+
+ThinThin.Type = function (typestr)
+{
+    var type = this;
+    this.constructor = function (thread, address) {
+        this.type = type;
+        this.typestr = typestr;
+        this.thread = thread;
+        this.address = address;
+        this.kind = type.kind;
+    };
+    this.kind = "unknown";
+};
+
+ThinThin.Type.prototype.construct = function (thread, address)
+{
+    if (address === 0)
+        return null;
+
+    return new this.constructor(thread, address);
+};
+
+ThinThin.TypeFunction = function (typestr, apply)
+{
+    ThinThin.Type.call(this, typestr);
+    this.kind = "function";
+    this.apply = apply;
+};
+ThinThin.TypeFunction.prototype = Object.create(ThinThin.Type.prototype);
+
+ThinThin.TypeObject = function (typestr)
+{
+    ThinThin.Type.call(this, typestr);
+    this.kind = "object";
+};
+
+ThinThin.TypeObject.prototype = Object.create(ThinThin.Type.prototype);
+
+ThinThin.TypeOpaque = function (typestr)
+{
+    ThinThin.TypeObject.call(this, typestr);
+    this.kind = "opaque";
+};
+ThinThin.TypeOpaque.prototype = Object.create(ThinThin.TypeObject.prototype);
+
+ThinThin.TypeDirect = function (typestr, suffix, shift)
+{
+    ThinThin.Type.call(this, typestr);
+    if (!suffix)
+        throw "abstract!";
+    this.suffix = suffix;
+    this.shift = shift;
+    this.kind = "direct";
+};
+
+ThinThin.TypeDirect.prototype = Object.create(ThinThin.Type.prototype);
+
+ThinThin.TypeDirect.prototype.construct = function (thread, address)
+{
+    return address;
+};
+
+ThinThin.Type8 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "8", 0);
+};
+ThinThin.Type8.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.Type16 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "16", 1);
+};
+ThinThin.Type16.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.Type32 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "32", 2);
+};
+ThinThin.Type32.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeU8 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "U8", 0);
+};
+ThinThin.TypeU8.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeU16 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "U16", 1);
+};
+ThinThin.TypeU16.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeU32 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "U32", 2);
+};
+ThinThin.TypeU32.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeF32 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "F32", 2);
+};
+ThinThin.TypeF32.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypeF64 = function (typestr)
+{
+    ThinThin.TypeDirect.call(this, typestr, "F64", 3);
+};
+ThinThin.TypeF64.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypePtr = function (typestr, base)
+{
+    ThinThin.TypeDirect.call(this, typestr, "U32", 2);
+
+    this.constructor.prototype.deref = function () {
+        var t = this.thread.find_type(base);
+        if (!t)
+            return this.address;
+
+        return t.construct(this.thread, this.thread.HEAPU32[this.address>>2]);
+    };
+    this.base = base;
+    this.kind = "pointer";
+};
+ThinThin.TypePtr.prototype = Object.create(ThinThin.TypeDirect.prototype);
+
+ThinThin.TypePtr.prototype.construct = ThinThin.Type.prototype.construct;
+
+ThinThin.Type.prototype.define_field = function (parent, jsname,
+                                                 fieldname, fieldtype,
+                                                 get_value_string,
+                                                 set_value_string,
+                                                 get_pointer_string)
+{
+    var type = this;
+    var props = { enumerable: true, configurable: true };
+    var pprops = { enumerable: true, configurable: true };
+    var prefix = "";
+    if (jsname === "type" ||
+        jsname === "thread" ||
+        jsname === "suffix" ||
+        jsname === "shift" ||
+        jsname === "kind" ||
+        jsname === "address" ||
+        jsname === "typestr")
+        prefix = "$";
+
+    if (get_value_string != "")
+        props.get = function () {
+            return this.thread.exports[get_value_string].call(this.thread, this.address);
+        };
+
+    if (set_value_string != "")
+        props.set = function (x) {
+            this.thread.exports[set_value_string].call(this.thread, this.address,
+                                                       x);
+        };
+
+    if (get_pointer_string != "")
+        pprops.get = function () {
+            return this.thread.exports[get_pointer_string].call(this.thread, this.address);
+        };
+
+    if (props.get)
+        Object.defineProperty(parent, prefix + jsname, props);
+    else
+        console.log("no getter for " + fieldname);
+    if (pprops.get)
+        Object.defineProperty(parent, "$$" + jsname, pprops);
+    else
+        console.log("no pgetter for " + fieldname);
+};
+
+ThinThin.TypeDirect.prototype.define_var = function (thread, parent, jsname,
+                                                     fieldname, fieldtype,
+                                                     address)
+{
+    var type = this;
+    var v = new type.constructor(thread, address);
+    var get = function () {
+        return type.getter().call(this);
+    }.bind(v);
+
+    var set = function (x) {
+        type.setter().call(this, x);
+    }.bind(v);
+
+    Object.defineProperty(parent, jsname, { get: get, set: set, enumerable: true, configurable: true });
+
+    parent["$$" + jsname] = v;
+};
+
+ThinThin.TypeObject.prototype.define_var = function (thread, parent, jsname,
+                                                     fieldname, fieldtype,
+                                                     address)
+{
+    var type = this;
+    var v = new type.constructor(thread, address);
+
+    parent[jsname] = v;
+};
+
+ThinThin.TypeDirect.prototype.getter = function ()
+{
+    var type = this;
+
+    return function () {
+        return type.construct(this.thread, this.thread["HEAP" + this.type.suffix][this.address>>this.type.shift]);
+    };
+};
+
+ThinThin.TypePtr.prototype.getter = function ()
+{
+    var type = this.base;
+
+    return function () {
+        return this.thread.find_type(type).construct(this.thread, this.thread["HEAP" + this.type.suffix][this.address>>this.type.shift]);
+    };
+};
+
+ThinThin.TypeDirect.prototype.setter = function ()
+{
+    return function (x) {
+        this.thread["HEAP" + this.type.suffix][this.address>>this.type.shift] = x;
+    };
+};
+
+/* It's tempting to add a map here so we don't create two wrapper
+ * objects for the same memory address; but we wouldn't know when to
+ * collect entries. */
+
+ThinThin.export_type = function (namep, typeidp)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var typeid = CStringAt(this.HEAPU8, typeidp);
+
+    typeid = typeid.replace(/^P/, "");
+
+    var thread = this;
+
+    console.log("defined type " + name + " " + typeid);
+
+    this.types_by_id[typeid] = this.types[name] = new ThinThin.TypeObject(typeid);
+
+    this.types[name].fields = [];
+
+    // /* do not call this .then, that causes infinite recursion. */
+    // this.types[name].prototype.promise = function () {
+    //     var ret = {};
+    //     var i;
+    //     var promises = [];
+
+    //     for (i = 0; i < this.thread.types[name].fields.length; i++) {
+    //         let field = this.thread.types[name].fields[i];
+
+    //         promises.push(this[field].then(x => ret[field] = x));
+    //     }
+
+    //     return Promise.all(promises).then(x => ret);
+    // };
+
+    return 0;
+};
+
+ThinThin.export_field = function (namep, fieldnamep,
+                                  recordtypep, fieldtypep,
+                                  f1p, f2p, f3p)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var fieldname = CStringAt(this.HEAPU8, fieldnamep);
+    var recordtype = CStringAt(this.HEAPU8, recordtypep);
+    var fieldtype = CStringAt(this.HEAPU8, fieldtypep);
+    var f1 = CStringAt(this.HEAPU8, f1p);
+    var f2 = CStringAt(this.HEAPU8, f2p);
+    var f3 = CStringAt(this.HEAPU8, f3p);
+
+    fieldtype = fieldtype.replace(/^P/, "");
+
+    var type = this.find_type(fieldtype);
+
+    if (!type) {
+        console.log("cannot find type " + fieldtype);
+        return -%{ENOENT};
+    }
+
+    if (!this.find_type(recordtype))
+        throw "cannot find record type " + recordtype;
+
+    type.define_field(this.find_type(recordtype).constructor.prototype,
+                      fieldname, name, fieldtype, f1, f2, f3);
+
+    return 0;
+};
+
+ThinThin.export_var = function (namep, typenamep, address)
+{
+    var name = CStringAt(this.HEAPU8, namep);
+    var typename = CStringAt(this.HEAPU8, typenamep + 1);
+    var v;
+
+    var type = this.find_type(typename);
+
+    if (!type)
+        throw "no type " + typename;
+
+    type.define_var(this, this.vars, name, "", typename, address);
+
+    return 0;
+};
+
