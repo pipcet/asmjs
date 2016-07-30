@@ -58,21 +58,7 @@ var initsp;
 
 var MyCode;
 
-var debug_queued_data = [];
-var debug_queued_writedata = [];
-var gServer;
-var gSocket;
-var gReqs = [];
-var debug_log = "";
 var args;
-
-if (typeof print === "function") {
-}
-else {
-    print = function (str) {
-        console.log(str);
-    }
-}
 
 if (args) {
 }
@@ -83,45 +69,6 @@ else if (typeof scriptArgs !== "undefined") {
     args = scriptArgs.slice(0);
 } else {
     args = ["<this program>"];
-}
-
-function checkQueuedData(force)
-{
-    if (gReqs.length == 0 &&
-        (force || debug_queued_writedata.length != 0)) {
-        var str = "";
-        for (var i in debug_queued_writedata) {
-            str += String.fromCharCode(debug_queued_writedata[i]);
-        }
-
-        debug_queued_writedata = [];
-
-        var req = new XMLHttpRequest();
-
-        req.onreadystatechange = function () {
-            if (req.readyState !== XMLHttpRequest.DONE) {
-                return;
-            }
-            gReqs.shift();
-            var data = req.responseText;
-            if (req.status !== 200) {
-                return;
-            }
-
-            if (data != "") {
-                for (var i = 0; i < data.length; i++) {
-                    debug_queued_data.push(data.charCodeAt(i));
-                }
-            }
-
-            checkQueuedData();
-        }
-
-        req.open("POST", "http://127.0.0.1/cgi-bin/debug.cgi");
-
-        gReqs.push(req);
-        req.send(str);
-    }
 }
 
 function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
@@ -148,7 +95,7 @@ function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
             rargs.push(args[i]);
         }
         ret = os.sys.call.apply(undefined, rargs);
-        //print("syscall " + number + " ret " + ret);
+
         return ret;
     };
 }
@@ -206,7 +153,7 @@ function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
         //console.log(args);
         //console.log(rargs);
         ret = os.sys.call64.call(undefined, rargs);
-        //print("syscall " + number + " ret " + ret);
+
         return ret;
     };
 }

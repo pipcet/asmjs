@@ -1,0 +1,45 @@
+var debug_queued_data = [];
+var debug_queued_writedata = [];
+var gServer;
+var gSocket;
+var gReqs = [];
+var debug_log = "";
+
+function checkQueuedData(force)
+{
+    if (gReqs.length == 0 &&
+        (force || debug_queued_writedata.length != 0)) {
+        var str = "";
+        for (var i in debug_queued_writedata) {
+            str += String.fromCharCode(debug_queued_writedata[i]);
+        }
+
+        debug_queued_writedata = [];
+
+        var req = new XMLHttpRequest();
+
+        req.onreadystatechange = function () {
+            if (req.readyState !== XMLHttpRequest.DONE) {
+                return;
+            }
+            gReqs.shift();
+            var data = req.responseText;
+            if (req.status !== 200) {
+                return;
+            }
+
+            if (data != "") {
+                for (var i = 0; i < data.length; i++) {
+                    debug_queued_data.push(data.charCodeAt(i));
+                }
+            }
+
+            checkQueuedData();
+        }
+
+        req.open("POST", "http://127.0.0.1/cgi-bin/debug.cgi");
+
+        gReqs.push(req);
+        req.send(str);
+    }
+}
