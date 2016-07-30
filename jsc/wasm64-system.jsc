@@ -115,8 +115,20 @@ function Wasm64Thread(process, module, threadpage)
 
             return new this.constructor(thread, ptr);
         },
-    }
+    };
 }
+
+Wasm64Thread.prototype.read64 = function (address)
+{
+    var x;
+
+    if ("low" in address)
+        address = address.low;
+
+    x = { low: this.HEAPU32[address>>2], high: this.HEAPU32[address+4>>2] };
+
+    return x;
+};
 
 Wasm64Thread.prototype.find_type = function (typeid)
 {
@@ -566,7 +578,8 @@ Wasm64System.prototype.init_sp = function (heap, off, args, env)
 
     var envp = off;
 
-    HEAP32[(off-=4)>>2] = 0;
+    HEAP32[(off-=8)>>2] = 0;
+    HEAP32[(off+4)>>2] = 0;
 
     for (i = 0; i < ao.length; i++) {
         HEAP32[(off-=8)>>2] = ao[i];
