@@ -103,7 +103,7 @@ imprts.thinthin.extcall = function (r0, r1, a0, a1) {
 
     if (name == "write") {
         //console.log(CStringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2]));
-        console.log(StringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2], HEAPU32[a1.low+0x30>>2]));
+        //console.log(StringAt(HEAPU8, HEAPU32[a1.low + 0x28 >> 2], HEAPU32[a1.low+0x30>>2]));
         HEAPU32[4096>>2] = HEAPU32[a1.low + 0x30 >> 2];
         HEAPU32[4100>>2] = 0;
     } else if (name == "fcntl_v") {
@@ -270,5 +270,5 @@ function step()
     }
 }
 
-while (1)
+while (pc.high)
     step();
