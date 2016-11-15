@@ -96,9 +96,9 @@ build/asmjs/bash.dir: build/asmjs/.dir
 	test -d build/asmjs/bash || $(MKDIR) build/asmjs/bash
 	touch $@
 
-build/asmjs/perl.dir: build/asmjs/.dir
+build/asmjs/perl.dir: build/asmjs/.dir src/perl.dir
 	test -d build/asmjs/perl || mkdir build/asmjs/perl
-	(cd src/perl; tar c --exclude .git .) | (cd build/perl; tar x)
+	(cd src/perl; tar c --exclude .git .) | (cd build/asmjs/perl; tar x)
 	touch $@
 
 build/asmjs/coreutils.dir: build/asmjs/.dir
@@ -313,12 +313,12 @@ build/debug/spidermonkey.make: build/debug/spidermonkey.configure
 	$(MAKE) -C build/debug/spidermonkey install
 	touch $@
 
-build/spidermonkey.clean: build/spidermonkey.make
-	rm -f build/spidermonkey.make
-	rm -f build/spidermonkey.configure
-	rm -f build/spidermonkey.dir
+build/common/spidermonkey.clean: FORCE
+	rm -f build/common/spidermonkey.make
+	rm -f build/common/spidermonkey.configure
+	rm -f build/common/spidermonkey.dir
 	rm -f src/spidermonkey.dir
-	rm -rf build/spidermonkey
+	rm -rf build/common/spidermonkey
 	rm -rf src/spidermonkey
 	touch $@
 
@@ -436,7 +436,7 @@ src/perl.dir: src/.dir
 bin/hexify: hexify/hexify.c
 	$(CC) $< -o $@
 
-lib/asmjs.o: lib/asmjs.S build/gcc-final.make
+lib/asmjs.o: lib/asmjs.S build/asmjs/gcc-final.make
 	asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -c $< -o $@
 
 js/.dir:
