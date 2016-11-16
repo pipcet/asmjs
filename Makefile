@@ -351,6 +351,8 @@ build/asmjs/coreutils.make: build/asmjs/coreutils.configure
 	touch $@
 
 build/asmjs/graphviz.configure: src/graphviz.dir build/asmjs/graphviz.dir | build/asmjs/gcc-final.make
+	(cd src/graphviz; sh autogen.sh NOCONFIG)
+	cp config/config.sub src/graphviz/config/config.sub
 	(cd build/asmjs/graphviz; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/graphviz/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --enable-static --disable-shared)
 	touch $@
 
