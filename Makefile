@@ -20,6 +20,10 @@ build/debug/.dir: build/.dir
 	test -d build/debug || $(MKDIR) build/debug
 	touch $@
 
+build/debug0/.dir: build/.dir
+	test -d build/debug0 || $(MKDIR) build/debug0
+	touch $@
+
 build/asmjs/.dir: build/.dir
 	test -d build/asmjs || $(MKDIR) build/asmjs
 	touch $@
@@ -90,6 +94,10 @@ build/common/spidermonkey.dir: build/common/.dir
 
 build/debug/spidermonkey.dir: build/debug/.dir
 	test -d build/debug/spidermonkey || $(MKDIR) build/debug/spidermonkey
+	touch $@
+
+build/debug0/spidermonkey.dir: build/debug0/.dir
+	test -d build/debug0/spidermonkey || $(MKDIR) build/debug0/spidermonkey
 	touch $@
 
 build/asmjs/bash.dir: build/asmjs/.dir
@@ -311,6 +319,16 @@ build/debug/spidermonkey.configure: src/spidermonkey.dir build/debug/spidermonke
 build/debug/spidermonkey.make: build/debug/spidermonkey.configure
 	$(MAKE) -C build/debug/spidermonkey
 	$(MAKE) -C build/debug/spidermonkey install
+	touch $@
+
+build/debug0/spidermonkey.configure: src/spidermonkey.dir build/debug0/spidermonkey.dir
+	(cd src/spidermonkey/js/src; autoconf2.13)
+	(cd build/debug0/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize="-O0 -g" --disable-debug --disable-tests --prefix=$(PWD)/debug0/spidermonkey --without-system-zlib)
+	touch $@
+
+build/debug0/spidermonkey.make: build/debug0/spidermonkey.configure
+	$(MAKE) -C build/debug0/spidermonkey
+	$(MAKE) -C build/debug0/spidermonkey install
 	touch $@
 
 build/common/spidermonkey.clean: FORCE
