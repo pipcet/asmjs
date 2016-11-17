@@ -27,7 +27,7 @@ var global2 = this;
 AsmJSCodeSection.prototype.instantiate = function (thread)
 {
     var mod;
-    if (global)
+    if (typeof global !== "undefined")
         global2 = global;
 
     mod = this.constructor(global2, {

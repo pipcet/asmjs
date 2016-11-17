@@ -88,9 +88,9 @@ var copyvars = ["HOME", "MAKE", "LIBPERL_A", "PERL_CORE", "PATH", "EMACSLOADPATH
 
 var restart;
 
-function newWasm64Module(mod)
+function newAsmJSModule(mod)
 {
-    sys = new Wasm64System();
+    sys = new AsmJSSystem();
     var env = [];
 
     if (typeof os === "undefined") {
