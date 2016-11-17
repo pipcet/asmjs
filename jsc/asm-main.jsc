@@ -106,6 +106,8 @@ function newAsmJSModule(mod)
         }
         env.push("TERM=vt100");
     }
+    if (typeof global !== "undefined")
+        args.shift();
     sys.instantiate(mod, args, env);
     //restart = function () {
     //sys.instantiate(mod, args, env);
