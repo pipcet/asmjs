@@ -853,6 +853,9 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
         new ReadableFD(process, global.process.stdin, 0);
         new WritableFD(process, global.process.stdout, 1);
         new WritableFD(process, global.process.stderr, 2);
+
+        new FSDD(process, "/", %{AT_FDROOTD});
+        new FSDD(process, ".", %{AT_FDCWD});
     } else if (false && typeof document !== "undefined") {
         new ThinThinFD(process, 0);
         new VT100FD(process, document.getElementById("output2"), 1, 0);
