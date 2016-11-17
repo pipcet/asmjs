@@ -407,7 +407,7 @@ public:
       off += 4;
     }
     while (len-off >= 2) {
-      ret.push_back(this->heap()->describe_heap(JSCType::i16) + "[" + a->describe_word() + (off ? "+" + to_string(off) : "") + ">>2]");
+      ret.push_back(this->heap()->describe_heap(JSCType::i16) + "[" + a->describe_word() + (off ? "+" + to_string(off) : "") + ">>1]");
       off += 2;
     }
     while (len-off >= 1) {
