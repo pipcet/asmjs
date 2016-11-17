@@ -719,6 +719,59 @@ ThinThinFetchFD.prototype.inputPromise = function ()
     }).catch(error => undefined);
 };
 
+function ReadableFD(process, readable, fdno)
+{
+    ThinThinFD.call(this, process, fdno);
+    this.readable = readable;
+};
+
+ReadableFD.prototype = Object.create(ThinThinFD.prototype);
+
+ReadableFD.prototype.inputPromise = function ()
+{
+    var readable = this.readable;
+    var ret = new Promise((resolve, reject) => {
+        readable.on("end", () => {
+            resolve("");
+            this.EOF = true;
+        });
+        readable.on("data", (data) => {
+            var text = "";
+            for (var i = 0; i < data.length; i++) {
+                var cc = data[i];
+                if (cc & 0x80) cc += 0x100;
+                text += String.fromCharCode(cc)
+            }
+            resolve(text);
+        });
+    });
+
+    return ret;
+};
+
+function WritableFD(process, writable, fdno)
+{
+    ThinThinFD.call(this, process, fdno);
+    this.writable = writable;
+};
+
+WritableFD.prototype = Object.create(ThinThinFD.prototype);
+
+WritableFD.prototype.outputPromise = function (heap, ptr, len)
+{
+    var data = "";
+
+    if (len == 0)
+        return 0;
+
+    for (i=0; i<len; i++)
+        data += String.fromCharCode(heap[ptr+i]);
+
+    this.writable.write(data);
+
+    return Promise.resolve(len);
+};
+
 function ArrayBufferFD(process, abufPromise, fdno)
 {
     ThinThinFD.call(this, process, fdno);
