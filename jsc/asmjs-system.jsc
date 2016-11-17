@@ -849,7 +849,11 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
         thread = this.threads[0];
     }
     %{tp1[&threadpage::pc] = "process.entry"}
-    if (false && typeof document !== "undefined") {
+    if (typeof global !== "undefined") {
+        new ReadableFD(process, global.process.stdin, 0);
+        new WritableFD(process, global.process.stdout, 1);
+        new WritableFD(process, global.process.stderr, 2);
+    } else if (false && typeof document !== "undefined") {
         new ThinThinFD(process, 0);
         new VT100FD(process, document.getElementById("output2"), 1, 0);
         new ThinThinFD(process, 2);

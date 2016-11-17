@@ -115,6 +115,9 @@ function newAsmJSModule(mod)
         sys.step();
 }
 
+if (typeof global !== "undefined")
+    run = () => global.setInterval(() => sys.step(), 0);
+
 function update() {
     if (!sys.threads || !sys.threads[0]) {
         return;

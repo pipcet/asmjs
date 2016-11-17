@@ -1199,3 +1199,8 @@ ThinThin.getuid = ThinThin.geteuid = ThinThin.getgid = ThinThin.getegid = functi
 {
     return 0;
 };
+
+ThinThin.getpid = ThinThin.getppid = function ()
+{
+    return 1;
+};
