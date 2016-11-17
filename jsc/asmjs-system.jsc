@@ -22,13 +22,14 @@ function AsmJSCodeSection(name, constructor)
     this.functions = {};
 }
 
-var global = this;
+var global2 = this;
 
 AsmJSCodeSection.prototype.instantiate = function (thread)
 {
     var mod;
+    global2 = global2 || global;
 
-    mod = this.constructor(global, {
+    mod = this.constructor(global2, {
         print: print,
         now: function () { return +(new Date())/1000.0 },
         bp_addr: 0,

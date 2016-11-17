@@ -271,7 +271,7 @@ var SyscallSignatures = {
     execveat:     [333, "fd", "ptr", "aptr", "aptr", "u64"],
 };
 
-function InputPromise(fd, output = undefined)
+function InputPromise(fd, output)
 {
     var done = false;
     output = undefined;
@@ -418,7 +418,7 @@ ImmediatePromise.prototype.then = function (consequence)
     return consequence(this.value);
 };
 
-function ThinThinFetchDD(process, parent, stem, fdno = undefined)
+function ThinThinFetchDD(process, parent, stem, fdno)
 {
     ThinThinDD.call(this, process, parent);
     this.stem = stem;
@@ -426,7 +426,7 @@ function ThinThinFetchDD(process, parent, stem, fdno = undefined)
 
 ThinThinFetchDD.prototype = Object.create(ThinThinDD.prototype);
 
-ThinThinDD.prototype.walk = function (component, isdir = false)
+ThinThinDD.prototype.walk = function (component, isdir)
 {
     if (component in this.entries)
         return this.entries[component];
@@ -439,7 +439,7 @@ ThinThinDD.prototype.walk = function (component, isdir = false)
     });
 };
 
-ThinThinFetchDD.prototype.discover = function (component, isdir = false)
+ThinThinFetchDD.prototype.discover = function (component, isdir)
 {
     var url = this.stem + "/" + component;
     var ret;
@@ -453,7 +453,7 @@ ThinThinFetchDD.prototype.discover = function (component, isdir = false)
     return ret;
 };
 
-function ThinThinDD(process, fdno = undefined)
+function ThinThinDD(process, fdno)
 {
     ThinThinFD.call(this, process, fdno);
     this.entries = {
@@ -472,7 +472,7 @@ ThinThinDD.prototype.openat = function (path)
 {
 };
 
-function ThinThinFD(process, fdno = undefined)
+function ThinThinFD(process, fdno)
 {
     if (fdno === undefined)
         for (fdno = 0; process.fds[fdno]; fdno++)
@@ -539,8 +539,13 @@ ThinThinFD.prototype.makeSeekable = function ()
 
 /* .read(undefined, 0, 0) returns a promise that resolves to 0 when
  * data is available to read. */
-ThinThinFD.prototype.read = function(heap = undefined, ptr = 0, len = 0)
+ThinThinFD.prototype.read = function(heap, ptr, len)
 {
+    if (ptr === undefined)
+        ptr = 0;
+    if (len === undefined)
+        len = 0;
+
     if (this.readData.length > this.readPosition ||
         this.EOF) {
         var i;
@@ -599,8 +604,13 @@ ThinThinFD.prototype.inputPromise = function ()
     return new InputPromise(this, this.domPromise());
 };
 
-ThinThinFD.prototype.write = function (heap = undefined, ptr = 0, len = 0)
+ThinThinFD.prototype.write = function (heap, ptr, len)
 {
+    if (ptr === undefined)
+        ptr = 0;
+    if (len === undefined)
+        len = 0;
+
     if (len == 0)
         return Promise.resolve(0);
 
@@ -667,7 +677,7 @@ FrozenThinThinFD.prototype.thaw = function (process, target)
     return fd;
 };
 
-function ThinThinFetchFD(process, url, fdno = undefined)
+function ThinThinFetchFD(process, url, fdno)
 {
     ThinThinFD.call(this, process, fdno);
     this.url = url;
@@ -709,7 +719,7 @@ ThinThinFetchFD.prototype.inputPromise = function ()
     }).catch(error => undefined);
 };
 
-function ArrayBufferFD(process, abufPromise, fdno = undefined)
+function ArrayBufferFD(process, abufPromise, fdno)
 {
     ThinThinFD.call(this, process, fdno);
 
@@ -723,7 +733,7 @@ ArrayBufferFD.prototype.inputPromise = function ()
     })
 }
 
-function PipeFD(process, fdno = undefined)
+function PipeFD(process, fdno)
 {
     ThinThinFD.call(this, process, fdno);
 }
@@ -739,13 +749,13 @@ function PipeConnection(ipipe, opipe)
     this.o = opipe;
 }
 
-function IPipeFD(process, fdno = undefined)
+function IPipeFD(process, fdno)
 {
     PipeFD.call(this, process, fdno);
 }
 IPipeFD.prototype = Object.create(PipeFD.prototype);
 
-function OPipeFD(process, fdno = undefined)
+function OPipeFD(process, fdno)
 {
     PipeFD.call(this, process, fdno);
 }
@@ -768,7 +778,7 @@ OPipeFD.prototype.outputPromise = function (heap, ptr, len)
     }
 };
 
-function RemoteFD(process, target, rfdno, fdno = undefined)
+function RemoteFD(process, target, rfdno, fdno)
 {
     ThinThinFD.call(this, process, fdno);
 

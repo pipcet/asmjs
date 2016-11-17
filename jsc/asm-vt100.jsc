@@ -10,8 +10,11 @@ function VT100Cell()
 
 VT100Cell.prototype.invert = function ()
 {
-    [this.dom_.style.color, this.dom_.style.background] =
-        [this.dom_.style.background, this.dom_.style.color];
+    var oldfg = this.dom_.style.color;
+    var oldbg = this.dom_.style.background;
+
+    this.dom_.style.color = oldbg;
+    this.dom_.style.background = oldfg;
 };
 
 VT100Cell.prototype.css = function ()
@@ -109,7 +112,7 @@ function VT100Context()
     this.showCursor();
 }
 
-VT100Context.prototype.write = function (c, x = undefined, y = undefined)
+VT100Context.prototype.write = function (c, x, y)
 {
     if (x === undefined)
         x = this.x;
@@ -136,7 +139,7 @@ VT100Context.prototype.showCursor = function ()
     cell.invert();
 };
 
-function VT100FD(process, domparent, fdno = undefined, outfdno = undefined)
+function VT100FD(process, domparent, fdno, outfdno)
 {
     ThinThinFD.call(this, process, fdno);
     this.domparent = domparent;
