@@ -11,7 +11,7 @@ struct multifile_header {
   unsigned long long fini_array_end;
 };
 
-void print_header(struct multifile_header *mfh)
+static void print_header(struct multifile_header *mfh)
 {
   printf("header at %p:\n", mfh);
   printf(" data start at %016llx\n", mfh->data_start);
@@ -29,7 +29,7 @@ void print_header(struct multifile_header *mfh)
   printf(" end   of F at %016llx\n", mfh->fini_array_end);
 }
 
-void f(void)
+static void f(void)
 {
   struct multifile_header *mfh = (struct multifile_header *)16384;
 
@@ -39,4 +39,4 @@ void f(void)
   }
 }
 
-__attribute__((section(".init_array"))) void (*f_init)(void) = f;
+__attribute__((section(".init_array"))) static void (*f_init)(void) = f;
