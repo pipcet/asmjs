@@ -20,11 +20,8 @@ addons:
             - libmpc-dev
             - yasm
 script:
-    - git clone git://github.com/git/git
-    - (cd git; autoconf && ./configure --prefix=$HOME && make && make install)
-    - hash -r
-    - $HOME/bin/git submodule update --init --recursive --depth=50
-    - (CC=clang make -kj3 build/spidermonkey.make >/dev/null 2>/dev/null) || CC=clang make -kj3 build/spidermonkey.make
+    - git submodule update --init --recursive --depth=50
+    - (CC=clang make -kj3 build/common/spidermonkey.make >/dev/null 2>/dev/null) || CC=clang make -kj3 build/common/spidermonkey.make
     - make -kj3 build/spidermonkey.clean
     - make -kj3 build/binfmt_misc.install
     - (sleep 5m && echo "I'm not done yet") &
@@ -33,15 +30,15 @@ script:
     - (sleep 20m && echo "I'm not done yet") &
     - (sleep 25m && echo "I'm not done yet") &
     - (sleep 30m && echo "I'm not done yet") &
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/asmjs/binutils-gdb.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make
     - make build/binutils-gdb.clean
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/asmjs/gcc-preliminary.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make
     - make build/gcc-preliminary.clean
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/asmjs/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make
     - make build/glibc.clean
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/asmjs/gcc-final.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make
     - make build/gcc-final.clean
-    - make -kj3 build/ncurses.make
+    - make -kj3 build/asmjs/ncurses.make
     - make build/ncurses.clean
-    - make -kj3 build/emacs.make
+    - make -kj3 build/asmjs/emacs.make
     - make build/emacs.clean
