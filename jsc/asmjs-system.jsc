@@ -51,8 +51,8 @@ AsmJSCodeSection.prototype.instantiate = function (thread)
 
     thread.module = mod;
 
-    if (!mod.inAsmJS())
-        console.log("no asm.js!");
+   // if (!mod.inAsmJS())
+        //console.log("no asm.js!");
 
     for (var page in this.functions) {
         var fo = this.functions[page];
@@ -510,7 +510,7 @@ AsmJSThread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 
         return sp;
     } else {
-        this.abort(0, pc, sp, r0, r1);
+        this.abort(0, pc, sp, r0, rpc);
     }
 };
 
