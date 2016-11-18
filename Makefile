@@ -279,6 +279,7 @@ build/asmjs/emacs.make: build/asmjs/emacs.configure build/asmjs/ncurses.make | b
 	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netdb.h
 	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet/in.h
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
 	touch $@
 
 build/asmjs/bash.configure: src/bash.dir build/asmjs/bash.dir | build/asmjs/gcc-final.make
