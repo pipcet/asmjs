@@ -8,14 +8,16 @@ function AsmJSCodeSection(name, constructor)
     this.functions = {};
 }
 
-var global = this;
+var global2 = this;
 
 AsmJSCodeSection.prototype.instantiate = function (thread)
 {
     var mod;
+    if (typeof global !== "undefined")
+        global2 = global;
 
-    mod = this.constructor(global, {
-        print: print,
+    mod = this.constructor(global2, {
+        print: function (...args) { return print(...args); },
         now: function () { return +(new Date())/1000.0 },
         bp_addr: 0,
         extcall: thread.extcall.bind(thread),
@@ -35,8 +37,8 @@ AsmJSCodeSection.prototype.instantiate = function (thread)
 
     thread.module = mod;
 
-    if (!mod.inAsmJS())
-        throw("no asm.js!");
+   // if (!mod.inAsmJS())
+        //console.log("no asm.js!");
 
     for (var page in this.functions) {
         var fo = this.functions[page];
@@ -493,7 +495,7 @@ AsmJSThread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 
         return sp;
     } else {
-        this.abort(0, pc, sp, r0, r1);
+        this.abort(0, pc, sp, r0, rpc);
     }
 };
 
@@ -830,7 +832,14 @@ AsmJSSystem.prototype.instantiate = function (module, args, env)
         thread = this.threads[0];
     }
     HEAP32[8192+48>>2] = process.entry;
-    if (false && typeof document !== "undefined") {
+    if (typeof global !== "undefined") {
+        new ReadableFD(process, global.process.stdin, 0);
+        new WritableFD(process, global.process.stdout, 1);
+        new WritableFD(process, global.process.stderr, 2);
+
+        new FSDD(process, "/", -101);
+        new FSDD(process, ".", -100);
+    } else if (false && typeof document !== "undefined") {
         new ThinThinFD(process, 0);
         new VT100FD(process, document.getElementById("output2"), 1, 0);
         new ThinThinFD(process, 2);
@@ -914,21 +923,7 @@ var initsp;
 
 var MyCode;
 
-var debug_queued_data = [];
-var debug_queued_writedata = [];
-var gServer;
-var gSocket;
-var gReqs = [];
-var debug_log = "";
 var args;
-
-if (typeof print === "function") {
-}
-else {
-    print = function (str) {
-        console.log(str);
-    }
-}
 
 if (args) {
 }
@@ -939,45 +934,6 @@ else if (typeof scriptArgs !== "undefined") {
     args = scriptArgs.slice(0);
 } else {
     args = ["<this program>"];
-}
-
-function checkQueuedData(force)
-{
-    if (gReqs.length == 0 &&
-        (force || debug_queued_writedata.length != 0)) {
-        var str = "";
-        for (var i in debug_queued_writedata) {
-            str += String.fromCharCode(debug_queued_writedata[i]);
-        }
-
-        debug_queued_writedata = [];
-
-        var req = new XMLHttpRequest();
-
-        req.onreadystatechange = function () {
-            if (req.readyState !== XMLHttpRequest.DONE) {
-                return;
-            }
-            gReqs.shift();
-            var data = req.responseText;
-            if (req.status !== 200) {
-                return;
-            }
-
-            if (data != "") {
-                for (var i = 0; i < data.length; i++) {
-                    debug_queued_data.push(data.charCodeAt(i));
-                }
-            }
-
-            checkQueuedData();
-        }
-
-        req.open("POST", "http://127.0.0.1/cgi-bin/debug.cgi");
-
-        gReqs.push(req);
-        req.send(str);
-    }
 }
 
 function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
@@ -1004,7 +960,7 @@ function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
             rargs.push(args[i]);
         }
         ret = os.sys.call.apply(undefined, rargs);
-        //print("syscall " + number + " ret " + ret);
+
         return ret;
     };
 }
@@ -1062,7 +1018,7 @@ function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
         //console.log(args);
         //console.log(rargs);
         ret = os.sys.call64.call(undefined, rargs);
-        //print("syscall " + number + " ret " + ret);
+
         return ret;
     };
 }
@@ -1108,7 +1064,7 @@ var Syscalls = {
     geteuid:      new Syscall(107),
     getegid:      new Syscall(108),
     getdents:     new Syscall(217, "fd", "ptr", "u64"),
-    clock_gettime:new Syscall(227, "u64", "ptr"),
+    clock_gettime:new Syscall(228, "u64", "ptr"),
     openat:       new Syscall(257, "fd", "ptr", "u64", "u64"),
     mkdirat:      new Syscall(258, "fd", "ptr", "u64"),
     newfstatat:   new Syscall(262, "fd", "ptr", "ptr", "u64"),
@@ -1180,7 +1136,7 @@ var SyscallSignatures = {
     execveat:     [333, "fd", "ptr", "aptr", "aptr", "u64"],
 };
 
-function InputPromise(fd, output = undefined)
+function InputPromise(fd, output)
 {
     var done = false;
     output = undefined;
@@ -1327,7 +1283,7 @@ ImmediatePromise.prototype.then = function (consequence)
     return consequence(this.value);
 };
 
-function ThinThinFetchDD(process, parent, stem, fdno = undefined)
+function ThinThinFetchDD(process, parent, stem, fdno)
 {
     ThinThinDD.call(this, process, parent);
     this.stem = stem;
@@ -1335,7 +1291,7 @@ function ThinThinFetchDD(process, parent, stem, fdno = undefined)
 
 ThinThinFetchDD.prototype = Object.create(ThinThinDD.prototype);
 
-ThinThinDD.prototype.walk = function (component, isdir = false)
+ThinThinDD.prototype.walk = function (component, isdir)
 {
     if (component in this.entries)
         return this.entries[component];
@@ -1348,7 +1304,7 @@ ThinThinDD.prototype.walk = function (component, isdir = false)
     });
 };
 
-ThinThinFetchDD.prototype.discover = function (component, isdir = false)
+ThinThinFetchDD.prototype.discover = function (component, isdir)
 {
     var url = this.stem + "/" + component;
     var ret;
@@ -1362,26 +1318,7 @@ ThinThinFetchDD.prototype.discover = function (component, isdir = false)
     return ret;
 };
 
-function ThinThinDD(process, fdno = undefined)
-{
-    ThinThinFD.call(this, process, fdno);
-    this.entries = {
-        ".": this,
-        "..": this.parent,
-    }
-}
-ThinThinDD.prototype = Object.create(ThinThinFD.prototype);
-
-ThinThinDD.prototype.mode = function ()
-{
-    return 16895;
-};
-
-ThinThinDD.prototype.openat = function (path)
-{
-};
-
-function ThinThinFD(process, fdno = undefined)
+function ThinThinFD(process, fdno)
 {
     if (fdno === undefined)
         for (fdno = 0; process.fds[fdno]; fdno++)
@@ -1390,8 +1327,7 @@ function ThinThinFD(process, fdno = undefined)
     this.readData = [];
     this.readPosition = 0;
     this.forgetInputPromises = new Set();
-    if (fdno >= 0)
-        process.fds[fdno] = this;
+    process.fds[fdno] = this;
     this.process = process;
 }
 
@@ -1448,8 +1384,13 @@ ThinThinFD.prototype.makeSeekable = function ()
 
 /* .read(undefined, 0, 0) returns a promise that resolves to 0 when
  * data is available to read. */
-ThinThinFD.prototype.read = function(heap = undefined, ptr = 0, len = 0)
+ThinThinFD.prototype.read = function(heap, ptr, len)
 {
+    if (ptr === undefined)
+        ptr = 0;
+    if (len === undefined)
+        len = 0;
+
     if (this.readData.length > this.readPosition ||
         this.EOF) {
         var i;
@@ -1508,8 +1449,13 @@ ThinThinFD.prototype.inputPromise = function ()
     return new InputPromise(this, this.domPromise());
 };
 
-ThinThinFD.prototype.write = function (heap = undefined, ptr = 0, len = 0)
+ThinThinFD.prototype.write = function (heap, ptr, len)
 {
+    if (ptr === undefined)
+        ptr = 0;
+    if (len === undefined)
+        len = 0;
+
     if (len == 0)
         return Promise.resolve(0);
 
@@ -1576,7 +1522,7 @@ FrozenThinThinFD.prototype.thaw = function (process, target)
     return fd;
 };
 
-function ThinThinFetchFD(process, url, fdno = undefined)
+function ThinThinFetchFD(process, url, fdno)
 {
     ThinThinFD.call(this, process, fdno);
     this.url = url;
@@ -1618,7 +1564,62 @@ ThinThinFetchFD.prototype.inputPromise = function ()
     }).catch(error => undefined);
 };
 
-function ArrayBufferFD(process, abufPromise, fdno = undefined)
+function ReadableFD(process, readable, fdno)
+{
+    ThinThinFD.call(this, process, fdno);
+    this.readable = readable;
+    this.makeSeekable();
+};
+
+ReadableFD.prototype = Object.create(ThinThinFD.prototype);
+
+ReadableFD.prototype.inputPromise = function ()
+{
+    var readable = this.readable;
+    var ret = new Promise((resolve, reject) => {
+        var text = "";
+        readable.on("end", () => {
+            resolve(text);
+            this.EOF = true;
+        });
+        readable.on("data", (data) => {
+            for (var i = 0; i < data.length; i++) {
+                var cc = data[i];
+                if (cc & 0x80) cc += 0x100;
+                text += String.fromCharCode(cc);
+            }
+            if (text.length > 2 * 1024 * 1024)
+                resolve(text);
+        });
+    });
+
+    return ret;
+};
+
+function WritableFD(process, writable, fdno)
+{
+    ThinThinFD.call(this, process, fdno);
+    this.writable = writable;
+};
+
+WritableFD.prototype = Object.create(ThinThinFD.prototype);
+
+WritableFD.prototype.outputPromise = function (heap, ptr, len)
+{
+    var data = "";
+
+    if (len == 0)
+        return 0;
+
+    for (i=0; i<len; i++)
+        data += String.fromCharCode(heap[ptr+i]);
+
+    this.writable.write(data);
+
+    return Promise.resolve(len);
+};
+
+function ArrayBufferFD(process, abufPromise, fdno)
 {
     ThinThinFD.call(this, process, fdno);
 
@@ -1632,7 +1633,7 @@ ArrayBufferFD.prototype.inputPromise = function ()
     })
 }
 
-function PipeFD(process, fdno = undefined)
+function PipeFD(process, fdno)
 {
     ThinThinFD.call(this, process, fdno);
 }
@@ -1648,13 +1649,13 @@ function PipeConnection(ipipe, opipe)
     this.o = opipe;
 }
 
-function IPipeFD(process, fdno = undefined)
+function IPipeFD(process, fdno)
 {
     PipeFD.call(this, process, fdno);
 }
 IPipeFD.prototype = Object.create(PipeFD.prototype);
 
-function OPipeFD(process, fdno = undefined)
+function OPipeFD(process, fdno)
 {
     PipeFD.call(this, process, fdno);
 }
@@ -1673,11 +1674,11 @@ OPipeFD.prototype.outputPromise = function (heap, ptr, len)
 
         this.other.resolve(l);
     } else {
-        
+
     }
 };
 
-function RemoteFD(process, target, rfdno, fdno = undefined)
+function RemoteFD(process, target, rfdno, fdno)
 {
     ThinThinFD.call(this, process, fdno);
 
@@ -1713,6 +1714,65 @@ RemoteFD.prototype.outputPromise = function (heap, ptr, len)
     return Promise.resolve(len);
 };
 
+function ThinThinDD(process, fdno)
+{
+    ThinThinFD.call(this, process, fdno);
+    this.entries = {
+        ".": this,
+        "..": this.parent,
+    }
+}
+ThinThinDD.prototype = Object.create(ThinThinFD.prototype);
+
+ThinThinDD.prototype.mode = function ()
+{
+    return 16895;
+};
+
+ThinThinDD.prototype.openat = function (path)
+{
+};
+
+var fs;
+
+if (typeof global !== "undefined")
+    fs = require('fs');
+
+function FSDD(process, root, fdno)
+{
+
+    ThinThinDD.call(this, process, fdno);
+    this.root = root;
+}
+
+FSDD.prototype = Object.create(ThinThinDD.prototype);
+
+FSDD.prototype.openat = function (path, flags, mode)
+{
+    if (!path.match(/^\//))
+        path = this.root + "/" + path;
+    if (flags === undefined)
+        flags = "r";
+    if (mode === undefined)
+        mode = 0;
+    return new Promise((resolve, reject) => {
+        console.log("opening " + path);
+        fs.open(path, flags, mode, (err, fd) => {
+            if (err)
+                reject(err);
+            else
+                resolve(new ReadableFD(this.process, fs.createReadStream
+                                       (null,
+                                        { flags: "r",
+                                          encoding: null,
+                                          fd: fd,
+                                          mode: mode,
+                                          autoClose: true
+                                        })));
+        });
+    });
+};
+
 if (typeof(os) !== "undefined" &&
     typeof(os.sys) !== "undefined") {
     for (var syscall in Syscalls)
@@ -1738,6 +1798,42 @@ if (typeof(os) !== "undefined" &&
         return os.sys.fork();
     };
 } else {
+    if (typeof global !== "undefined") {
+        ThinThin.fcntl_i = function () {
+            return 0;
+        };
+        ThinThin.fcntl_v = function () {
+            return 0;
+        };
+        ThinThin.pipe2 = function (intptr) {
+            var ifd = new IPipeFD(this.process).fdno;
+            var ofd = new OPipeFD(this.process).fdno;
+
+            
+            
+
+            return 0;
+        };
+        ThinThin.clock_gettime = function (clk_id, timespec)
+        {
+            var date = new Date();
+            var s = date / 1000.0;
+            var ns = (date % 1000.0) * 1000000.0;
+
+            this.HEAP32[timespec>>2] = 0; this.HEAP32[timespec+4>>2] = 0;
+            this.HEAP32[timespec+8>>2] = 0; this.HEAP32[timespec+8+4>>2] = 0;
+            this.HEAP32[timespec>>2] = s;
+            this.HEAP32[timespec+8>>2] = ns;
+
+            return 0;
+        };
+    ThinThin.getcwd = function (addr, len) {
+        this.HEAP8[addr] = 0;
+
+        return 0;
+    };
+    } else {
+    }
     ThinThin.isatty = function (fdno) {
         return fdno <= 2 ? 1 : 0;
     };
@@ -1772,19 +1868,13 @@ if (typeof(os) !== "undefined" &&
     };
     ThinThin.openat = function (fdno, ptr, flags, mode) {
         var path = CStringAt(this.HEAPU8, ptr);
-        console.log("openat?! " + path);
-        return -2;
 
-        path = path.replace(/^.*[\/]/, "");
+        var dd = this.fds[fdno];
+        if (!dd)
+            return -22;
 
-        if (path.match(/\.elc$/) ||
-            path.match(/\.el\.el$/) ||
-            path.match(/\.el\.e$/))
-            return -2;
-
-        var fd = new ThinThinFetchFD(this.process, path);
-
-        return fd.fdno;
+        return dd.openat(path, flags, mode)
+            .then((fd) => fd.fdno).catch((error) => -2);
     },
     ThinThin.close = function (fdno) {
         var fd = this.fds[fdno];
@@ -1798,20 +1888,40 @@ if (typeof(os) !== "undefined" &&
         return 0;
     };
     ThinThin.newfstatat = function (fdno, pathstr, statbufptr, flags) {
-        var fd = this.fds[fdno];
+        var dd = this.fds[fdno];
         var path = CStringAt(this.HEAPU8, pathstr);
 
-        var off;
-        for (off = 0; off < 176; off += 4)
-            this.HEAP32[statbufptr+off>>2] = 0;
+        if (!dd)
+            return -9;
 
-        this.HEAP32[statbufptr+16>>2] = 1; this.HEAP32[statbufptr+16+4>>2] = 0;
-        this.HEAP32[statbufptr+24>>2] = fd.mode();
-        this.HEAP32[statbufptr+48>>2] = fd.size();
-        this.HEAP32[statbufptr+56>>2] = fd.size();
-        this.HEAP32[statbufptr+64>>2] = 1;
+        if ("openat" in dd)
+            return dd.openat(path).then(fd => {
+                var off;
+                for (off = 0; off < 176; off += 4)
+                    this.HEAP32[statbufptr+off>>2] = 0;
 
-        return 0;
+                this.HEAP32[statbufptr+16>>2] = 1; this.HEAP32[statbufptr+16+4>>2] = 0;
+                this.HEAP32[statbufptr+24>>2] = 438;;
+                this.HEAP32[statbufptr+48>>2] = fd.size();
+                this.HEAP32[statbufptr+56>>2] = fd.size();
+                this.HEAP32[statbufptr+64>>2] = 1;
+
+                return 0;
+            }).catch(err => -2);
+        else {
+            var fd = dd;
+            var off;
+            for (off = 0; off < 176; off += 4)
+                this.HEAP32[statbufptr+off>>2] = 0;
+
+            this.HEAP32[statbufptr+16>>2] = 1; this.HEAP32[statbufptr+16+4>>2] = 0;
+            this.HEAP32[statbufptr+24>>2] = fd.mode();;
+            this.HEAP32[statbufptr+48>>2] = fd.size();
+            this.HEAP32[statbufptr+56>>2] = fd.size();
+            this.HEAP32[statbufptr+64>>2] = 1;
+
+            return 0;
+        }
     };
     ThinThin.stat = function (ptr, bufptr) {
         var path = CStringAt(this.HEAPU8, ptr);
@@ -1852,7 +1962,7 @@ if (typeof(os) !== "undefined" &&
         if (first) {
             this.HEAP32[direntp>>2] = 0;
             this.HEAP32[direntp+8>>2] = 0;
-            this.HEAP16[direntp+16>>2] = 9;
+            this.HEAP16[direntp+16>>1] = 9;
 
             CStringTo(this.HEAP8, direntp+19, "words.eng");
             first--;
@@ -1931,7 +2041,7 @@ if (typeof(os) !== "undefined" &&
             var fdno = this.HEAP32[fdsptr+i*8>>2];
             var fd = this.fds[fdno];
             var events = this.HEAP16[fdsptr+i*8+4>>1];
-            this.HEAP16[fdsptr+i*8+6>>2] = 0;
+            this.HEAP16[fdsptr+i*8+6>>1] = 0;
             if (events & 1) {
                 all.push(fd.available().then((avail) => {
                     if (incall) {
@@ -2041,6 +2151,15 @@ if (typeof(os) !== "undefined" &&
     };
 }
 
+ThinThin.getuid = ThinThin.geteuid = ThinThin.getgid = ThinThin.getegid = function ()
+{
+    return 0;
+};
+
+ThinThin.getpid = ThinThin.getppid = function ()
+{
+    return 1;
+};
 ThinThin.queue_peek = function ()
 {
     if (typeof window === "undefined" &&
@@ -2553,10 +2672,6 @@ ThinThin.export_var = function (namep, typenamep, address)
     return 0;
 };
 
-ThinThin.getuid = ThinThin.geteuid = ThinThin.getgid = ThinThin.getegid = function ()
-{
-    return 0;
-};
 function VT100Cell()
 {
     this.dom_ = document.createElement("span");
@@ -2569,8 +2684,11 @@ function VT100Cell()
 
 VT100Cell.prototype.invert = function ()
 {
-    [this.dom_.style.color, this.dom_.style.background] =
-        [this.dom_.style.background, this.dom_.style.color];
+    var oldfg = this.dom_.style.color;
+    var oldbg = this.dom_.style.background;
+
+    this.dom_.style.color = oldbg;
+    this.dom_.style.background = oldfg;
 };
 
 VT100Cell.prototype.css = function ()
@@ -2668,7 +2786,7 @@ function VT100Context()
     this.showCursor();
 }
 
-VT100Context.prototype.write = function (c, x = undefined, y = undefined)
+VT100Context.prototype.write = function (c, x, y)
 {
     if (x === undefined)
         x = this.x;
@@ -2695,7 +2813,7 @@ VT100Context.prototype.showCursor = function ()
     cell.invert();
 };
 
-function VT100FD(process, domparent, fdno = undefined, outfdno = undefined)
+function VT100FD(process, domparent, fdno, outfdno)
 {
     ThinThinFD.call(this, process, fdno);
     this.domparent = domparent;
@@ -2982,6 +3100,8 @@ function newAsmJSModule(mod)
         }
         env.push("TERM=vt100");
     }
+    if (typeof global !== "undefined")
+        args.shift();
     sys.instantiate(mod, args, env);
     //restart = function () {
     //sys.instantiate(mod, args, env);
@@ -2990,6 +3110,9 @@ function newAsmJSModule(mod)
     while (sys.runqueue.length)
         sys.step();
 }
+
+if (typeof global !== "undefined")
+    run = () => global.setInterval(() => sys.step(), 0);
 
 function update() {
     if (!sys.threads || !sys.threads[0]) {
