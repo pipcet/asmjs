@@ -322,7 +322,7 @@ function InputPromise(fd, output)
             if (0) node_ta.onchange = function (e) {
                 var value = node_ta.value;
                 if (value == "")
-                    fd.EOF = true;
+                    fd.readEOF = true;
                 resolve(value == "" ? "" : (value + "\n"));
 
                 if (node.parentNode)
@@ -334,7 +334,7 @@ function InputPromise(fd, output)
 
             node_b.onclick = function (e) {
                 var value = node_ta.value;
-                fd.EOF = true;
+                fd.readEOF = true;
                 resolve(value == "" ? "" : (value + "\n"));
 
                 destroy();
@@ -462,7 +462,9 @@ function ThinThinFD(process, fdno)
     this.fdno = fdno;
     this.readData = [];
     this.readPosition = 0;
+    this.readTo = 0;
     this.forgetInputPromises = new Set();
+    this.onstuff = new Set();
     process.fds[fdno] = this;
     this.process = process;
 }
@@ -498,17 +500,80 @@ ThinThinFD.prototype.stuff = function (data)
 {
     this.readData += data;
 
-    if (this.activeInputPromise) {
-        var activeInputPromise = this.activeInputPromise;
-        delete this.activeInputPromise;
-        activeInputPromise.resolve(data);
-    }
+    var onstuff = this.onstuff;
+    this.onstuff = new Set();
+
+    for (var handler of onstuff)
+        handler();
 
     var forgetInputPromises = this.forgetInputPromises;
     this.forgetInputPromises = new Set();
 
     for (var forget of forgetInputPromises)
         forget();
+};
+
+ThinThinFD.prototype.stuffError = function (error)
+{
+    this.readError = error;
+
+    var onstuff = this.onstuff;
+    this.onstuff = new Set();
+
+    for (var handler of onstuff)
+        handler();
+};
+
+ThinThinFD.prototype.stuffEOF = function ()
+{
+    this.readEOF = true;
+
+    var onstuff = this.onstuff;
+    this.onstuff = new Set();
+
+    for (var handler of onstuff)
+        handler();
+};
+
+ThinThinFD.prototype.startStuffing = function ()
+{
+    this.wrappedInputPromise();
+
+    return Promise.resolve();
+};
+
+ThinThinFD.prototype.stopStuffing = function ()
+{
+    if (this.activeInputPromise) {
+        var activeInputPromise = this.activeInputPromise;
+        delete this.activeInputPromise;
+        activeInputPromise.resolve(data);
+    }
+};
+
+ThinThinFD.prototype.unpause = function (len)
+{
+    if (this.readTo < this.readPosition + len)
+        this.readTo = this.readPosition + len;
+
+    if (this.readers++ === 0) {
+        return new Promise((resolve, reject) => {
+            this.startStuffing().then(() => {
+                resolve();
+            }).catch(() => {
+                this.readers--;
+                reject();
+            });
+        });
+    }
+
+    return Promise.resolve();
+};
+
+ThinThinFD.prototype.pause = function ()
+{
+    if (--this.readers === 0)
+        this.stopStuffing();
 };
 
 ThinThinFD.prototype.makeSeekable = function ()
@@ -528,7 +593,7 @@ ThinThinFD.prototype.read = function(heap, ptr, len)
         len = 0;
 
     if (this.readData.length > this.readPosition ||
-        this.EOF) {
+        this.readEOF) {
         var i;
 
         for (i=0; i<len && i<this.readData.length - this.readPosition; i++) {
@@ -546,14 +611,13 @@ ThinThinFD.prototype.read = function(heap, ptr, len)
         return Promise.resolve(this.read(heap, ptr+i, len-i)).then(j => i+j);
     }
 
-    return this.wrappedInputPromise().then(data => {
-        if (data === undefined)
-            return -2;
-
-        if (data === "" && !this.EOF)
-            return 0;
-
-        return this.read(heap, ptr, len);
+    return this.unpause(len).then(() => {
+        return new Promise((resolve, reject) => {
+            this.onstuff.add(() => {
+                this.pause();
+                resolve(this.read(heap, ptr, len));
+            });
+        });
     });
 };
 
@@ -562,9 +626,10 @@ ThinThinFD.prototype.available = function ()
     if (this.readData.length > this.readPosition)
         return Promise.resolve(this.readData.length - this.readPosition);
 
-    this.wrappedInputPromise();
-
-    return Promise.resolve(0);
+    return this.unpause(0).then(() => {
+        this.pause();
+        return this.readData.length - this.readPosition;
+    });
 };
 
 ThinThinFD.prototype.wrappedInputPromise = function ()
@@ -672,17 +737,17 @@ ThinThinFetchFD.prototype.open = function ()
     return this.inputPromise().then(() => this.fdno);
 };
 
-ThinThinFetchFD.prototype.inputPromise = function ()
+ThinThinFetchFD.prototype.startStuffing = function ()
 {
     var url = this.url;
 
     delete this.url;
 
-    if (!url) {
-        return Promise.resolve("");
+    if (url === undefined) {
+        return Promise.reject("EOF");
     }
 
-    return fetch(url).then(response => {
+    fetch(url).then(response => {
         var abp = response.arrayBuffer();
 
         return abp.then(abuf => {
@@ -695,9 +760,22 @@ ThinThinFetchFD.prototype.inputPromise = function ()
                 text += String.fromCharCode(cc);
             }
 
-            return text;
+            this.stuff(text);
+            this.stuffEOF();
         });
-    }).catch(error => undefined);
+    }).catch(error => this.stuffError(error));
+};
+
+ThinThinFetchFD.prototype.inputPromise = function ()
+{
+    var url = this.url;
+
+    delete this.url;
+
+    if (!url) {
+        return Promise.resolve("");
+    }
+
 };
 
 function ReadableFD(process, readable, fdno)
@@ -709,27 +787,39 @@ function ReadableFD(process, readable, fdno)
 
 ReadableFD.prototype = Object.create(ThinThinFD.prototype);
 
-ReadableFD.prototype.inputPromise = function ()
+ReadableFD.prototype.startStuffing = function ()
 {
     var readable = this.readable;
-    var ret = new Promise((resolve, reject) => {
+    this.onend = () => {
+        this.stuffEOF();
+    };
+    this.ondata = (data) => {
         var text = "";
-        readable.on("end", () => {
-            resolve(text);
-            this.EOF = true;
-        });
-        readable.on("data", (data) => {
-            for (var i = 0; i < data.length; i++) {
-                var cc = data[i];
-                if (cc & 0x80) cc += 0x100;
-                text += String.fromCharCode(cc);
-            }
-            if (text.length > 2 * 1024 * 1024)
-                resolve(text);
-        });
-    });
 
-    return ret;
+        for (var i = 0; i < data.length; i++) {
+            var cc = data[i];
+            if (cc & 0x80) cc += 0x100;
+            text += String.fromCharCode(cc);
+        }
+
+        this.stuff(text);
+    };
+
+    readable.on("end", this.onend);
+    readable.on("data", this.ondata);
+
+    return Promise.resolve();
+};
+
+ReadableFD.prototype.stopStuffing = function ()
+{
+    var readable = this.readable;
+
+    readable.removeListener("end", this.onend);
+    delete this.onend;
+
+    readable.removeListener("data", this.ondata);
+    delete this.ondata;
 };
 
 function WritableFD(process, writable, fdno)
@@ -762,12 +852,6 @@ function ArrayBufferFD(process, abufPromise, fdno)
     this.abufPromise = abufPromise;
 }
 ArrayBufferFD.prototype = Object.create(ThinThinFD.prototype);
-
-ArrayBufferFD.prototype.inputPromise = function ()
-{
-    this.abufPromise.then((abuf) => {
-    })
-}
 
 function PipeFD(process, fdno)
 {
