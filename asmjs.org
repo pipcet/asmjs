@@ -476,6 +476,8 @@ Similarly, structure layouts and constants passed to system calls are identical 
 ** os.sys.call
 One implementation of the syscall API forwards them directly to the syscall(3) function, which is called by some extra code added to the SpiderMonkey JavaScript shell.
 
+The calling convention is that os.sys.call is called with the first argument, an integer, specifying the syscall number, followed by a list of arguments that are either integers, to be passed directly to the syscall, or array buffer arguments, followed by an integer offset, which are converted to a pointer to the relevant offset in the array buffer. As a special case, an offset of 0 is translated to a NULL pointer, and the array buffer is ignored.
+
 ** how to special-case the first case label:
 
 #+begin_src javascript
@@ -498,6 +500,8 @@ In essence, we admit that we are treating the asm.js target as a hostile environ
 
 The proposed specification for WebAssembly lacks the equivalent of a switch statement; the nearest match is the br_table opcode, which requires 
 * wasm support
+wasm/wasm64 support is rudimentarily present, but currently *outdated*.
+
 ** assembly language
 Unlike the text-based asm.js backend, the wasm target uses a conventional assembler approach: the wasm opcodes are used as though they were assembly instructions.
 
@@ -551,3 +555,12 @@ uses .dpc
 .wasm.text: WebAssembly binary code
 *** TODO fpswitch for wasm
 **** TODO test .rept hack for multi-page functions
+
+* unsorted
+** multifile support
+The multifile feature supports relinking an ELF executable (which has  already been linked) with additional object files to produce another ELF executable. This is similar to what LD_PRELOAD does on systems that support it, but manages to work around the lack of dynamic linking in the asmjs target.
+
+In addition to including the new object file code, constructors and destructors in the library file are executed.
+
+This is implemented by modifying the linker script files to produce a linked list of file descriptors, starting at the fixed offset 16384, with new descriptors appended to existing object files after the .bss section.
+
