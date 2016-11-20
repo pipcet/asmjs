@@ -1,4 +1,4 @@
-all: build/spidermonkey.make cache/interpolate-cache.pl bin/hexify js/asmjs.js lib/asmjs.o build/gcc-final.make build/graphviz.make # tests/001-do-nothing.c.s.o.exe.js build/perl.make build/coreutils.make build/bash.make # build/emacs.make
+all: build/common/spidermonkey.make bin/hexify js/asmjs.js lib/asmjs.o build/asmjs/gcc-final.make build/asmjs/perl.make build/asmjs/emacs.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -615,5 +615,8 @@ lib/%.o: lib/%.c
 
 lib/%.o: lib/%.cc
 	asmjs-virtual-asmjs-g++ -c -o $@ $<
+
+examples/002-perl/perl.js: asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/perl5.25.7 bin/prepare js/asmjs.js
+	./bin/prepare $< > $@
 
 .PHONY: FORCE clean fetch

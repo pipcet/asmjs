@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <title>something 2</title>
+    <script type="application/javascript"
+            src="perl.js"
+            defer="defer"
+            async="async">
+    </script>
+    <script>
+      var args = ["perl"];
+      var outstr = "";
+      var counter = 0;
+      function putstr(str) {
+          outstr += str;
+          var node = document.getElementById("output");
+          node.innerHTML = outstr;
+      }
+
+      //window.setInterval(function () {
+      //  counter *= .9;
+      //}, 1000);
+    </script>
+  </head>
+  <body>
+    <div id="input">
+      <textarea id="dot-input">
+      </textarea>
+    </div>
+    <div id="dot-counter">
+    </div>
+    <pre>
+      <div id="output"></div>
+    </pre>
+  </body>
+</html>
