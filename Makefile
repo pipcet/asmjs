@@ -32,6 +32,10 @@ build/asmjs/.dir: build/.dir
 	test -d build/asmjs || $(MKDIR) build/asmjs
 	touch $@
 
+build/asmjs-cross/.dir: build/.dir
+	test -d build/asmjs-cross || $(MKDIR) build/asmjs-cross
+	touch $@
+
 build/wasm/.dir: build/.dir
 	test -d build/wasm || $(MKDIR) build/wasm
 	touch $@
@@ -68,6 +72,10 @@ build/asmjs/glibc.dir: build/asmjs/.dir
 	test -d build/asmjs/glibc || $(MKDIR) build/asmjs/glibc
 	touch $@
 
+build/asmjs-cross/glibc.dir: build/asmjs-cross/.dir
+	test -d build/asmjs-cross/glibc || $(MKDIR) build/asmjs-cross/glibc
+	touch $@
+
 build/wasm/glibc.dir: build/wasm/.dir
 	test -d build/wasm/glibc || $(MKDIR) build/wasm/glibc
 	touch $@
@@ -90,6 +98,14 @@ build/asmjs/ncurses.dir: build/asmjs/.dir
 
 build/asmjs/emacs.dir: build/asmjs/.dir
 	test -d build/asmjs/emacs || $(MKDIR) build/asmjs/emacs
+	touch $@
+
+build/asmjs-cross/ncurses.dir: build/asmjs-cross/.dir
+	test -d build/asmjs-cross/ncurses || $(MKDIR) build/asmjs-cross/ncurses
+	touch $@
+
+build/asmjs-cross/emacs.dir: build/asmjs-cross/.dir
+	test -d build/asmjs-cross/emacs || $(MKDIR) build/asmjs-cross/emacs
 	touch $@
 
 build/common/spidermonkey.dir: build/common/.dir
@@ -115,6 +131,11 @@ build/asmjs/bash.dir: build/asmjs/.dir
 build/asmjs/perl.dir: build/asmjs/.dir src/perl.dir
 	test -d build/asmjs/perl || mkdir build/asmjs/perl
 	(cd src/perl; tar c --exclude .git .) | (cd build/asmjs/perl; tar x)
+	touch $@
+
+build/asmjs-cross/perl.dir: build/asmjs-cross/.dir src/perl.dir
+	test -d build/asmjs-cross/perl || mkdir build/asmjs-cross/perl
+	(cd src/perl; tar c --exclude .git .) | (cd build/asmjs-cross/perl; tar x)
 	touch $@
 
 build/asmjs/coreutils.dir: build/asmjs/.dir
@@ -208,6 +229,10 @@ build/asmjs/glibc.configure: src/glibc.dir build/asmjs/glibc.dir | build/asmjs/g
 	(cd build/asmjs/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
 
+build/asmjs-cross/glibc.configure: src/glibc.dir build/asmjs-cross/glibc.dir | build/asmjs/gcc-preliminary.make
+	(cd build/asmjs-cross/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	touch $@
+
 build/wasm/glibc.configure: src/glibc.dir build/wasm/glibc.dir | build/wasm/gcc-preliminary.make
 	(cd build/wasm/glibc; CC=wasm-virtual-wasm-gcc PATH=$(PWD)/wasm-virtual-wasm/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=wasm-virtual-wasm --target=wasm-virtual-wasm --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/wasm-virtual-wasm/wasm-virtual-wasm)
 	touch $@
@@ -219,6 +244,11 @@ build/wasm64/glibc.configure: src/glibc.dir build/wasm64/glibc.dir | build/wasm6
 build/asmjs/glibc.make: build/asmjs/glibc.dir build/asmjs/glibc.configure
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/glibc
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/glibc install
+	touch $@
+
+build/asmjs-cross/glibc.make: build/asmjs-cross/glibc.dir build/asmjs-cross/glibc.configure
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc install
 	touch $@
 
 build/wasm/glibc.make: build/wasm/glibc.dir build/wasm/glibc.configure
@@ -275,13 +305,37 @@ build/asmjs/ncurses.make: build/asmjs/ncurses.configure
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/ncurses install
 	touch $@
 
+build/asmjs-cross/ncurses.configure: src/ncurses.dir build/asmjs-cross/ncurses.dir | build/asmjs/gcc-final.make
+	(cd build/asmjs-cross/ncurses; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	touch $@
+
+build/asmjs-cross/ncurses.make: build/asmjs-cross/ncurses.configure
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses install
+	touch $@
+
 build/asmjs/emacs.configure: src/emacs.dir build/asmjs/emacs.dir | build/asmjs/ncurses.make
 	(cd src/emacs; autoreconf -ivf)
 	cp config/config.sub src/emacs/build-aux
 	(cd build/asmjs/emacs; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
 
+build/asmjs-cross/emacs.configure: src/emacs.dir build/asmjs-cross/emacs.dir | build/asmjs-cross/ncurses.make
+	(cd src/emacs; autoreconf -ivf)
+	cp config/config.sub src/emacs/build-aux
+	(cd build/asmjs-cross/emacs; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --build=x86_64-pc-linux-gnu --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	touch $@
+
 build/asmjs/emacs.make: build/asmjs/emacs.configure build/asmjs/ncurses.make | build/binfmt_misc.install
+	$(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet
+	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa/inet.h
+	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netdb.h
+	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet/in.h
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs
+	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
+	touch $@
+
+build/asmjs-cross/emacs.make: build/asmjs-cross/emacs.configure build/asmjs-cross/ncurses.make | build/binfmt_misc.install
 	$(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet
 	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa/inet.h
 	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netdb.h
@@ -302,11 +356,23 @@ build/asmjs/bash.make: build/asmjs/bash.configure
 build/asmjs/perl.configure: src/perl.dir build/asmjs/perl.dir | build/asmjs/gcc-final.make
 	test -f build/asmjs/perl/config.sh && mv build/asmjs/perl/config.sh build/asmjs/perl/config.sh.old || true
 	touch build/asmjs/perl/config.sh
-	(cd build/asmjs/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel)
+	(cd build/asmjs/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs')
 	touch $@
 
 build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/perl
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/perl install
+	touch $@
+
+build/asmjs-cross/perl.configure: src/perl.dir build/asmjs-cross/perl.dir | build/asmjs/gcc-final.make
+	test -f build/asmjs-cross/perl/config.sh && mv build/asmjs-cross/perl/config.sh build/asmjs-cross/perl/config.sh.old || true
+	touch build/asmjs-cross/perl/config.sh
+	(cd build/asmjs-cross/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.0.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/asmjs-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs')
+	touch $@
+
+build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.configure
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl
+	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl install
 	touch $@
 
 build/common/spidermonkey.configure: src/spidermonkey.dir build/common/spidermonkey.dir
