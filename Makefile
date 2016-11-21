@@ -549,11 +549,11 @@ js/.dir:
 	test -d js || mkdir js
 	touch $@
 
-js/asmjs-%.jsc.js: jsc/asmjs-%.jsc js/.dir
+js/asmjs-%.jsc.js: jsc/asmjs-%.jsc js/.dir build/asmjs/gcc-final.make
 	test -d cache || mkdir cache
 	perl ./bin/interpolate asmjs-virtual-asmjs < $< > $@
 
-js/asmjs-%.jsc.js: jsc/asm-%.jsc js/.dir
+js/asmjs-%.jsc.js: jsc/asm-%.jsc js/.dir build/asmjs/gcc-final.make
 	test -d cache || mkdir cache
 	perl ./bin/interpolate asmjs-virtual-asmjs < $< > $@
 
