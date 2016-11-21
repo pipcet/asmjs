@@ -89,7 +89,7 @@ SECTIONS
     SECTION_SIZED(memory)
     SECTION_SIZED(global)
     SECTION_SIZED(export)
-    SECTION_UNSIZED(start, LONGLEB128(_start>>32))
+    SECTION_UNSIZED(start, LONGLEB128(1+(_start>>32)))
     SECTION_SIZED(element)
     SECTION_SIZED(code)
     SECTION_DATA(data)

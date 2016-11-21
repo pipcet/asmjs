@@ -232,9 +232,31 @@ __wasm_chars_\name\():
         lstring "_start"
         .byte 0x00              ; external kind function
                                 ;rleb128 _start
+        .byte 0x02
+        .popsection
+
+        .pushsection .wasm.chars.export
+        .byte 0x00
+        .popsection
+        .pushsection .wasm.payload.export
+        lstring "_memory"
+        .byte 0x02              ; external kind function
+                                ;rleb128 _start
         .byte 0x00
         .popsection
 
+        createsig FiiiiiiiE
+        .pushsection .wasm.chars.import
+        .byte 0x00
+        .popsection
+        .pushsection .wasm.payload.import
+        lstring "sys"
+        lstring "call"
+        .byte 0x00              ; external kind function
+        rleb128 __sigchar_FiiiiiiiE
+        .popsection
+        
+        
         .if 0
         .if 0
         .pushsection .wasm.chars.type

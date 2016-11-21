@@ -446,11 +446,12 @@ long import_entry(void)
 {
   long delta = 0;
 
+  delta += msynch();
+  mputstring(mgetstring());
+  delta += msynch();
+  mputstring(mgetstring());
   mputuleb128(mgetuleb128());
-  delta += msynch();
-  mputstring(mgetstring());
-  delta += msynch();
-  mputstring(mgetstring());
+  mputuleb128(mgetuleb128());
   delta += msynch();
 
   return delta;

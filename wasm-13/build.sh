@@ -10,5 +10,5 @@ gcc -g ./wasmrewrite.c -o wasmrewrite
 od -tx1 c.out
 ./wasmrewrite c.out > d.out
 od -tx1 d.out
-../common3/bin/js --execute='WebAssembly.instantiate(os.file.readFile("d.out", "binary")).catch(error => console.log(error)).then(success => { console.log("success: " + success); for (let o in success.instance.exports) console.log(o); console.log(success.instance.exports._start()) });'
+../common3/bin/js --execute='WebAssembly.instantiate(os.file.readFile("d.out", "binary"), { sys: { call: function (a,b,c,d,e,f) { console.log(`${a} ${b} ${c} ${d} ${e} ${f}`); return 42; }} }).catch(error => console.log(error)).then(success => { console.log("success: " + success); for (let o in success.instance.exports) console.log(o); console.log(success.instance.exports._start()) });'
 sleep 10
