@@ -632,11 +632,11 @@ js/wasm-%.jsc.js: jsc/asm-%.jsc js/.dir
 
 js/wasm32-%.jsc.js: jsc/wasm32-%.jsc js/.dir
 	test -d cache || mkdir cache
-	perl ./bin/interpolate wasm32-virtual-wasm32 < $< > $@
+	perl ./bin/interpolate asmjs-virtual-asmjs < $< > $@
 
 js/wasm32-%.jsc.js: jsc/asm-%.jsc js/.dir
 	test -d cache || mkdir cache
-	perl ./bin/interpolate wasm32-virtual-wasm32 < $< > $@
+	perl ./bin/interpolate asmjs-virtual-asmjs < $< > $@
 
 js/wasm64-%.jsc.js: jsc/wasm64-%.jsc js/.dir
 	test -d cache || mkdir cache

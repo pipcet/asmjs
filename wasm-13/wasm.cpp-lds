@@ -25,7 +25,7 @@
   *(.wasm.payload.name*);                                            \
   __wasm_##name##_payload_end = .;
 
-#define SECTION_DATA(name)                                           \
+#define SECTION_DATA_HEADER(name)                                    \
   wasm-headers.o(.wasm.header_id.name);                              \
   LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
   wasm-headers.o(.wasm.header.name);                                 \
@@ -35,10 +35,14 @@
   BYTE(0x41);                                                        \
   LONGLEB128(0x4000);                                                \
   BYTE(0x0b);                                                        \
-  LONGLEB128(__wasm_##name##_segment_end - __wasm_##name##_segment); \
+  LONGLEB128(__wasm_##name##_segment_end - __wasm_##name##_segment);
+
+#define SECTION_DATA_BODY(name)                                      \
   __wasm_##name##_segment = .;                                       \
   *(.asmjs.header);                                                  \
   *(.data);                                                          \
+  *(.rodata);                                                        \
+  *(.bss);                                                           \
   __wasm_##name##_segment_end = .;                                   \
   __wasm_##name##_payload_end = .;
 
@@ -78,8 +82,12 @@ SECTIONS
       //SECTION_UNSIZED(start, LONGLEB128(1+(_start>>32)))
     SECTION_SIZED(element)
     SECTION_SIZED(code)
-    SECTION_DATA(data)
+    SECTION_DATA_HEADER(data)
 //    SECTION_SIZED(name)
+  }
+  . = 0x4000;
+  .output.data : {
+    SECTION_DATA_BODY(data)
   }
   SECTION_CHARS(function_index)
   SECTION_CHARS(type)

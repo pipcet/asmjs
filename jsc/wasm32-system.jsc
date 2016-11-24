@@ -27,14 +27,17 @@ Wasm32ModuleSection.prototype.instantiate = function (thread)
     this.imports = {};
     this.imports.sys = {};
 
-    this.imports.sys).call = thread.extcall.bind(thread);
+    this.imports.sys.call = thread.extcall.bind(thread);
     this.imports.sys.eh_return = thread.eh_return.bind(thread);
     this.imports.sys.indcall = thread.indcall.bind(thread);
 
-    this.instancePromise = WebAssembly.instantiate(this.bytes, imports).then((instance) => {
-        this.instance = instance;
+    this.instancePromise = WebAssembly.instantiate(this.bytes, this.imports).then((instance) => {
+        this.instance = instance.instance;
         thread.exports = this.instance.exports;
-        thread.memory = this.instance.exports.memory;
+        thread.memory = this.instance.exports._memory.buffer;
+        console.log(thread.memory);
+        for (let l in thread.memory)
+            console.log(l);
     });
 
     return this.instancePromise;
@@ -190,6 +193,12 @@ Wasm32Thread.prototype.stop = function (reason)
     }
 };
 
+Wasm32Thread.prototype.set_rv = function (rv)
+{
+    //%XXX{tp[&threadpage::rv]} = rv;
+    this.HEAPU32[4096>>2] = rv;
+};
+
 Wasm32Thread.prototype.set_pc = function (pc)
 {
     %{tp[&threadpage::pc]} = pc;
@@ -205,12 +214,21 @@ Wasm32Thread.prototype.set_initsp = function (initsp)
     %{tp[&threadpage::initsp]} = initsp;
 };
 
-Wasm32Thread.prototype.extcall = function (modstr, funstr, pc, sp)
+Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
 {
+    console.log(a + " " + b + " " + c + " " + d)
+    console.log("sp1 " + sp1);
+    for (var diff = -48; diff < 48; diff += 4)
+        console.log("@" + diff + ": " + this.HEAPU32[sp1+diff>>2]);
+    for (var diff = 0; diff < 48; diff += 4)
+        console.log("@" + diff + ": " + this.HEAPU32[diff>>2]);
+    var sp = sp1 + 16;
+    var modstr = b;
+    var funstr = c;
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
-    //console.log('extcall ' + mod + ' ' + fun);
+    console.log('extcall ' + mod + ' ' + fun);
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
@@ -222,7 +240,7 @@ Wasm32Thread.prototype.extcall = function (modstr, funstr, pc, sp)
                 return sp|1;
             }
 
-            this.module.set_rv(ret);
+            this.set_rv(ret);
 
             delete this.extcallRet[sp];
 
@@ -230,10 +248,10 @@ Wasm32Thread.prototype.extcall = function (modstr, funstr, pc, sp)
         }
     }
 
-    var nargs = this.HEAP32[sp+8>>2];
+    var nargs = this.HEAP32[sp1+8>>2];
     var is_void = ((nargs & 0x40000000) != 0) !=
         ((nargs & 0x80000000) != 0);
-    var is_void_2 = this.HEAP32[sp>>2] != 0;
+    var is_void_2 = this.HEAP32[sp1>>2] != 0;
 
     if (is_void)
         nargs ^= 0x40000000;
@@ -241,7 +259,8 @@ Wasm32Thread.prototype.extcall = function (modstr, funstr, pc, sp)
     var args = [];
     if (nargs >= 0) {
         for (var ai = 0; ai < nargs; ai++) {
-            args[ai] = this.HEAP32[sp+16+4*ai>>2];
+            args[ai] = this.HEAP32[sp1+16+4*ai>>2];
+            console.log("arg " + ai + " " + args[ai]);
         }
     }
 
@@ -273,8 +292,9 @@ Wasm32Thread.prototype.extcall = function (modstr, funstr, pc, sp)
         return sp|1;
     }
 
+    console.log("retv " + retv)
     if (retv !== undefined && retv == retv) {
-        this.module.set_rv(retv);
+        this.set_rv(retv);
     } else if (retv != retv) {
         this.stop(1);
         return sp|1;
@@ -432,7 +452,7 @@ FrozenWasm32Thread.prototype.thaw = function (process, module)
     return n;
 };
 
-function Wasm32Process(system, heap)
+function Wasm32Process(system)
 {
     this.system = system;
     system.processes.push(this);
@@ -440,16 +460,6 @@ function Wasm32Process(system, heap)
     this.fds = [];
     this.ddroot = system.ddroot;
     this.ddcwd = system.ddcwd;
-
-    this.heap = heap;
-    this.HEAP8 = new Int8Array(this.heap);
-    this.HEAP16 = new Int16Array(this.heap);
-    this.HEAP32 = new Int32Array(this.heap);
-    this.HEAPU8 = new Uint8Array(this.heap);
-    this.HEAPU16 = new Uint16Array(this.heap);
-    this.HEAPU32 = new Uint32Array(this.heap);
-    this.HEAPF32 = new Float32Array(this.heap);
-    this.HEAPF64 = new Float64Array(this.heap);
 
     this.functions = {};
     this.threads = [];
@@ -613,31 +623,49 @@ Wasm32System.prototype.init_sp = function (heap, off, args, env)
 
 Wasm32System.prototype.instantiate = function (module, args, env)
 {
-    var size = module.top_of_memory;
-    var heap = new ArrayBuffer(size);
-    var HEAP32 = new Int32Array(heap);
-
-    %{zp[&zeropage::top_of_memory] = "module.top_of_memory"}
-    %{zp[&zeropage::top_of_sbrk] = "module.start_of_sbrk"}
-    %{zp[&zeropage::thread_list]} = %{tp1};
-    %{zp[&zeropage::bottom_of_sbrk] = "module.start_of_sbrk"}
-
-    %{tp1[&threadpage::next]} = %{tp1};
-    %{tp1[&threadpage::prev]} = %{tp1};
-    %{tp1[&threadpage::id] = "1"}
-    %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
-    %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
-
-    var sp = this.init_sp(heap, module.top_of_stack, args, env);
-    %{tp1[&threadpage::sp] = "sp"}
-    %{tp1[&threadpage::initsp] = "sp"}
-
     var process;
     var thread;
     if (!this.threads.length) {
-        process = new Wasm32Process(this, heap);
+        process = new Wasm32Process(this);
         thread = new Wasm32Thread(process, module, 8192);
         return thread.module.instantiate(thread).then(() => {
+            var size = module.top_of_memory;
+            var heap = thread.memory;
+            process.heap = heap;
+            process.HEAP8 = new Int8Array(process.heap);
+            process.HEAP16 = new Int16Array(process.heap);
+            process.HEAP32 = new Int32Array(process.heap);
+            process.HEAPU8 = new Uint8Array(process.heap);
+            process.HEAPU16 = new Uint16Array(process.heap);
+            process.HEAPU32 = new Uint32Array(process.heap);
+            process.HEAPF32 = new Float32Array(process.heap);
+            process.HEAPF64 = new Float64Array(process.heap);
+            thread.HEAP8 = new Int8Array(process.heap);
+            thread.HEAP16 = new Int16Array(process.heap);
+            thread.HEAP32 = new Int32Array(process.heap);
+            thread.HEAPU8 = new Uint8Array(process.heap);
+            thread.HEAPU16 = new Uint16Array(process.heap);
+            thread.HEAPU32 = new Uint32Array(process.heap);
+            thread.HEAPF32 = new Float32Array(process.heap);
+            thread.HEAPF64 = new Float64Array(process.heap);
+
+            var HEAP32 = new Int32Array(heap);
+
+            %{zp[&zeropage::top_of_memory] = "module.top_of_memory"}
+            %{zp[&zeropage::top_of_sbrk] = "module.start_of_sbrk"}
+            %{zp[&zeropage::thread_list]} = %{tp1};
+            %{zp[&zeropage::bottom_of_sbrk] = "module.start_of_sbrk"}
+
+            %{tp1[&threadpage::next]} = %{tp1};
+            %{tp1[&threadpage::prev]} = %{tp1};
+            %{tp1[&threadpage::id] = "1"}
+            %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
+            %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
+
+            var sp = this.init_sp(heap, module.top_of_stack, args, env);
+            %{tp1[&threadpage::sp] = "sp"}
+            %{tp1[&threadpage::initsp] = "sp"}
+
             %{tp1[&threadpage::pc] = "process.entry"}
             if (false && typeof document !== "undefined") {
                 new ThinThinFD(process, 0);

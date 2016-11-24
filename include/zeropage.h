@@ -13,6 +13,8 @@ typedef struct threadpage {
   unsigned long long top_of_stack;
   unsigned long long stop_reason;
   unsigned long long pc;
+  unsigned long long pc0;
+  unsigned long long dpc;
   unsigned long long sp;
   unsigned long long initsp;
   unsigned long long rv;
