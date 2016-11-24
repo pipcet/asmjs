@@ -60,38 +60,35 @@
         .wasmtextlabeldef .LFl\@
         .endm
 
-        .macro .wasmtextlabeldef label
+        .macro .wasmtextlabelpc0def label
         nextcase
-        .set \label, __wasm_skip_function + __wasm_blocks
+        .set \label, __wasm_function_index
+        .endm
+
+        .macro .wasmtextlabeldpcdef label
+        nextcase
+        .set \label, __wasm_blocks
         .endm
 
         .macro .ndatatextlabel label
-        i64.const \label
+        i32.const \label
         .endm
 
         .macro .ncodetextlabel label
-        i64.const \label
+        i32.const \label
         .endm
 
         .macro .dpc label
-        i64.const \label
+        i32.const \label
         .endm
 
         .macro .labeldef_internal label
         nextcase
-        .set \label, __wasm_skip_function + __wasm_blocks
+        .set \label, __wasm_blocks
         .endm
 
         .macro rleb128 expr:vararg
         .reloc .,R_ASMJS_LEB128,\expr
-        .rept 15
-        .byte 0x80
-        .endr
-        .byte 0x00
-        .endm
-
-        .macro rleb128r32 expr:vararg
-        .reloc .,R_ASMJS_LEB128_R32,\expr
         .rept 15
         .byte 0x80
         .endr
@@ -127,14 +124,10 @@ __sigchar_\sig:
         .pushsection .wasm.chars.function
         .byte 0
         .popsection
-        .pushsection .wasm.skip.function,"",@nobits
+        .pushsection .wasm.chars.function_index.b,"",@nobits
 \name\():
-        .skip 1 << 32
-        .set __wasm_skip_function, \name\()
-        .popsection
-        .pushsection .wasm.chars.xxx
-1:
         .byte 0
+        .set __wasm_function_index, \name\()
         .popsection
         .pushsection .wasm.chars.code
         .byte 0
@@ -221,20 +214,20 @@ __sigchar_\sig:
 __wasm_locals_\name\():
         .byte 0x02              ; 2 local entries
         .byte 17                ; 17 variables of type
-        .byte 0x7e                 ; i64
+        .byte 0x7f                 ; i32
         .byte 8                 ; 8 variables of type
         .byte 0x7c                 ; f64
 __wasm_locals_\name\()_end:
-        i64.const -16
+        i32.const -16
         get_local $sp1
-        i64.add
+        i32.add
         set_local $sp
         .ifne __wasm_blocks
 __wasm_ast_\name\():
         loop
 __wasm_blocks_\name:
         .rept __wasm_blocks
-        block
+        block[]
         .endr
 __wasm_blocks_\name\()_end:
         .pushsection .wasm.dummy
@@ -242,16 +235,14 @@ __wasm_blocks_\name\()_end:
 __wasm_blocks_\name\()_sym:
         .popsection
         get_local $dpc
-        i32.wrap_i64
-        .byte 0x08              ; br_table[0] [0,1,2,...,n] n
-        .byte 0x00
+        .byte 0x0e              ; br_table[0] [0,1,2,...,n] n
         rleb128 __wasm_blocks-1
         .set __wasm_block, 0
         .rept __wasm_blocks-1
-        .4byte __wasm_block
+        rleb128 __wasm_block
         .set __wasm_block, __wasm_block + 1
         .endr
-        .4byte __wasm_blocks-1
+        rleb128 __wasm_blocks-1
         end
         .popsection
         .else
@@ -272,16 +263,16 @@ __wasm_blocks_\name\()_sym:
 
         .ifne 1
         .macro .labeldef_debug label
-        .ifndef __wasm_skip_function
-        .pushsection .wasm.skip.function,"",@nobits
+        .ifndef __wasm_function_index
+        .pushsection .wasm.chars.function_index.b,"",@nobits
 0:
         .popsection
-        .set __wasm_skip_function, 0b
+        .set __wasm_function_index, 0b
         .endif
         .ifndef __wasm_blocks
         .set __wasm_blocks, 0
         .endif
-        .set \label, __wasm_skip_function + __wasm_blocks + 1
+        .set \label, __wasm_blocks + 1
         .endm
         .else
         .macro .labeldef_debug label

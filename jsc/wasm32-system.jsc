@@ -1,0 +1,729 @@
+#{#define _GNU_SOURCE}
+#{#include <stdio.h>}
+#{#include <sys/stat.h>}
+#{#include <fcntl.h>}
+#{#include <sys/fcntl.h>}
+#{#include <unistd.h>}
+#{#include <sys/types.h>}
+#{#include <errno.h>}
+#{#include <sys/ioctl.h>}
+#{#include <sys/poll.h>}
+#{#include "zeropage.h"}
+#{#include "js3.h"}
+#{#define AT_FDROOTD -101}
+
+#{Heap thisheap("this.HEAP");}
+#{Context context(&thisheap);}
+
+var global = this;
+
+function Wasm32ModuleSection(bytes)
+{
+    this.bytes = bytes;
+}
+
+Wasm32ModuleSection.prototype.instantiate = function (thread)
+{
+    this.imports = {};
+    this.imports.sys = {};
+
+    this.imports.sys).call = thread.extcall.bind(thread);
+    this.imports.sys.eh_return = thread.eh_return.bind(thread);
+    this.imports.sys.indcall = thread.indcall.bind(thread);
+
+    this.instancePromise = WebAssembly.instantiate(this.bytes, imports).then((instance) => {
+        this.instance = instance;
+        thread.exports = this.instance.exports;
+        thread.memory = this.instance.exports.memory;
+    });
+
+    return this.instancePromise;
+};
+
+function Wasm32Module()
+{
+    this.sections = {};
+}
+
+Wasm32Module.prototype.add_section = function (section)
+{
+    this.sections[section.name] = section;
+};
+
+Wasm32Module.prototype.instantiate = function (thread)
+{
+    var promises = [];
+    for (var name in this.sections) {
+        promises.push(this.sections[name].instantiate(thread));
+    }
+    return Promise.all(promises);
+};
+
+function Wasm32Thread(process, module, threadpage)
+{
+    this.process = process;
+    process.threads.push(this);
+    var system = process.system;
+
+    this.fds = process.fds;
+
+    this.system = system;
+    system.threads.push(this);
+
+    this.HEAP8 = process.HEAP8;
+    this.HEAP16 = process.HEAP16;
+    this.HEAP32 = process.HEAP32;
+    this.HEAPU8 = process.HEAPU8;
+    this.HEAPU16 = process.HEAPU16;
+    this.HEAPU32 = process.HEAPU32;
+    this.HEAPF32 = process.HEAPF32;
+    this.HEAPF64 = process.HEAPF64;
+
+    this.threadpage = threadpage;
+
+    this.module = module;
+    this.rmodule = module;
+
+    this.extcallRet = {};
+    this.exports = {};
+    this.types = {};
+    this.types_by_id = {};
+    this.vars = {};
+    this.queue = [];
+
+    var thread = this;
+
+    this.types_by_id["Kc"] = this.types["string"] = {
+        constructor: function (thread, ptr) {
+            if (ptr === 0)
+                return null;
+
+            var str = CStringAt(thread.HEAP8, ptr);
+
+            this.thread = thread;
+            this.address = ptr;
+            this.str = str;
+
+            this.toString = function () {
+                return this.str;
+            };
+
+            var ret = new String(this.str);
+
+            ret.address = ptr;
+
+            return ret;
+        },
+        construct: function (thread, ptr) {
+            if (ptr === 0)
+                return null;
+
+            return new this.constructor(thread, ptr);
+        },
+    };
+}
+
+Wasm32Thread.prototype.find_type = function (typeid)
+{
+    typeid = typeid.replace(/^P/, "");
+
+    if (typeid in this.types_by_id)
+        return this.types_by_id[typeid];
+    else if (typeid.match(/^P/))
+        return new ThinThin.TypePtr(typeid, typeid);
+    else
+        switch (typeid) {
+        case "i":
+            return this.types_by_id[typeid] = new ThinThin.Type32(typeid);
+
+        case "m":
+            return this.types_by_id[typeid] = new ThinThin.TypeU32(typeid);
+
+        default:
+            return new ThinThin.TypeOpaque(typeid);
+    }
+};
+
+#{JSV<threadpage*> tp("this.threadpage");}
+
+Wasm32Thread.prototype.stopped = function ()
+{
+    return %{tp[&threadpage::stop_reason]};
+};
+
+Wasm32Thread.prototype.pc = function ()
+{
+    return %{tp[&threadpage::pc]};
+};
+
+Wasm32Thread.prototype.pc0 = function ()
+{
+    return %{tp[&threadpage::pc]};
+};
+
+Wasm32Thread.prototype.dpc = function ()
+{
+    return %{tp[&threadpage::pc]};
+};
+
+Wasm32Thread.prototype.sp = function ()
+{
+    return %{tp[&threadpage::sp]};
+};
+
+Wasm32Thread.prototype.initsp = function ()
+{
+    return %{tp[&threadpage::initsp]};
+};
+
+var run;
+
+Wasm32Thread.prototype.stop = function (reason)
+{
+    var stopped = this.stopped();
+    %{tp[&threadpage::stop_reason]} = reason;
+
+    if (stopped && reason == 0) {
+        this.system.runqueue.push(this);
+        if (run)
+            run();
+    }
+};
+
+Wasm32Thread.prototype.set_pc = function (pc)
+{
+    %{tp[&threadpage::pc]} = pc;
+};
+
+Wasm32Thread.prototype.set_sp = function (sp)
+{
+    %{tp[&threadpage::sp]} = sp;
+};
+
+Wasm32Thread.prototype.set_initsp = function (initsp)
+{
+    %{tp[&threadpage::initsp]} = initsp;
+};
+
+Wasm32Thread.prototype.extcall = function (modstr, funstr, pc, sp)
+{
+    var mod = CStringAt(this.HEAPU8, modstr);
+    var fun = CStringAt(this.HEAPU8, funstr);
+
+    //console.log('extcall ' + mod + ' ' + fun);
+
+    if (sp in this.extcallRet) {
+        var ret = this.extcallRet[sp];
+
+        if (ret !== undefined) {
+            if (typeof Promise !== undefined &&
+                ret instanceof Promise) {
+                this.stop(1);
+                return sp|1;
+            }
+
+            this.module.set_rv(ret);
+
+            delete this.extcallRet[sp];
+
+            return sp;
+        }
+    }
+
+    var nargs = this.HEAP32[sp+8>>2];
+    var is_void = ((nargs & 0x40000000) != 0) !=
+        ((nargs & 0x80000000) != 0);
+    var is_void_2 = this.HEAP32[sp>>2] != 0;
+
+    if (is_void)
+        nargs ^= 0x40000000;
+
+    var args = [];
+    if (nargs >= 0) {
+        for (var ai = 0; ai < nargs; ai++) {
+            args[ai] = this.HEAP32[sp+16+4*ai>>2];
+        }
+    }
+
+    switch (mod) {
+    case "thinthin":
+        if (ThinThin[fun]) {
+            try {
+                retv = ThinThin[fun].apply(this, args);
+                break;
+            } catch (e) {
+                throw "died while executing " + fun + ' arg0 ' + args[0] + " e " + e;
+            }
+        }
+        throw "couldn't find " + fun;
+    default:
+        throw("giving up, pc " + pc.toString(16) + " fun " + funstr.toString(16) + " " + fun + " mod " + modstr.toString(16) + " " + mod);
+    }
+
+    if (typeof Promise !== "undefined" &&
+        retv instanceof Promise) {
+        this.extcallRet[sp] = retv;
+        this.stop(1);
+
+        retv.then(r => {
+            this.extcallRet[sp] = r;
+            this.stop(0);
+        });
+
+        return sp|1;
+    }
+
+    if (retv !== undefined && retv == retv) {
+        this.module.set_rv(retv);
+    } else if (retv != retv) {
+        this.stop(1);
+        return sp|1;
+    } else {
+        throw "cannot resolve " + mod + ":" + fun;
+    }
+
+    return sp;
+};
+
+Wasm32Thread.prototype.restart = function (dst, src, len, entry)
+{
+    var initsp = this.initsp();
+
+    this.restartCode = () => {
+        if (len) {
+            var i;
+
+            for (i = 0; i < len; i++)
+                this.HEAP8[dst+i] = this.HEAP8[src+i];
+        } else {
+            //datainit();
+        }
+
+        this.set_pc(entry>>4);
+        this.set_sp(initsp+16);
+        this.set_initsp(initsp);
+
+        delete this.restartCode;
+    };
+
+    this.stop(0);
+
+    return 0;
+};
+
+Wasm32Thread.prototype.step = function ()
+{
+    var pc = this.pc();
+    var sp = this.sp();
+    var rp = 0;
+    var isp = pc ? 0 : sp;
+    var rpc = 0;
+
+    while (true) {
+
+        if (!f)
+            throw "no f for " + cpc.toString(16);
+
+        rp = this.exports.indcall(pc, sp,
+                                  0, 0,
+                                  rpc, pc);
+        //putstr('rp ' + rp.toString(16));
+
+        sp = rp;
+
+        if (sp & 3) {
+            sp &= -4;
+            pc = HEAPU32[sp+12>>2];
+            sp += 16;
+        } else {
+            sp = HEAPU32[rp>>2];
+            pc = HEAPU32[sp+20>>2];
+            sp += 16;
+        }
+    }
+
+    this.set_pc(pc);
+    this.set_sp(sp);
+
+    return rp&-4;
+};
+
+Wasm32Thread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
+{
+    for (;;) ;
+};
+
+Wasm32Thread.prototype.set_arg = function (index, arg)
+{
+    this.HEAP32[4096 + (index+1) * 4 >> 2] = arg;
+};
+
+/* This is somewhat tricky. The dwarf expressions we want to generate are:
+ *   DW_CFA_offset_extended_sf: r36 at cfa+8
+ *   DW_CFA_expression: r0 (DW_OP_breg2 (r2): 0; DW_OP_breg2 (r2): 0; DW_OP_deref; DW_OP_breg2 (r2): 0; DW_OP_minus; DW_OP_plus)
+ *   DW_CFA_def_cfa_register: r0
+ *
+ * (I have to try again to make the second expression less redundant).
+ * The point is that the stack pointer is implicitly set to the CFA,
+ * so we work around gcc's apparent inability to generate a
+ * DW_OP_call_frame_cfa opcode or use the CFA argument pushed onto the
+ * stack by CFA expressions.
+ */
+
+Wasm32Thread.prototype.eh_return = function (fp, sp, handler)
+{
+    var a0 = this.HEAP32[fp+48>>2]|0;
+    var a1 = this.HEAP32[fp+56>>2]|0;
+    var a2 = this.HEAP32[fp+64>>2]|0;
+    var a3 = this.HEAP32[fp+72>>2]|0;
+
+    this.set_arg(0, a0);
+    this.set_arg(1, a1);
+    this.set_arg(2, a2);
+    this.set_arg(3, a3);
+
+    fp = this.HEAP32[this.HEAP32[fp>>2]>>2]|0;
+
+    this.HEAP32[fp+16>>2] = handler;
+
+    fp |= 3;
+
+    return fp;
+};
+
+Wasm32Thread.prototype.to_address = function (x)
+{
+    if (x === null)
+        return 0;
+
+    if (typeof x === "number")
+        return x;
+
+    if ("address" in x)
+        return x.address;
+
+    throw "cannot convert " + x + " to address";
+};
+
+Wasm32Thread.prototype.from_address = function (type, addr)
+{
+    if (addr === 0)
+        return null;
+
+    var t = this.types_by_id[type];
+
+    return new t.constructor(this, address);
+};
+
+Wasm32Thread.prototype.freeze = function ()
+{
+    return new FrozenWasm32Thread(this);
+};
+
+function FrozenWasm32Thread(thread)
+{
+    this.threadpage = thread.threadpage;
+}
+
+FrozenWasm32Thread.prototype.thaw = function (process, module)
+{
+    var n = new Wasm32Thread(process, module, this.threadpage);
+
+    return n;
+};
+
+function Wasm32Process(system, heap)
+{
+    this.system = system;
+    system.processes.push(this);
+
+    this.fds = [];
+    this.ddroot = system.ddroot;
+    this.ddcwd = system.ddcwd;
+
+    this.heap = heap;
+    this.HEAP8 = new Int8Array(this.heap);
+    this.HEAP16 = new Int16Array(this.heap);
+    this.HEAP32 = new Int32Array(this.heap);
+    this.HEAPU8 = new Uint8Array(this.heap);
+    this.HEAPU16 = new Uint16Array(this.heap);
+    this.HEAPU32 = new Uint32Array(this.heap);
+    this.HEAPF32 = new Float32Array(this.heap);
+    this.HEAPF64 = new Float64Array(this.heap);
+
+    this.functions = {};
+    this.threads = [];
+}
+
+Wasm32Process.prototype.deffun = function(page, fo)
+{
+    this.functions[page] = fo;
+
+    if (fo.name == "__pre_main") {
+        this.entry = fo.pc0;
+        premain_pc = fo.pc0;
+    } else if (fo.name == "_start") {
+        if (this.entry === undefined)
+            this.entry = fo.pc0;
+        main_pc = fo.pc0;
+    } else if (fo.name == "gdbstub_entry") {
+        gdbstub_pc = fo.pc0;
+    }
+};
+
+Wasm32Process.prototype.freeze = function ()
+{
+    return new FrozenWasm32Process(this);
+};
+
+function FrozenWasm32Process(process)
+{
+    this.fds = process.fds;
+    this.threads = process.threads;
+    this.system = process.system;
+    this.functions = process.functions;
+    this.heap = process.heap;
+
+    for (var i = 0; i < this.threads.length; i++)
+        this.threads[i] = this.threads[i].freeze();
+
+    var fds = [];
+    for (var i = 0; i < this.fds.length; i++)
+        fds[i] = this.fds[i].freeze();
+
+    this.fds = fds;
+
+    delete this.system;
+    delete this.functions;
+}
+
+FrozenWasm32Process.prototype.thaw = function (system)
+{
+    var n = new Wasm32Process(system, this.heap);
+
+    var fds = [];
+    for (var i = 0; i < this.fds.length; i++) {
+        var fd = this.fds[i];
+        fds[i] = FrozenThinThinFD.prototype.thaw.call(fd,
+                                                      n,
+                                                      function (x) { return global.postMessage(x) });
+    }
+    n.fds = fds;
+
+    n.threads = [];
+    n.system = system;
+    n.functions = {};
+    n.heap = new ArrayBuffer(this.heap.byteLength);
+    var newHEAP8 = new Int8Array(n.heap);
+    var oldHEAP8 = new Int8Array(this.heap);
+    for (var i = 0; i < this.heap.byteLength; i++)
+        newHEAP8[i] = oldHEAP8[i];
+
+    n.newHEAP8 = newHEAP8;
+    n.oldHEAP8 = oldHEAP8;
+
+    n.HEAP8 = new Int8Array(n.heap);
+    n.HEAP16 = new Int16Array(n.heap);
+    n.HEAP32 = new Int32Array(n.heap);
+    n.HEAPU8 = new Uint8Array(n.heap);
+    n.HEAPU16 = new Uint16Array(n.heap);
+    n.HEAPU32 = new Uint32Array(n.heap);
+    n.HEAPF32 = new Float32Array(n.heap);
+    n.HEAPF64 = new Float64Array(n.heap);
+
+    for (var i = 0; i < this.threads.length; i++)
+        n.threads[i] = FrozenWasm32Thread.prototype.thaw.call(this.threads[i],
+                                                              n,
+                                                              gMod);
+
+    return n;
+};
+
+function Wasm32System()
+{
+    this.processes = [];
+    this.threads = [];
+    this.runqueue = [];
+}
+
+Wasm32System.prototype.init_sp = function (heap, off, args, env)
+{
+    var HEAP8 = new Int8Array(heap);
+    var HEAP32 = new Int32Array(heap);
+    var i;
+    var eo = [];
+    var ao = [];
+    for (i = env.length-1; i >= 0; i--) {
+        var str = env[i];
+        off -= str.length+1;
+        CStringTo(str, HEAP8, off);
+        eo.push(off);
+    }
+    for (i = args.length-1; i >= 0; i--) {
+        var str = args[i];
+        off -= str.length+1;
+        CStringTo(str, HEAP8, off);
+        ao.push(off);
+    }
+    off &= -8;
+
+    HEAP32[(off-=8)>>2] = 0;
+    HEAP32[(off+4)>>2] = 0;
+
+    for (i = 0; i < eo.length; i++) {
+        HEAP32[(off-=8)>>2] = eo[i];
+        HEAP32[(off+4)>>2] = 0;
+    }
+
+    var envp = off;
+
+    HEAP32[(off-=8)>>2] = 0;
+    HEAP32[(off+4)>>2] = 0;
+
+    for (i = 0; i < ao.length; i++) {
+        HEAP32[(off-=8)>>2] = ao[i];
+        HEAP32[(off+4)>>2] = ao[i];
+    }
+
+    var argv = off;
+    var argc = ao.length;
+
+    off &= -16;
+
+    HEAP32[(off-=8)>>2] = 0; HEAP32[(off+4)>>2] = 0; /* padding */
+    HEAP32[(off-=8)>>2] = envp; HEAP32[(off+4)>>2] = 0;
+    HEAP32[(off-=8)>>2] = argv; HEAP32[(off+4)>>2] = 0;
+    HEAP32[(off-=8)>>2] = argc; HEAP32[(off+4)>>2] = 0;
+
+    HEAP32[(off-=8)>>2] = 3; HEAP32[(off+4)>>2] = 0; /* argument count */
+    off -= 8;
+    HEAP32[off>>2] = off+48; HEAP32[(off+4)>>2] = 0;  /* argument something */
+    HEAP32[(off-=8)>>2] = 0; HEAP32[(off+4)>>2] = 0;  /* return FP */
+    HEAP32[(off-=8)>>2] = 0; HEAP32[(off+4)>>2] = 0;  /* return PC */
+
+    if (off & 4) {
+        throw "unaligned off";
+    }
+
+    return off;
+};
+
+#{JSV<zeropage*> zp("4096", "HEAP");}
+#{JSV<threadpage*> tp1("8192", "HEAP");}
+
+Wasm32System.prototype.instantiate = function (module, args, env)
+{
+    var size = module.top_of_memory;
+    var heap = new ArrayBuffer(size);
+    var HEAP32 = new Int32Array(heap);
+
+    %{zp[&zeropage::top_of_memory] = "module.top_of_memory"}
+    %{zp[&zeropage::top_of_sbrk] = "module.start_of_sbrk"}
+    %{zp[&zeropage::thread_list]} = %{tp1};
+    %{zp[&zeropage::bottom_of_sbrk] = "module.start_of_sbrk"}
+
+    %{tp1[&threadpage::next]} = %{tp1};
+    %{tp1[&threadpage::prev]} = %{tp1};
+    %{tp1[&threadpage::id] = "1"}
+    %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
+    %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
+
+    var sp = this.init_sp(heap, module.top_of_stack, args, env);
+    %{tp1[&threadpage::sp] = "sp"}
+    %{tp1[&threadpage::initsp] = "sp"}
+
+    var process;
+    var thread;
+    if (!this.threads.length) {
+        process = new Wasm32Process(this, heap);
+        thread = new Wasm32Thread(process, module, 8192);
+        return thread.module.instantiate(thread).then(() => {
+            %{tp1[&threadpage::pc] = "process.entry"}
+            if (false && typeof document !== "undefined") {
+                new ThinThinFD(process, 0);
+                new VT100FD(process, document.getElementById("output2"), 1, 0);
+                new ThinThinFD(process, 2);
+            } else if (typeof document !== "undefined") {
+                new ThinThinFD(process, 0);
+                new ThinThinFD(process, 1);
+                new ThinThinFD(process, 2);
+
+                //console.log('restarting');
+
+                // let first = true;
+
+                // process.fds[0].inputPromise = function () {
+                //     if (first) {
+                //         first = false;
+                //         return new Promise((resolve,reject) => {
+                //             var content = document.getElementById("dot-input").innerHTML;
+                //             console.log(content);
+                //             resolve(content);
+                //         });
+                //     } else {
+                //         console.log("EOF");
+                //         return Promise.resolve("");
+                //     }
+                // };
+
+                // outstr = "";
+            } else {
+                new ThinThinFD(process, 0);
+                new ThinThinFD(process, 1);
+                new ThinThinFD(process, 2);
+            }
+            this.runqueue.push(thread);
+        });
+    } else {
+        process = this.processes[0];
+        thread = this.threads[0];
+    }
+    %{tp1[&threadpage::pc] = "process.entry"}
+    if (false && typeof document !== "undefined") {
+        new ThinThinFD(process, 0);
+        new VT100FD(process, document.getElementById("output2"), 1, 0);
+        new ThinThinFD(process, 2);
+    } else if (typeof document !== "undefined") {
+        new ThinThinFD(process, 0);
+        new ThinThinFD(process, 1);
+        new ThinThinFD(process, 2);
+
+        //console.log('restarting');
+
+        // let first = true;
+
+        // process.fds[0].inputPromise = function () {
+        //     if (first) {
+        //         first = false;
+        //         return new Promise((resolve,reject) => {
+        //             var content = document.getElementById("dot-input").innerHTML;
+        //             console.log(content);
+        //             resolve(content);
+        //         });
+        //     } else {
+        //         console.log("EOF");
+        //         return Promise.resolve("");
+        //     }
+        // };
+
+        // outstr = "";
+    } else {
+        new ThinThinFD(process, 0);
+        new ThinThinFD(process, 1);
+        new ThinThinFD(process, 2);
+    }
+    this.runqueue.push(thread);
+};
+
+Wasm32System.prototype.step = function ()
+{
+    if (this.runqueue.length == 0)
+        return;
+
+    var thread = this.runqueue.shift();
+
+    thread.step();
+
+    if (!thread.stopped())
+        this.runqueue.push(thread);
+};

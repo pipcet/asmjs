@@ -277,6 +277,15 @@ long ast(unsigned long len)
       delta += msynch();
       break;
 
+    case 0x0e:
+      mputchar(c);
+      mputuleb128(target_count = mgetuleb128());
+      while (target_count--)
+        mputuleb128(mgetuleb128());
+      mputuleb128(mgetuleb128());
+      delta += msynch();
+      break;
+
     default:
       fprintf(stderr, "ast %02x %lx\n", (int)c, roff);
       for(;;);

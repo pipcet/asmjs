@@ -2,7 +2,7 @@
 # Configuration validation subroutine script.
 #   Copyright 1992-2016 Free Software Foundation, Inc.
 
-timestamp='2016-06-17'
+timestamp='2016-11-21'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -315,7 +315,7 @@ case $basic_machine in
 	| ubicom32 \
 	| v850 | v850e | v850e1 | v850e2 | v850es | v850e2v3 \
 	| visium \
-        | wasm | wasm64 \
+        | wasm | wasm32 | wasm64 \
 	| we32k \
 	| x86 | xc16x | xstormy16 | xtensa \
 	| z8k | z80)
@@ -447,7 +447,7 @@ case $basic_machine in
 	| v850-* | v850e-* | v850e1-* | v850es-* | v850e2-* | v850e2v3-* \
 	| vax-* \
 	| visium-* \
-        | wasm-* | wasm64-* \
+        | wasm-* | wasm32-* | wasm64-* \
 	| we32k-* \
 	| x86-* | x86_64-* | xc16x-* | xps100-* \
 	| xstormy16-* | xtensa*-* \
@@ -1240,6 +1240,9 @@ case $basic_machine in
 	wasm)
 		basic_machine=wasm-unknown
 		;;
+	wasm32)
+		basic_machine=wasm32-unknown
+		;;
 	wasm64)
 		basic_machine=wasm64-unknown
 		;;
@@ -1429,7 +1432,7 @@ case $os in
 	-sim | -es1800* | -hms* | -xray | -os68k* | -none* | -v88r* \
 	      | -windows* | -osx | -abug | -netware* | -os9* | -beos* | -haiku* \
 	      | -macos* | -mpw* | -magic* | -mmixware* | -mon960* | -lnews* \
-              | -asmjs* | -wasm* | -wasm64* )
+              | -asmjs* | -wasm* | -wasm32* | -wasm64* )
 		;;
 	-mac*)
 		os=`echo $os | sed -e 's|mac|macos|'`
