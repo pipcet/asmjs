@@ -196,7 +196,7 @@ Wasm32Thread.prototype.stop = function (reason)
 Wasm32Thread.prototype.set_rv = function (rv)
 {
     //%XXX{tp[&threadpage::rv]} = rv;
-    this.HEAPU32[4096>>2] = rv;
+    this.HEAPU32[8192 + 12 * 8>>2] = rv;
 };
 
 Wasm32Thread.prototype.set_pc = function (pc)

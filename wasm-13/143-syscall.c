@@ -7,5 +7,10 @@ char _start;
 
 void main(void)
 {
-  __thinthin_write(1, "hi there\n", __builtin_strlen("hi there\n"));
+  const char *ok;
+  do {
+    ok = (__thinthin_write(1, "hi there\n", __builtin_strlen("hi there\n")) == 9) ? "ok" : "nokay";
+  } while (ok == "ok");
+
+   __thinthin_write(1, ok, 2);
 }

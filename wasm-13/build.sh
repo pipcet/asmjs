@@ -2,6 +2,7 @@ export PATH=/home/pip/git/asmjs/wasm32-virtual-wasm32/bin:$PATH
 make wasm-13/wasm.cpp-lds.lds
 make js/wasm32.js
 cd wasm-13
+../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gcc -S -nostdlib 143-syscall.c ../wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc.a
 ../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gcc -c -nostdlib 143-syscall.s ../wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc.a
 ../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gcc -c ./wasm-headers.s
 # ../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-as -c ./wasm.S

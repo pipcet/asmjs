@@ -1,6 +1,16 @@
         .include "wasm64-macros.s"
-        
+        .macro section_id name id
+        .pushsection .wasm.header_id.\name
+        rleb128 \id
+        .popsection
+        .pushsection .wasm.header.\name
+        .popsection
+        .endm
+
         .macro section name
+        .pushsection .wasm.header_id.\name
+        rleb128 0
+        .popsection
         .pushsection .wasm.header.\name
         rleb128 __wasm_\name\()_id_end - __wasm_\name\()_id
 __wasm_\name\()_id:
@@ -12,15 +22,17 @@ __wasm_\name\()_id_end:
 __wasm_chars_\name\():
         .endm
 
-        section type
-        section import
-        section function
-        section memory
-        section export
-        section table
-        section start
-        section code
-        section data
+        section_id type 1
+        section_id import 2
+        section_id function 3
+        section_id table 4
+        section_id memory 5
+        section_id global 6
+        section_id export 7
+        section_id start 8
+        section_id element 8
+        section_id code 10
+        section_id data 11
         section name
 
         .globl $i64_store8

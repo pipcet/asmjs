@@ -17,16 +17,18 @@
   BYTE(0x00);
 
 #define SECTION_SIZED(name)                                          \
-  wasm-headers.o(.wasm.header.name);                                 \
+  wasm-headers.o(.wasm.header_id.name)                               \
   LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
+  wasm-headers.o(.wasm.header.name);                                 \
   __wasm_##name##_payload = .;                                       \
   LONGLEB128(__wasm_chars_##name##_end - __wasm_chars_##name);       \
   *(.wasm.payload.name*);                                            \
   __wasm_##name##_payload_end = .;
 
 #define SECTION_DATA(name)                                           \
-  wasm-headers.o(.wasm.header.name);                                 \
+  wasm-headers.o(.wasm.header_id.name);                              \
   LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
+  wasm-headers.o(.wasm.header.name);                                 \
   __wasm_##name##_payload = .;                                       \
   BYTE(1);                                                           \
   LONGLEB128(0x4000);                                                \
@@ -38,8 +40,9 @@
   __wasm_##name##_payload_end = .;
 
 #define SECTION_UNSIZED(name, contents)                              \
-  wasm-headers.o(.wasm.header.name);                                 \
+  wasm-headers.o(.wasm.header_id.name);                              \
   LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
+  wasm-headers.o(.wasm.header.name);                                 \
   __wasm_##name##_payload = .;                                       \
   contents;                                                          \
   *(.wasm.payload.name*);                                            \
@@ -74,23 +77,28 @@ SECTIONS
 {
   .output : {
     LONG(0x6d736100)
-    LONG(11)
+    LONG(13) /* as of 20161121 */
     SECTION_SIZED(type)
     SECTION_SIZED(import)
     SECTION_SIZED(function)
     SECTION_SIZED(table)
-    SECTION_UNSIZED(memory, LONG(0x0080c080); LONG(0x0080c080); BYTE(1);)
+    SECTION_SIZED(memory)
+    SECTION_SIZED(global)
     SECTION_SIZED(export)
+    SECTION_UNSIZED(start, LONGLEB128(_start>>32))
+    SECTION_SIZED(element)
     SECTION_SIZED(code)
     SECTION_DATA(data)
     SECTION_SIZED(name)
-    SECTION_UNSIZED(start, LONGLEB128(_start>>32))
   }
   SECTION_CHARS(type)
   SECTION_CHARS(import)
   SECTION_CHARS(function)
   SECTION_CHARS(table)
+  SECTION_CHARS(memory)
+  SECTION_CHARS(global)
   SECTION_CHARS(export)
+  SECTION_CHARS(element)
   SECTION_CHARS(code)
   SECTION_CHARS(data)
   SECTION_CHARS(name)
