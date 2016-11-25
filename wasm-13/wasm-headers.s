@@ -15,7 +15,7 @@
         .popsection
         .pushsection .wasm.header.\name
         rleb128 __wasm_\name\()_id_end - __wasm_\name\()_id
-__wasm_\name\()_id: 
+__wasm_\name\()_id:
         .ascii "\name"
 __wasm_\name\()_id_end:
         .popsection
@@ -67,7 +67,7 @@ __wasm_chars_\name\():
         .byte 0x02
         .popsection
         .endif
-        
+
         .pushsection .wasm.chars.export
         .byte 0x00
         .popsection
