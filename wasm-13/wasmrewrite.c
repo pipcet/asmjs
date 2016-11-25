@@ -814,7 +814,7 @@ int main(int argc, char **argv)
 
   unsigned long ooff = 0;
   for (woff = 0; woff < off; woff++) {
-    if ((woff & 1023) == 0)
+    if (0) if ((woff & 1023) == 0)
       fprintf(stderr, "%lx -> %lx\n",
               woff, ooff);
     if (gmask[woff]) {
