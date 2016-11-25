@@ -548,11 +548,20 @@ uses .dpc
 *** DONE make %S0 expand to "set_local $r0" or "i32.store %0"
 *** DONE make .dpc produce an i32.const
 *** DONE new section namespacing.
-
 .javascript.text: JavaScript text section
 .wasm-ast.text: WebAssembly AST, as defined by the standard
 .wasm-pwas.text: wasm-translate.scm input, as not defined by a standard
 .wasm.text: WebAssembly binary code
+** TODO wasm32
+*** TODO fix offsets for 32-bitness
+*** TODO setjmp
+*** TODO longjmp
+*** TODO mi thunk
+*** TODO eh_return
+*** TODO indcall
+*** TODO officialize ld script
+*** TODO shorten uleb128s
+*** TODO sleb128 vs uleb128
 *** TODO fpswitch for wasm
 **** TODO test .rept hack for multi-page functions
 
