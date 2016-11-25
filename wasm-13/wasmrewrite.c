@@ -263,9 +263,29 @@ long ast(unsigned long len)
     case 0x10:
     case 0x20 ... 0x24:
     case 0x3f:
-    case 0x40 ... 0x44:
+    case 0x40 ... 0x42:
       mputchar(c);
       mputsleb128(mgetsleb128());
+      delta += msynch();
+      break;
+    case 0x43:
+      mputchar(c);
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      delta += msynch();
+      break;
+    case 0x44:
+      mputchar(c);
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
       delta += msynch();
       break;
 
