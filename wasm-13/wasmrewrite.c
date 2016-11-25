@@ -306,6 +306,47 @@ long ast(unsigned long len)
       delta += msynch();
       break;
 
+    case 0x06:
+      switch (mgetchar()) {
+      case 1:
+        //mputchar(0x41);
+        //mputchar(0x01);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+1);
+        break;
+      case 2:
+        //mputchar(0x41);
+        //mputchar(0x02);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+1);
+        break;
+      case 3:
+        //mputchar(0x41);
+        //mputchar(0x03);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+2);
+        break;
+      case 4:
+        //mputchar(0x41);
+        //mputchar(0x04);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+2);
+        break;
+      case 5:
+        //mputchar(0x41);
+        //mputchar(0x05);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+1);
+        break;
+      }
+      delta += msynch();
+      break;
+
     default:
       fprintf(stderr, "ast %02x %lx\n", (int)c, roff);
       for(;;);
