@@ -30,6 +30,7 @@ Wasm32ModuleSection.prototype.instantiate = function (thread)
     this.imports.sys.call = thread.extcall.bind(thread);
     this.imports.sys.eh_return = thread.eh_return.bind(thread);
     this.imports.sys.indcall = thread.indcall.bind(thread);
+    this.imports.sys.trace = thread.trace.bind(thread);
 
     this.instancePromise = WebAssembly.instantiate(this.bytes, this.imports).then((instance) => {
         this.instance = instance.instance;
@@ -368,8 +369,16 @@ Wasm32Thread.prototype.step = function ()
     return rp&-4;
 };
 
+Wasm32Thread.prototype.trace = function (off, pc0, dpc)
+{
+    console.log("trace off " + off + " pc0 " + pc0 + " dpc " + dpc);
+
+    return 0;
+};
+
 Wasm32Thread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 {
+    console.log("indcall!");
     for (;;) ;
 };
 
