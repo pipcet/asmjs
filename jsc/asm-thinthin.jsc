@@ -272,94 +272,6 @@ var SyscallSignatures = {
     execveat:     [333, "fd", "ptr", "aptr", "aptr", "u64"],
 };
 
-function InputPromise(fd, output)
-{
-    var done = false;
-    output = undefined;
-
-    if (done)
-        return Promise.resolve("");
-
-    done = true;
-
-    if (output === undefined)
-        output = document.getElementById("output");
-
-    output = new ImmediatePromise(output);
-
-    return output.then(o => {
-        return new Promise((resolve, reject) => {
-            var node = document.createElement("div");
-            var node_ta = document.createElement("textarea");
-            var node_b = document.createElement("button");
-            node_b.innerHTML = "EOF";
-
-            var node_send = document.createElement("button");
-            node_send.innerHTML = "Send";
-
-            node.appendChild(node_ta);
-            node.appendChild(node_send);
-            node.appendChild(node_b);
-
-            var forget;
-            var destroy;
-
-            destroy = function () {
-                if (node.parentNode)
-                    node.parentNode.removeChild(node);
-
-                fd.forgetInputPromises.delete(forget);
-                reject();
-            };
-
-            forget = function () {
-                if (node_ta.value === "")
-                    destroy();
-            };
-
-            fd.forgetInputPromises.add(forget);
-
-            if (0) node_ta.onchange = function (e) {
-                var value = node_ta.value;
-                if (value == "")
-                    fd.readEOF = true;
-                resolve(value == "" ? "" : (value + "\n"));
-
-                if (node.parentNode)
-                    node.parentNode.removeChild(node);
-
-                e.stopPropagation();
-                e.preventDefault();
-            };
-
-            node_b.onclick = function (e) {
-                var value = node_ta.value;
-                fd.readEOF = true;
-                resolve(value == "" ? "" : (value + "\n"));
-
-                destroy();
-
-                e.stopPropagation();
-                e.preventDefault();
-            };
-
-            node_send.onclick = function (e) {
-                var value = node_ta.value;
-                resolve(value == "" ? "" : (value + "\n"));
-
-                destroy();
-
-                e.stopPropagation();
-                e.preventDefault();
-            };
-
-            o.appendChild(node);
-
-            node.focus();
-        });
-    });
-}
-
 function TimeoutPromise(timeout)
 {
     return new Promise((resolve, reject) => {
@@ -460,6 +372,7 @@ function ThinThinFD(process, fdno)
         for (fdno = 0; process.fds[fdno]; fdno++)
             ;
     this.fdno = fdno;
+    this.readers = 0;
     this.readData = [];
     this.readPosition = 0;
     this.readTo = 0;
@@ -486,6 +399,9 @@ ThinThinFD.prototype.open = function ()
 
 ThinThinFD.prototype.close = function ()
 {
+    while (this.readers)
+        this.pause();
+
     delete this.process.fds[this.fdno];
 
     return Promise.resolve(0);
@@ -505,12 +421,6 @@ ThinThinFD.prototype.stuff = function (data)
 
     for (var handler of onstuff)
         handler();
-
-    var forgetInputPromises = this.forgetInputPromises;
-    this.forgetInputPromises = new Set();
-
-    for (var forget of forgetInputPromises)
-        forget();
 };
 
 ThinThinFD.prototype.stuffError = function (error)
@@ -537,7 +447,13 @@ ThinThinFD.prototype.stuffEOF = function ()
 
 ThinThinFD.prototype.startStuffing = function ()
 {
-    this.wrappedInputPromise();
+    if (!this.activeInputPromise) {
+        this.activeInputPromise = new DissectedPromise();
+
+        this.inputPromise().then((data) => {
+            this.stuff(data);
+        });
+    }
 
     return Promise.resolve();
 };
@@ -626,23 +542,22 @@ ThinThinFD.prototype.available = function ()
     if (this.readData.length > this.readPosition)
         return Promise.resolve(this.readData.length - this.readPosition);
 
+    if (!this.readAvailable) {
+        var readAvailable = () => {
+            this.pause();
+            this.onstuff.delete(this.readAvailable);
+            delete this.readAvailable;
+        };
+        this.unpause(0).then(() => {
+            this.readAvailable = readAvailable;
+            this.onstuff.add(this.readAvailable);
+        });
+    }
+
     return this.unpause(0).then(() => {
         this.pause();
         return this.readData.length - this.readPosition;
     });
-};
-
-ThinThinFD.prototype.wrappedInputPromise = function ()
-{
-    if (!this.activeInputPromise) {
-        this.activeInputPromise = new DissectedPromise();
-
-        this.inputPromise().then((data) => {
-            this.stuff(data);
-        });
-    }
-
-    return this.activeInputPromise;
 };
 
 ThinThinFD.prototype.inputPromise = function ()
@@ -698,6 +613,84 @@ ThinThinFD.prototype.clone = function ()
 ThinThinFD.prototype.freeze = function ()
 {
     return new FrozenThinThinFD(this);
+};
+
+function HTMLFD(process, dom, fdno)
+{
+    ThinThinFD.call(this, process, fdno);
+
+    if (dom === undefined)
+        dom = document.getElementById("output");
+
+    this.dom = dom;
+}
+HTMLFD.prototype = Object.create(ThinThinFD.prototype);
+
+HTMLFD.prototype.stopStuffing = function ()
+{
+    if (this.dom && this.node && this.node_ta) {
+        if (this.node_ta.value === "") {
+            this.dom.removeChild(this.node);
+            delete this.node;
+            delete this.node_ta;
+        }
+    }
+};
+
+HTMLFD.prototype.startStuffing = function ()
+{
+    if (this.node)
+        return Promise.resolve();
+
+    return new Promise((resolve, reject) => {
+        this.node = document.createElement("div");
+        var node_ta = document.createElement("textarea");
+        this.node_ta = node_ta;
+        var node_b = document.createElement("button");
+        node_b.innerHTML = "EOF";
+
+        var node_send = document.createElement("button");
+        node_send.innerHTML = "Send";
+
+        this.node.appendChild(node_ta);
+        this.node.appendChild(node_send);
+        this.node.appendChild(node_b);
+
+        if (0) node_ta.onchange = function (e) {
+            var value = node_ta.value;
+            if (value == "")
+                fd.readEOF = true;
+            resolve(value == "" ? "" : (value + "\n"));
+
+            if (node.parentNode)
+                node.parentNode.removeChild(node);
+
+            e.stopPropagation();
+            e.preventDefault();
+        };
+
+        node_b.onclick = e => {
+            var value = node_ta.value;
+            this.stuff(value == "" ? "" : (value + "\n"));
+            this.stuffEOF();
+
+            e.stopPropagation();
+            e.preventDefault();
+        };
+
+        node_send.onclick = e => {
+            var value = node_ta.value;
+            this.stuff(value == "" ? "" : (value + "\n"));
+
+            e.stopPropagation();
+            e.preventDefault();
+        };
+
+        this.dom.appendChild(this.node);
+
+        this.node.focus();
+        resolve();
+    });
 };
 
 var gRemoteFDs = {};
@@ -955,8 +948,8 @@ ThinThinDD.prototype.openat = function (path)
 
 var fs;
 
-if (typeof global !== "undefined")
-    fs = require('fs');
+//if (typeof global !== "undefined")
+//    fs = require('fs');
 
 function FSDD(process, root, fdno)
 {
