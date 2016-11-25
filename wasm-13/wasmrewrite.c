@@ -812,9 +812,15 @@ int main(int argc, char **argv)
     section();
   }
 
+  unsigned long ooff = 0;
   for (woff = 0; woff < off; woff++) {
-    if (gmask[woff])
+    if ((woff & 1023) == 0)
+      fprintf(stderr, "%lx -> %lx\n",
+              woff, ooff);
+    if (gmask[woff]) {
       putchar(gbuf[woff]);
+      ooff++;
+    }
   }
 
   return 0;
