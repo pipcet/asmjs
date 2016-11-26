@@ -728,7 +728,7 @@ lib/%.o: lib/%.cc
 examples/002-perl/perl.js: asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/perl5.25.7 bin/prepare js/asmjs.js
 	./bin/prepare $< > $@
 
-wasm-13/wasm.cpp-lds.lds: wasm-13/wasm.cpp-lds
+%.cpp-lds.lds: %.cpp-lds
 	cpp < $< | egrep -v '^#' > $@
 
 
