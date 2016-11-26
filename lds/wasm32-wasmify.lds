@@ -1,7 +1,7 @@
 OUTPUT_FORMAT(binary)
 SECTIONS
 {
-  .data : SUBALIGN(1) {
+  .data : SUBALIGN(1)  {
       *(.output)
       *(.asmjs.header)
       *(.data)

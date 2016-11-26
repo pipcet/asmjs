@@ -18,7 +18,7 @@ fi
 if [ x"$DELAY" = x ]; then
     DELAY=1
 fi
-wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32.cpp-lds.lds "$1" -o $TMP5 || exit 1
+wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32.cpp-lds.lds "$1" $ASMJSDIR/lib/wasm32-headers.o  -o $TMP5 || exit 1
 wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32-wasmify.lds $TMP5 -o $TMP6 || exit 1
 $ASMJSDIR/bin/wasmrewrite $TMP6 > $TMP8
 (echo "var path = \"$TMP8\";"; cat $ASMJSDIR/js/wasm32.js) > $TMP7

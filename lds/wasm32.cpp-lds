@@ -1,13 +1,13 @@
 #define BYTELEB128(x)                           \
   BYTE((((x)>>0*7)&0x7f)|0x80);                 \
-  BYTE((((x)>>1*7)&0x7f));                      \
+  BYTE((((x)>>1*7)&0x7f))
 
 #define LONGLEB128(x)                           \
   BYTE((((x)>>0*7)&0x7f)|0x80);                 \
   BYTE((((x)>>1*7)&0x7f)|0x80);                 \
   BYTE((((x)>>2*7)&0x7f)|0x80);                 \
   BYTE((((x)>>3*7)&0x7f)|0x80);                 \
-  BYTE((((x)>>4*7)&0x7f);                       \
+  BYTE((((x)>>4*7)&0x7f))
 
 #define QUADLEB128(x)                           \
   BYTE((((x)>>0*7)&0x7f)|0x80);                 \
@@ -19,21 +19,21 @@
   BYTE((((x)>>6*7)&0x7f)|0x80);                 \
   BYTE((((x)>>7*7)&0x7f)|0x80);                 \
   BYTE((((x)>>8*7)&0x7f)|0x80);                 \
-  BYTE((((x)>>9*7)&0x7f));                      \
+  BYTE((((x)>>9*7)&0x7f))
 
 #define SECTION_SIZED(name)                                          \
-  wasm-headers.o(.wasm.header_id.name)                               \
+  */wasm32-headers.o(.wasm.header_id.name)                               \
   LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
-  wasm-headers.o(.wasm.header.name);                                 \
+  */wasm32-headers.o(.wasm.header.name);                                 \
   __wasm_##name##_payload = .;                                       \
   LONGLEB128(__wasm_chars_##name##_end - __wasm_chars_##name);       \
   *(.wasm.payload.name*);                                            \
   __wasm_##name##_payload_end = .;
 
 #define SECTION_DATA_HEADER(name)                                    \
-  wasm-headers.o(.wasm.header_id.name);                              \
+  */wasm32-headers.o(.wasm.header_id.name);                              \
   LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
-  wasm-headers.o(.wasm.header.name);                                 \
+  */wasm32-headers.o(.wasm.header.name);                                 \
   __wasm_##name##_payload = .;                                       \
   BYTE(1);                                                           \
   BYTE(0);                                                           \
@@ -54,9 +54,9 @@
   __wasm_##name##_payload_end = .;
 
 #define SECTION_UNSIZED(name, contents)                              \
-  wasm-headers.o(.wasm.header_id.name);                              \
+  */wasm32-headers.o(.wasm.header_id.name);                              \
   LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
-  wasm-headers.o(.wasm.header.name);                                 \
+  */wasm32-headers.o(.wasm.header.name);                                 \
   __wasm_##name##_payload = .;                                       \
   contents;                                                          \
   *(.wasm.payload.name*);                                            \
@@ -231,5 +231,5 @@ SECTIONS
   SECTION_CHARS(element)
   SECTION_CHARS(code)
   SECTION_CHARS(data)
-/*  /DISCARD/ : { *(*) } */
+  /DISCARD/ : { *(.asmjs.header) }
 }
