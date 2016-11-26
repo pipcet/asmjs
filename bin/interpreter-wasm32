@@ -1,0 +1,35 @@
+#!/bin/bash
+TMP1=$(mktemp);
+TMP2=$(mktemp);
+TMP3=$(mktemp);
+TMP4=$(mktemp);
+TMP5=$(mktemp);
+TMP6=$(mktemp);
+TMP7=$(mktemp);
+TMP8=$(mktemp);
+TMP9=$(mktemp);
+TMPD=$(mktemp -d);
+if [ x"$JS" = x ]; then
+    JS=$(which js)
+fi
+if [ x"$ASMJSDIR" = x ]; then
+    ASMJSDIR=$HOME/git/asmjs
+fi
+if [ x"$DELAY" = x ]; then
+    DELAY=1
+fi
+wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32.cpp-lds.lds "$1" -o $TMP5 || exit 1
+wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32-wasmify.lds $TMP5 -o $TMP6 || exit 1
+$ASMJSDIR/bin/wasmrewrite $TMP6 > $TMP8
+(echo "var path = \"$TMP8\";"; cat $ASMJSDIR/js/wasm32.js) > $TMP7
+rm $TMP1 $TMP2 $TMP3 $TMP4 $TMP5
+(sleep $DELAY && rm $TMP6 $TMP7) & disown
+chmod u+x $TMP7
+if [ x"$GDB" != x ]; then
+    mkfifo $TMPD/in
+    mkfifo $TMPD/out
+    (dd bs=1 if=$TMPD/out | nc -l -p 7777 | dd bs=1 of=$TMPD/in) &
+    exec $JS $JSFLAGS $TMP7 "$@" 3<$TMPD/in 4>$TMPD/out
+else
+    exec $JS $JSFLAGS $TMP7 "$@"
+fi
