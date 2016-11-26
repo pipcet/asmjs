@@ -378,7 +378,19 @@ Wasm32Thread.prototype.trace = function (off, pc0, dpc)
 
 Wasm32Thread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 {
-    console.log("indcall!");
+    console.log("indcall! " + pc);
+    var str = pc.toString(16);
+    while (str.length < 16)
+        str = str + " ";
+    console.log("str " + str);
+    if (this.exports["f_" + str]) {
+        console.log("found!");
+        let ret = this.exports["f_" + str](mbz, sp, r0, r1, rpc, pc);
+        console.log("ret " + ret);
+        return ret;
+    } else
+        for (let name in this.exports)
+            console.log("!= " + name);
     for (;;) ;
 };
 
