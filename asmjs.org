@@ -507,7 +507,7 @@ Unlike the text-based asm.js backend, the wasm target uses a conventional assemb
 
 Notation is in RPN order: child nodes of the AST are described first, then their parent node. This can also be read as instructions for a stack machine.
 
-Immediate arguments follow the instruction, with the exception of an immediate argument specifying the number of stack slots to use, which is written in brackets. Thus, we have "return\[0]" and "return\[1]", "br\[0]" and "br\[1]", and "call[n]" for all n. In the case of call_indirect, the argument specifies the arity of the function, which is one less than the number of stack slots used.
+Immediate arguments follow the instruction opcode, with the exception of an immediate argument specifying the value type for a block, loop, or if block; that type is specified in brackets following the mnemonic, with [] for a void type, [i] for i32, [l] for i64, [f] for f32, and [d] for f64.
 
 The software-visible PC is split into a function index in the upper 32 bits and a relative PC in the lower 32 bits.
 
@@ -558,7 +558,7 @@ uses .dpc
 *** TODO longjmp
 *** TODO mi thunk
 *** TODO eh_return
-*** TODO indcall
+*** DONE indcall
 *** TODO officialize ld script
 *** TODO shorten uleb128s
 *** TODO sleb128 vs uleb128
