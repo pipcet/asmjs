@@ -158,6 +158,16 @@ build/asmjs-cross/perl.dir: build/asmjs-cross/.dir src/perl.dir
 	(cd src/perl; tar c --exclude .git .) | (cd build/asmjs-cross/perl; tar x)
 	touch $@
 
+build/wasm32/perl.dir: build/wasm32/.dir src/perl.dir
+	test -d build/wasm32/perl || mkdir build/wasm32/perl
+	(cd src/perl; tar c --exclude .git .) | (cd build/wasm32/perl; tar x)
+	touch $@
+
+build/wasm32-cross/perl.dir: build/wasm32-cross/.dir src/perl.dir
+	test -d build/wasm32-cross/perl || mkdir build/wasm32-cross/perl
+	(cd src/perl; tar c --exclude .git .) | (cd build/wasm32-cross/perl; tar x)
+	touch $@
+
 build/asmjs/coreutils.dir: build/asmjs/.dir
 	test -d build/asmjs/coreutils || $(MKDIR) build/asmjs/coreutils
 	touch $@
@@ -439,6 +449,28 @@ build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.c
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl install
 	touch $@
 
+build/wasm32/perl.configure: src/perl.dir build/wasm32/perl.dir | build/wasm32/gcc-final.make
+	test -f build/wasm32/perl/config.sh && mv build/wasm32/perl/config.sh build/wasm32/perl/config.sh.old || true
+	touch build/wasm32/perl/config.sh
+	(cd build/wasm32/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
+	touch $@
+
+build/wasm32/perl.make: build/wasm32/perl.dir build/wasm32/perl.configure
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/perl
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/perl install
+	touch $@
+
+build/wasm32-cross/perl.configure: src/perl.dir build/wasm32-cross/perl.dir | build/wasm32/gcc-final.make
+	test -f build/wasm32-cross/perl/config.sh && mv build/wasm32-cross/perl/config.sh build/wasm32-cross/perl/config.sh.old || true
+	touch build/wasm32-cross/perl/config.sh
+	(cd build/wasm32-cross/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.0.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/wasm32-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
+	touch $@
+
+build/wasm32-cross/perl.make: build/wasm32-cross/perl.dir build/wasm32-cross/perl.configure
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl install
+	touch $@
+
 build/common/spidermonkey.configure: src/spidermonkey.dir build/common/spidermonkey.dir
 	(cd src/spidermonkey/js/src; autoconf2.13)
 	(cd build/common/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/common/spidermonkey --without-system-zlib)
@@ -513,7 +545,6 @@ build/asmjs/graphviz.make: build/asmjs/graphviz.configure
 
 build/binfmt_misc.install:
 	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/interpreter || true
-	sudo ./binfmt_misc/binfmt_misc-wasm $(PWD)/bin/interpreter-wasm || true
 	sudo ./binfmt_misc/binfmt_misc-wasm32 $(PWD)/bin/interpreter-wasm32 || true
 	sudo ./binfmt_misc/binfmt_misc-wasm64 $(PWD)/bin/interpreter-wasm64 || true
 	touch $@
@@ -651,9 +682,9 @@ js/asmjs.js: js/asmjs-main.jsc.js js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.j
 	cat js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.js js/asmjs-thinthin-jsexport.jsc.js js/asmjs-vt100.jsc.js js/asmjs-main.jsc.js >> $@.new
 	mv $@.new $@
 
-js/wasm32.js: js/wasm32-main.jsc.js js/wasm32-system.jsc.js js/wasm32-thinthin.jsc.js js/wasm32-vt100.jsc.js build/wasm32/gcc-final.make
+js/wasm32.js: js/wasm32-main.jsc.js js/wasm32-system.jsc.js js/wasm32-thinthin.jsc.js js/wasm32-vt100.jsc.js js/wasm32-boot.jsc.js build/wasm32/gcc-final.make
 	echo "// autogenerated, do not edit" > $@.new
-	cat js/wasm32-system.jsc.js js/wasm32-thinthin.jsc.js js/wasm32-vt100.jsc.js js/wasm32-main.jsc.js >> $@.new
+	cat js/wasm32-system.jsc.js js/wasm32-thinthin.jsc.js js/wasm32-vt100.jsc.js js/wasm32-main.jsc.js js/wasm32-boot.jsc.js >> $@.new
 	mv $@.new $@
 
 js/wasm64.js: js/wasm64-main.jsc.js js/wasm64-system.jsc.js js/wasm64-thinthin.jsc.js js/wasm64-vt100.jsc.js build/wasm64/gcc-final.make
