@@ -1,6 +1,6 @@
 OUTPUT_FORMAT(binary)
 SECTIONS
 {
-  .data : { *(.output) *(.output.data) }
+  .data : SUBALIGN(1) { *(.output) *(.output.data) }
   /DISCARD/ : { *(.discard*) *(*) }
 }

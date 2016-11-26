@@ -39,8 +39,10 @@
 
 #define SECTION_DATA_BODY(name)                                      \
   __wasm_##name##_segment = .;                                       \
+  *(.data*);                                                          \
+  *(.gnu.linkonce.d.*)                                               \
+  *(__libc_IO_vtables)                                               \
   *(.asmjs.header);                                                  \
-  *(.data);                                                          \
   *(.rodata);                                                        \
   *(.bss);                                                           \
   __wasm_##name##_segment_end = .;                                   \
