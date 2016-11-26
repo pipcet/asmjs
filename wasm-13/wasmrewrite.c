@@ -98,10 +98,12 @@ unsigned long mgetuleb128(void)
   }
 }
 
-void mputsleb128(long value)
+void mputsleb128(long value, int bits)
 {
   u8 c;
   int more;
+  if (bits < 64)
+    value |= (value & (1L<<(bits-1))) ? ((-1L) << bits) : 0;
   do {
     c = value & 0x7fL;
     value >>= 7;
@@ -132,7 +134,7 @@ long mgetsleb128(void)
 
     if (!(c & 0x80)) {
       if (c & 0x40)
-        return value | (-1 << shift);
+        return value | (-1L << shift);
       else
         return value;
     }
@@ -263,9 +265,14 @@ long ast(unsigned long len)
     case 0x10:
     case 0x20 ... 0x24:
     case 0x3f:
-    case 0x40 ... 0x42:
+    case 0x40 ... 0x41:
       mputchar(c);
-      mputsleb128(mgetsleb128());
+      mputsleb128(mgetsleb128(), 32);
+      delta += msynch();
+      break;
+    case 0x42:
+      mputchar(c);
+      mputsleb128(mgetsleb128(), 64);
       delta += msynch();
       break;
     case 0x43:
@@ -313,35 +320,35 @@ long ast(unsigned long len)
         //mputchar(0x01);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+1);
+        mputsleb128(mgetsleb128()+1, 32);
         break;
       case 2:
         //mputchar(0x41);
         //mputchar(0x02);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+1);
+        mputsleb128(mgetsleb128()+1, 32);
         break;
       case 3:
         //mputchar(0x41);
         //mputchar(0x03);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+2);
+        mputsleb128(mgetsleb128()+2, 32);
         break;
       case 4:
         //mputchar(0x41);
         //mputchar(0x04);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+2);
+        mputsleb128(mgetsleb128()+2, 32);
         break;
       case 5:
         //mputchar(0x41);
         //mputchar(0x05);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+1);
+        mputsleb128(mgetsleb128()+1, 32);
         break;
       }
       delta += msynch();

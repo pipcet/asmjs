@@ -1,7 +1,7 @@
-        .include "wasm-macros.s"
+        .include "wasm32-macros.s"
         .macro section_id name id
         .pushsection .wasm.header_id.\name
-        rleb128 \id
+        rleb128_32 \id
         .popsection
         .pushsection .wasm.header.\name
         .popsection
@@ -11,10 +11,10 @@
 
         .macro section name
         .pushsection .wasm.header_id.\name
-        rleb128 0
+        .byte 0
         .popsection
         .pushsection .wasm.header.\name
-        rleb128 __wasm_\name\()_id_end - __wasm_\name\()_id
+        rleb128_32 __wasm_\name\()_id_end - __wasm_\name\()_id
 __wasm_\name\()_id:
         .ascii "\name"
 __wasm_\name\()_id_end:
@@ -43,8 +43,8 @@ __wasm_chars_\name\():
         .pushsection .wasm.payload.table
         .byte 0x70                         ; anyfunc
         .byte 0x1                          ; maximum field present
-        rleb128 1                          ; __wasm_chars_function_size
-        rleb128 1024
+        rleb128_32 1                          ; __wasm_chars_function_size
+        rleb128_32 1024
         .popsection
 
         .pushsection .wasm.chars.memory
@@ -52,8 +52,8 @@ __wasm_chars_\name\():
         .popsection
         .pushsection .wasm.payload.memory
         .byte 0x1               ; maximum field present
-        rleb128 1024            ; 64 MiB
-        rleb128 1024            ; 64 MiB
+        rleb128_32 1024            ; 64 MiB
+        rleb128_32 1024            ; 64 MiB
         .popsection
 
         .if 0
