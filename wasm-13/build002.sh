@@ -7,8 +7,8 @@ gcc -o wasmrewrite wasmrewrite.c
 ../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gcc -c 144-syscall-asm.c
 ../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gcc -S 144-syscall-asm.c
 # ../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-as -c ./wasm.S
-../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld --warn-section-align --no-check-sections -T wasm.cpp-lds.lds 144-syscall-asm.o ../wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.a ../wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc.a -Map=b.map -o b.out
-../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld --warn-section-align --no-check-sections -T wasm2.lds ./b.out -Map=c.map -o c.out
+../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld --warn-section-align -T wasm.cpp-lds.lds 144-syscall-asm.o ../wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.a ../wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc.a -Map=b.map -o b.out
+../wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld --warn-section-align -T wasm2.lds ./b.out -Map=c.map -o c.out
 gcc -g ./wasmrewrite.c -o wasmrewrite
 ./wasmrewrite c.out > d.out
 cp d.out wasm.wasm

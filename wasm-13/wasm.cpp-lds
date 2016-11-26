@@ -58,7 +58,7 @@
   __wasm_##name##_payload_end = .;
 
 #define SECTION_CHARS(name)                     \
-  .discard.chars.name 0 :                       \
+  .discard.chars.name (INFO) 0 :                \
   {                                             \
        . = 0;                                   \
        __wasm_chars_##name = .;                 \
@@ -71,7 +71,7 @@
 
 SECTIONS
 {
-  .output : {
+  .output (INFO) : {
     LONG(0x6d736100)
     LONG(13) /* as of 20161121 */
     SECTION_SIZED(type)
