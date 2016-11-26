@@ -36,9 +36,9 @@ Wasm32ModuleSection.prototype.instantiate = function (thread)
         this.instance = instance.instance;
         thread.exports = this.instance.exports;
         thread.memory = this.instance.exports._memory.buffer;
-        console.log(thread.memory);
-        for (let l in thread.memory)
-            console.log(l);
+        //console.log(thread.memory);
+        //for (let l in thread.memory)
+            //console.log(l);
     });
 
     return this.instancePromise;
@@ -217,19 +217,19 @@ Wasm32Thread.prototype.set_initsp = function (initsp)
 
 Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
 {
-    console.log(a + " " + b + " " + c + " " + d)
-    console.log("sp1 " + sp1);
-    for (var diff = -48; diff < 48; diff += 4)
-        console.log("@" + diff + ": " + this.HEAPU32[sp1+diff>>2]);
-    for (var diff = 0; diff < 48; diff += 4)
-        console.log("@" + diff + ": " + this.HEAPU32[diff>>2]);
+    //console.log(a + " " + b + " " + c + " " + d)
+    //console.log("sp1 " + sp1);
+    //for (var diff = -48; diff < 48; diff += 4)
+        //console.log("@" + diff + ": " + this.HEAPU32[sp1+diff>>2]);
+    //for (var diff = 0; diff < 48; diff += 4)
+        //console.log("@" + diff + ": " + this.HEAPU32[diff>>2]);
     var sp = sp1 + 16;
     var modstr = b;
     var funstr = c;
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
-    console.log('extcall ' + mod + ' ' + fun);
+    //console.log('extcall ' + mod + ' ' + fun);
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
@@ -261,7 +261,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     if (nargs >= 0) {
         for (var ai = 0; ai < nargs; ai++) {
             args[ai] = this.HEAP32[sp1+16+4*ai>>2];
-            console.log("arg " + ai + " " + args[ai]);
+            //console.log("arg " + ai + " " + args[ai]);
         }
     }
 
@@ -293,7 +293,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         return sp|1;
     }
 
-    console.log("retv " + retv)
+    //console.log("retv " + retv)
     if (retv !== undefined && retv == retv) {
         this.set_rv(retv);
     } else if (retv != retv) {
@@ -371,26 +371,26 @@ Wasm32Thread.prototype.step = function ()
 
 Wasm32Thread.prototype.trace = function (off, pc0, dpc)
 {
-    console.log("trace off " + off + " pc0 " + pc0 + " dpc " + dpc);
+    //console.log("trace off " + off + " pc0 " + pc0 + " dpc " + dpc);
 
     return 0;
 };
 
 Wasm32Thread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 {
-    console.log("indcall! " + pc);
+    //console.log("indcall! " + pc);
     var str = pc.toString(16);
     while (str.length < 16)
         str = str + " ";
-    console.log("str " + str);
+    //console.log("str " + str);
     if (this.exports["f_" + str]) {
-        console.log("found!");
+        //console.log("found!");
         let ret = this.exports["f_" + str](mbz, sp, r0, r1, rpc, pc);
-        console.log("ret " + ret);
+        //console.log("ret " + ret);
         return ret;
-    } else
-        for (let name in this.exports)
-            console.log("!= " + name);
+    } //else
+        //for (let name in this.exports)
+            //console.log("!= " + name);
     for (;;) ;
 };
 
@@ -697,7 +697,7 @@ Wasm32System.prototype.instantiate = function (module, args, env)
                 new ThinThinFD(process, 1);
                 new ThinThinFD(process, 2);
 
-                //console.log('restarting');
+                ////console.log('restarting');
 
                 // let first = true;
 
@@ -706,11 +706,11 @@ Wasm32System.prototype.instantiate = function (module, args, env)
                 //         first = false;
                 //         return new Promise((resolve,reject) => {
                 //             var content = document.getElementById("dot-input").innerHTML;
-                //             console.log(content);
+                //             //console.log(content);
                 //             resolve(content);
                 //         });
                 //     } else {
-                //         console.log("EOF");
+                //         //console.log("EOF");
                 //         return Promise.resolve("");
                 //     }
                 // };
@@ -737,7 +737,7 @@ Wasm32System.prototype.instantiate = function (module, args, env)
         new ThinThinFD(process, 1);
         new ThinThinFD(process, 2);
 
-        //console.log('restarting');
+        ////console.log('restarting');
 
         // let first = true;
 
@@ -746,11 +746,11 @@ Wasm32System.prototype.instantiate = function (module, args, env)
         //         first = false;
         //         return new Promise((resolve,reject) => {
         //             var content = document.getElementById("dot-input").innerHTML;
-        //             console.log(content);
+        //             //console.log(content);
         //             resolve(content);
         //         });
         //     } else {
-        //         console.log("EOF");
+        //         //console.log("EOF");
         //         return Promise.resolve("");
         //     }
         // };
