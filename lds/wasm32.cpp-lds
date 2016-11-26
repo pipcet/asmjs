@@ -1,4 +1,15 @@
+#define BYTELEB128(x)                           \
+  BYTE((((x)>>0*7)&0x7f)|0x80);                 \
+  BYTE((((x)>>1*7)&0x7f));                      \
+
 #define LONGLEB128(x)                           \
+  BYTE((((x)>>0*7)&0x7f)|0x80);                 \
+  BYTE((((x)>>1*7)&0x7f)|0x80);                 \
+  BYTE((((x)>>2*7)&0x7f)|0x80);                 \
+  BYTE((((x)>>3*7)&0x7f)|0x80);                 \
+  BYTE((((x)>>4*7)&0x7f);                       \
+
+#define QUADLEB128(x)                           \
   BYTE((((x)>>0*7)&0x7f)|0x80);                 \
   BYTE((((x)>>1*7)&0x7f)|0x80);                 \
   BYTE((((x)>>2*7)&0x7f)|0x80);                 \
@@ -8,13 +19,7 @@
   BYTE((((x)>>6*7)&0x7f)|0x80);                 \
   BYTE((((x)>>7*7)&0x7f)|0x80);                 \
   BYTE((((x)>>8*7)&0x7f)|0x80);                 \
-  BYTE((((x)>>9*7)&0x7f)|0x80);                 \
-  BYTE(0x80);                                   \
-  BYTE(0x80);                                   \
-  BYTE(0x80);                                   \
-  BYTE(0x80);                                   \
-  BYTE(0x80);                                   \
-  BYTE(0x00);
+  BYTE((((x)>>9*7)&0x7f));                      \
 
 #define SECTION_SIZED(name)                                          \
   wasm-headers.o(.wasm.header_id.name)                               \
