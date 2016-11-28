@@ -401,6 +401,7 @@ http://asmjs.org
 
 ** WebAssembly
 http://webassembly.github.io/
+https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
 * Future design
 ** asm.js calling convention
 I think the best calling convention to use is:
