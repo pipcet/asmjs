@@ -598,22 +598,18 @@ Wasm32System.prototype.init_sp = function (heap, off, args, env)
     }
     off &= -8;
 
-    HEAP32[(off-=8)>>2] = 0;
-    HEAP32[(off+4)>>2] = 0;
+    HEAP32[(off-=4)>>2] = 0;
 
     for (i = 0; i < eo.length; i++) {
-        HEAP32[(off-=8)>>2] = eo[i];
-        HEAP32[(off+4)>>2] = 0;
+        HEAP32[(off-=4)>>2] = eo[i];
     }
 
     var envp = off;
 
-    HEAP32[(off-=8)>>2] = 0;
-    HEAP32[(off+4)>>2] = 0;
+    HEAP32[(off-=4)>>2] = 0;
 
     for (i = 0; i < ao.length; i++) {
-        HEAP32[(off-=8)>>2] = ao[i];
-        HEAP32[(off+4)>>2] = ao[i];
+        HEAP32[(off-=4)>>2] = ao[i];
     }
 
     var argv = off;
@@ -621,16 +617,16 @@ Wasm32System.prototype.init_sp = function (heap, off, args, env)
 
     off &= -16;
 
-    HEAP32[(off-=8)>>2] = 0; HEAP32[(off+4)>>2] = 0; /* padding */
-    HEAP32[(off-=8)>>2] = envp; HEAP32[(off+4)>>2] = 0;
-    HEAP32[(off-=8)>>2] = argv; HEAP32[(off+4)>>2] = 0;
-    HEAP32[(off-=8)>>2] = argc; HEAP32[(off+4)>>2] = 0;
+    HEAP32[(off-=4)>>2] = 0; /* padding */
+    HEAP32[(off-=4)>>2] = envp;
+    HEAP32[(off-=4)>>2] = argv;
+    HEAP32[(off-=4)>>2] = argc;
 
-    HEAP32[(off-=8)>>2] = 3; HEAP32[(off+4)>>2] = 0; /* argument count */
-    off -= 8;
-    HEAP32[off>>2] = off+48; HEAP32[(off+4)>>2] = 0;  /* argument something */
-    HEAP32[(off-=8)>>2] = 0; HEAP32[(off+4)>>2] = 0;  /* return FP */
-    HEAP32[(off-=8)>>2] = 0; HEAP32[(off+4)>>2] = 0;  /* return PC */
+    HEAP32[(off-=4)>>2] = 3; /* argument count */
+    off -= 4;
+    HEAP32[off>>2] = off+48; /* argument something */
+    HEAP32[(off-=4)>>2] = 0; /* return FP */
+    HEAP32[(off-=4)>>2] = 0; /* return PC */
 
     if (off & 4) {
         throw "unaligned off";
@@ -683,6 +679,7 @@ Wasm32System.prototype.instantiate = function (module, args, env)
             %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
             %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
 
+            module.top_of_stack = 64 * 1024 * 1024;
             var sp = this.init_sp(heap, module.top_of_stack, args, env);
             %{tp1[&threadpage::sp] = "sp"}
             %{tp1[&threadpage::initsp] = "sp"}

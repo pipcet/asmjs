@@ -3,12 +3,14 @@ var module = new Wasm32Module();
 module.add_section(section);
 var system = new Wasm32System();
 
-system.instantiate(module, ["this program"], ["A=B"]).then(() => {
+system.instantiate(module, args, ["A=B"]).then(() => {
     try {
         var first = true;
         var dpc = 0;
         var pc0 = 0xa;
-        var sp = 65535 * 1024;
+        /* The 0x10 offset is for... err... making things work. Somehow.
+         * Possibly a remnant of the incomplete 64-bitification. */
+        var sp = system.threads[0].%{tp1[&threadpage::sp]} + 0x10;
         var rpc = 0;
         while (1) {
             //console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
