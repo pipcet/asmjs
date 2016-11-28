@@ -21,6 +21,7 @@ fi
 wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32.cpp-lds.lds "$1" $ASMJSDIR/lib/wasm32-headers.o  -o $TMP5 || exit 1
 wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32-wasmify.lds $TMP5 -o $TMP6 || exit 1
 $ASMJSDIR/bin/wasmrewrite $TMP6 > $TMP8
+# ls -l $TMP8 > /dev/stderr
 (echo "var path = \"$TMP8\";"; cat $ASMJSDIR/js/wasm32.js) > $TMP7
 rm $TMP1 $TMP2 $TMP3 $TMP4 $TMP5
 (sleep $DELAY && rm $TMP6 $TMP7) & disown
