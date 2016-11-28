@@ -564,7 +564,15 @@ uses .dpc
 *** TODO sleb128 vs uleb128
 *** TODO fpswitch for wasm
 **** TODO test .rept hack for multi-page functions
-
+*** TODO use br_if for throw1
+*** TODO use i32.store offset
+*** TODO use tee_local
+*** TODO peephole patterns
+** TODO signals
+*** TODO SIGFPE/SIGSEGV "handlers"
+*** TODO debugging signal
+*** TODO user-defined signals
+*** TODO SIGALRM
 * unsorted
 ** multifile support
 The multifile feature supports relinking an ELF executable (which has  already been linked) with additional object files to produce another ELF executable. This is similar to what LD_PRELOAD does on systems that support it, but manages to work around the lack of dynamic linking in the asmjs target.
