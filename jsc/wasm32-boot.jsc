@@ -5,9 +5,48 @@ var system = new Wasm32System();
 
 system.instantiate(module, ["this program"], ["A=B"]).then(() => {
     try {
-        system.threads[0].exports._start(0, 65535 * 1024, 0, 0, 0, 0);
+        var first = true;
+        var dpc = 0;
+        var pc0 = 0xa;
+        var sp = 65535 * 1024;
+        var rpc = 0;
+        while (1) {
+            console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
+            var ret;
+            if (first) {
+                ret = system.threads[0].exports._start(dpc, sp, 0, 0, rpc, pc0);
+                first = false;
+            } else {
+                ret = system.threads[0].indcall(dpc, sp, 0, 0, rpc, pc0);
+            }
+            console.log("called: " + ret);
+
+            if (ret & 3) {
+                sp = ret;
+                sp &= -4;
+                for (var off = -48; off < 48; off += 4)
+                    console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
+                pc0 = system.threads[0].HEAPU32[sp+8>>2];
+                dpc = -1;
+                console.log("pc0 " + pc0 + " dpc " + dpc);
+                sp += 16;
+            } else {
+                sp = ret; //system.threads[0].HEAPU32[ret+16>>2];
+                sp = system.threads[0].HEAPU32[ret>>2];
+                for (var off = -48; off < 48; off += 4)
+                    console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
+                pc0 = system.threads[0].HEAPU32[sp+8>>2];
+                dpc = -1; //system.threads[0].HEAPU32[sp+28>>2];
+                console.log("pc0 " + pc0 + " dpc " + dpc);
+                sp += 16;
+            }
+        }
     } catch (e) {
+        console.log("exception");
         console.log(e);
         console.log(e.stack);
     }
-}).catch((e) => console.log(e));
+}).catch((e) => {
+    console.log("caught");
+    console.log(e);
+});
