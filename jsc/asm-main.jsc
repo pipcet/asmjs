@@ -88,6 +88,27 @@ var copyvars = ["HOME", "MAKE", "LIBPERL_A", "PERL_CORE", "PATH", "EMACSLOADPATH
 
 var restart;
 
+function environment_variables()
+{
+    var env = [];
+
+    if (typeof os === "undefined") {
+    } else if ("getenvironment" in os) {
+        env = os.getenvironment();
+    } else {
+        for (var i = 0; i < copyvars.length; i++) {
+            var copyvar = copyvars[i];
+            var value = os.getenv(copyvar);
+
+            if (value !== undefined)
+                env.push(copyvar + "=" + value);
+        }
+        env.push("TERM=vt100");
+    }
+
+    return env;
+}
+
 function newAsmJSModule(mod)
 {
     sys = new AsmJSSystem();
