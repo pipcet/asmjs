@@ -240,19 +240,21 @@ void mputbytes(char *bytes, unsigned long len)
   free(bytes);
 }
 
-long ast(unsigned long len)
+long ast(unsigned long len, unsigned long index)
 {
   unsigned long off0 = roff;
   unsigned long target_count;
   long delta = 0;
+  long block = 0;
 
   while (roff < off0 + len) {
     u8 c = mgetchar();
     switch (c) {
+    case 0x0b:
+      block--;
+    case 0x0f:
     case 0x00 ... 0x01:
     case 0x05:
-    case 0x0b:
-    case 0x0f:
     case 0x1a:
     case 0x1b:
     case 0x45 ... 0xbf:
@@ -260,6 +262,7 @@ long ast(unsigned long len)
       break;
 
     case 0x02 ... 0x04:
+      block++;
     case 0x0c:
     case 0x0d:
     case 0x10:
@@ -315,35 +318,35 @@ long ast(unsigned long len)
 
     case 0x06:
       switch (mgetchar()) {
-      case 1:
+      case 1: /* jump */
         //mputchar(0x41);
         //mputchar(0x01);
         //mputchar(0x1a);
         mputchar(0x0c);
         mputsleb128(mgetsleb128()+1, 32);
         break;
-      case 2:
+      case 2: /* throw */
         //mputchar(0x41);
         //mputchar(0x02);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+1, 32);
+        mputsleb128(mgetsleb128()+2, 32);
         break;
-      case 3:
+      case 3: /* jump1 */
         //mputchar(0x41);
         //mputchar(0x03);
         //mputchar(0x1a);
         mputchar(0x0c);
         mputsleb128(mgetsleb128()+2, 32);
         break;
-      case 4:
+      case 4: /* throw1 */
         //mputchar(0x41);
         //mputchar(0x04);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+2, 32);
+        mputsleb128(mgetsleb128()+3, 32);
         break;
-      case 5:
+      case 5: /* jump2 */
         //mputchar(0x41);
         //mputchar(0x05);
         //mputchar(0x1a);
@@ -359,6 +362,11 @@ long ast(unsigned long len)
       for(;;);
       abort();
     }
+  }
+
+  if (block != -1) {
+    fprintf(stderr, "unbalanced %ld %lx %lx\n", block, roff, index);
+    for(;;);
   }
 
   return delta;
@@ -378,7 +386,7 @@ long local_entry(void)
   return delta;
 }
 
-long function_body(void)
+long function_body(unsigned long index)
 {
   unsigned long off0, off1;
   unsigned long len = mgetsize(&off0, &off1);
@@ -396,7 +404,7 @@ long function_body(void)
   while (nlocals--)
     delta += local_entry();
 
-  delta += ast(end - roff);
+  delta += ast(end - roff, index);
   delta += msynch();
 
   delta += msetsize(off0, off1, delta);
@@ -410,6 +418,7 @@ long section_code()
   unsigned long off0, off1;
   unsigned long len;
   long delta = 0;
+  unsigned long index = 0;
 
   len = mgetsize(&off0, &off1);
   if (len) {
@@ -418,7 +427,7 @@ long section_code()
     mputuleb128(count = mgetuleb128());
     delta += msynch();
     while (count--)
-      delta += function_body();
+      delta += function_body(index++);
     delta += msetsize(off0, off1, delta);
   } else {
     /* delta += */ msynch();
