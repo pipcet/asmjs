@@ -43,8 +43,8 @@ __wasm_chars_\name\():
         .pushsection .wasm.payload.table
         .byte 0x70                         ; anyfunc
         .byte 0x1                          ; maximum field present
-        rleb128_32 1                          ; __wasm_chars_function_size
-        rleb128_32 1024
+        rleb128_32 __wasm_chars_function_index_size
+        rleb128_32 __wasm_chars_function_index_size
         .popsection
 
         .pushsection .wasm.chars.memory
@@ -74,6 +74,14 @@ __wasm_chars_\name\():
         .pushsection .wasm.payload.export
         lstring "_memory"
         .byte 0x02              ; external kind memory
-                                ;rleb128 _start
+        .byte 0x00
+        .popsection
+
+        .pushsection .wasm.chars.export
+        .byte 0x00
+        .popsection
+        .pushsection .wasm.payload.export
+        lstring "_table"
+        .byte 0x01              ; external kind table
         .byte 0x00
         .popsection
