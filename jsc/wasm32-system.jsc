@@ -679,7 +679,7 @@ Wasm32System.prototype.instantiate = function (module, args, env)
             %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
             %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
 
-            module.top_of_stack = 64 * 1024 * 1024;
+            module.top_of_stack = 1023 * 1024 * 1024;
             var sp = this.init_sp(heap, module.top_of_stack, args, env);
             %{tp1[&threadpage::sp] = "sp"}
             %{tp1[&threadpage::initsp] = "sp"}

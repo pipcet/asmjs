@@ -52,8 +52,8 @@ __wasm_chars_\name\():
         .popsection
         .pushsection .wasm.payload.memory
         .byte 0x1               ; maximum field present
-        rleb128_32 1024            ; 64 MiB
-        rleb128_32 1024            ; 64 MiB
+        rleb128_32 1024*16            ; 1 GiB
+        rleb128_32 1024*16            ; 1 GiB
         .popsection
 
         .if 0
