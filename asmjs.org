@@ -567,6 +567,16 @@ uses .dpc
 *** TODO debugging signal
 *** TODO user-defined signals
 *** TODO SIGALRM
+*** TODO fast switch for wasm
+wasm, unlike asm.js, allows the default label of a br_table to be the first case. So make the default case dpc = -1, use dpc = 0 for a register restore, then start "real" dpcs at dpc = 1. That saves an indirect branch and should make things significantly faster.
+*** TODO remove $trace code
+*** TODO dynamic memory limit
+*** TODO test "name" section
+*** TODO drop pc0 argument for direct calls
+It's highly desirable to keep things limited to six integer arguments since those can be passed in registers on x86-64, but we need two arguments for the return pc0 and the return dpc. Alternatively, we could pass a pointer to a 64-bit PC in the data section, or on the stack for PIC code.
+
+In fact it's only setjmp that really needs to know our dpc.
+*** TODO Use call_indirect rather than indcall
 * unsorted
 ** multifile support
 The multifile feature supports relinking an ELF executable (which has  already been linked) with additional object files to produce another ELF executable. This is similar to what LD_PRELOAD does on systems that support it, but manages to work around the lack of dynamic linking in the asmjs target.
@@ -574,4 +584,5 @@ The multifile feature supports relinking an ELF executable (which has  already b
 In addition to including the new object file code, constructors and destructors in the library file are executed.
 
 This is implemented by modifying the linker script files to produce a linked list of file descriptors, starting at the fixed offset 16384, with new descriptors appended to existing object files after the .bss section.
-
+** dummy sections
+The wasm32 backend uses a number of dummy ELF sections whose only purpose it is to allocate positions in some index space.
