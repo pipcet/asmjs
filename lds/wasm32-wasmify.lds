@@ -10,6 +10,7 @@ SECTIONS
       *(.ctors)
       *(.dtors)
       *(.asmjs.term)
+      *(.output.named)
   }
   /DISCARD/ : { *(.discard*) *(*) }
 }

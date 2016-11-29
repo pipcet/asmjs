@@ -168,7 +168,7 @@ long msetsize(unsigned long off0, unsigned long off1, long delta)
   for (off = off1; off < roff; off++)
     if (gmask[off])
       len++;
-  assert(len == roff - off1 - delta);
+  //assert(len == roff - off1 - delta);
   return msetuleb128(off0, len);
 }
 
@@ -687,29 +687,6 @@ long function_names(void)
   return delta;
 }
 
-long section_name()
-{
-  unsigned long off0, off1;
-  unsigned long len;
-  unsigned long count;
-  long delta = 0;
-
-  len = mgetsize(&off0, &off1);
-  if (len) {
-    delta += msynch();
-    mputuleb128(count = mgetuleb128());
-    delta += msynch();
-    while (count--)
-      delta += function_names();
-    delta += msynch();
-    delta += msetsize(off0, off1, delta);
-  } else {
-    delta += msynch();
-  }
-
-  return delta;
-}
-
 long section_simple()
 {
   unsigned long off0, off1;
@@ -806,20 +783,56 @@ long section_element()
   return delta;
 }
 
+long section_name(long len)
+{
+  unsigned long off0, off1;
+  unsigned long count;
+  long delta = 0;
+  long lcount = 0;
+
+  if (len) {
+    mputuleb128(count = mgetuleb128());
+    delta += msynch();
+    while (count--) {
+      mputstring(mgetstring());
+      mputuleb128(lcount = mgetuleb128());
+      while (lcount--)
+        mputstring(mgetstring());
+      delta += msynch();
+    }
+  } else {
+    delta += msynch();
+  }
+
+  return delta;
+}
+
+long section_named(void)
+{
+  unsigned long off0, off1;
+  unsigned long len;
+  long delta = 0;
+
+  msynch();
+  len = mgetsize(&off0, &off1);
+  msynch();
+  char *str = mgetstring();
+
+  if (strcmp(str, "name") == 0) {
+    mputstring(str);
+    delta += section_name(len);
+  } else {
+    abort();
+  }
+
+  delta += msetsize(off0, off1, delta);
+
+  return delta;
+}
+
 long section(void)
 {
   long id = mgetuleb128();
-  if (id == 0) {
-    unsigned long off0, off1;
-    unsigned long len;
-    long delta = 0;
-
-    len = mgetsize(&off0, &off1);
-    while (len--)
-      mgetchar();
-
-    return 0;
-  }
   long delta = 0;
   mputuleb128(id);
 
@@ -835,6 +848,7 @@ long section(void)
   case  9: delta += section_element(); break;
   case 10: delta += section_code(); break;
   case 11: delta += section_data(); break;
+  case  0: delta += section_named(); break;
   }
 
   return delta;

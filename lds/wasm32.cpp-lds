@@ -91,7 +91,6 @@ SECTIONS
     SECTION_SIZED(element)
     SECTION_SIZED(code)
     SECTION_DATA_HEADER(data)
-//    SECTION_SIZED(name)
   }
   . = 16384;
   .asmjs.header :
@@ -220,6 +219,9 @@ SECTIONS
     __wasm_data_segment_end = .;
     __wasm_data_payload_end = .;
   }
+  .output.named (INFO) : {
+    SECTION_SIZED(name)
+  }
   SECTION_CHARS(function_index)
   SECTION_CHARS(type)
   SECTION_CHARS(import)
@@ -231,5 +233,6 @@ SECTIONS
   SECTION_CHARS(element)
   SECTION_CHARS(code)
   SECTION_CHARS(data)
+  SECTION_CHARS(name)
   /DISCARD/ : { *(.asmjs.header) }
 }
