@@ -22,6 +22,25 @@ function Wasm32ModuleSection(bytes)
     this.bytes = bytes;
 }
 
+Wasm32ModuleSection.prototype.fill_table = function (thread)
+{
+    var pc = 0;
+    var seen = 0;
+    do {
+        var str = pc.toString(16);
+        while (str.length < 16)
+            str = str + " ";
+        var f = thread.exports["f_" + str];
+        if (f) {
+            thread.table.set(pc, f);
+            seen++;
+        } else if (seen) {
+            break;
+        }
+        pc++;
+    } while (true);
+};
+
 Wasm32ModuleSection.prototype.instantiate = function (thread)
 {
     this.imports = {};
@@ -36,6 +55,8 @@ Wasm32ModuleSection.prototype.instantiate = function (thread)
         this.instance = instance.instance;
         thread.exports = this.instance.exports;
         thread.memory = this.instance.exports._memory.buffer;
+        thread.table = this.instance.exports._table;
+        this.fill_table(thread);
         //console.log(thread.memory);
         //for (let l in thread.memory)
             //console.log(l);
