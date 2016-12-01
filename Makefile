@@ -116,8 +116,16 @@ build/asmjs/ncurses.dir: build/asmjs/.dir
 	test -d build/asmjs/ncurses || $(MKDIR) build/asmjs/ncurses
 	touch $@
 
+build/wasm32/ncurses.dir: build/wasm32/.dir
+	test -d build/wasm32/ncurses || $(MKDIR) build/wasm32/ncurses
+	touch $@
+
 build/asmjs/emacs.dir: build/asmjs/.dir
 	test -d build/asmjs/emacs || $(MKDIR) build/asmjs/emacs
+	touch $@
+
+build/wasm32/emacs.dir: build/wasm32/.dir
+	test -d build/wasm32/emacs || $(MKDIR) build/wasm32/emacs
 	touch $@
 
 build/asmjs-cross/ncurses.dir: build/asmjs-cross/.dir
@@ -374,9 +382,18 @@ build/asmjs/ncurses.configure: src/ncurses.dir build/asmjs/ncurses.dir | build/a
 	(cd build/asmjs/ncurses; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
 
+build/wasm32/ncurses.configure: src/ncurses.dir build/wasm32/ncurses.dir | build/wasm32/gcc-final.make
+	(cd build/wasm32/ncurses; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	touch $@
+
 build/asmjs/ncurses.make: build/asmjs/ncurses.configure
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/ncurses
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/ncurses install
+	touch $@
+
+build/wasm32/ncurses.make: build/wasm32/ncurses.configure
+	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/ncurses
+	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/ncurses install
 	touch $@
 
 build/asmjs-cross/ncurses.configure: src/ncurses.dir build/asmjs-cross/ncurses.dir | build/asmjs/gcc-final.make
@@ -400,6 +417,12 @@ build/asmjs-cross/emacs.configure: src/emacs.dir build/asmjs-cross/emacs.dir | b
 	(cd build/asmjs-cross/emacs; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --build=x86_64-pc-linux-gnu --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
 
+build/wasm32/emacs.configure: src/emacs.dir build/wasm32/emacs.dir | build/wasm32/ncurses.make
+	(cd src/emacs; autoreconf -ivf)
+	cp config/config.sub src/emacs/build-aux
+	(cd build/wasm32/emacs; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	touch $@
+
 build/asmjs/emacs.make: build/asmjs/emacs.configure build/asmjs/ncurses.make | build/binfmt_misc.install
 	$(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet
 	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa/inet.h
@@ -416,6 +439,15 @@ build/asmjs-cross/emacs.make: build/asmjs-cross/emacs.configure build/asmjs-cros
 	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet/in.h
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
+	touch $@
+
+build/wasm32/emacs.make: build/wasm32/emacs.configure build/wasm32/ncurses.make | build/binfmt_misc.install
+	$(MKDIR) -p $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/arpa $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/netinet
+	touch $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/arpa/inet.h
+	touch $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/netdb.h
+	touch $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/netinet/in.h
+	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/emacs
+	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/emacs install
 	touch $@
 
 build/asmjs/bash.configure: src/bash.dir build/asmjs/bash.dir | build/asmjs/gcc-final.make
