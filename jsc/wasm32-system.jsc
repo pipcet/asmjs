@@ -282,7 +282,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     if (nargs >= 0) {
         for (var ai = 0; ai < nargs; ai++) {
             args[ai] = this.HEAP32[sp1+16+4*ai>>2];
-            //console.log("arg " + ai + " " + args[ai]);
+            //console.log("arg " + ai + " " + args[ai] + " " + CStringAt(this.HEAP8, args[ai]));
         }
     }
 
