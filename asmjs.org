@@ -556,7 +556,6 @@ uses .dpc
 *** TODO officialize ld script
 *** DONE shorten uleb128s
 *** DONE sleb128 vs uleb128
-*** TODO fpswitch for wasm
 **** TODO test .rept hack for multi-page functions
 *** TODO use br_if for throw1
 *** TODO use i32.store offset
@@ -567,16 +566,16 @@ uses .dpc
 *** TODO debugging signal
 *** TODO user-defined signals
 *** TODO SIGALRM
-*** TODO fast switch for wasm
+*** DONE fast switch for wasm
 wasm, unlike asm.js, allows the default label of a br_table to be the first case. So make the default case dpc = -1, use dpc = 0 for a register restore, then start "real" dpcs at dpc = 1. That saves an indirect branch and should make things significantly faster.
-*** TODO remove $trace code
+*** DONE remove $trace code
 *** TODO dynamic memory limit
 *** TODO test "name" section
 *** TODO drop pc0 argument for direct calls
 It's highly desirable to keep things limited to six integer arguments since those can be passed in registers on x86-64, but we need two arguments for the return pc0 and the return dpc. Alternatively, we could pass a pointer to a 64-bit PC in the data section, or on the stack for PIC code.
 
 In fact it's only setjmp that really needs to know our dpc.
-*** TODO Use call_indirect rather than indcall
+*** DONE Use call_indirect rather than indcall
 * unsorted
 ** multifile support
 The multifile feature supports relinking an ELF executable (which has  already been linked) with additional object files to produce another ELF executable. This is similar to what LD_PRELOAD does on systems that support it, but manages to work around the lack of dynamic linking in the asmjs target.
