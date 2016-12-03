@@ -731,6 +731,139 @@ long section_memory()
   return delta;
 }
 
+long init_expr()
+{
+  unsigned long off0 = roff;
+  unsigned long target_count;
+  long delta = 0;
+  long block = 0;
+
+  while (1) {
+    u8 c = mgetchar();
+    switch (c) {
+    case 0x0b:
+      block--;
+      goto out;
+    case 0x0f:
+    case 0x00 ... 0x01:
+    case 0x05:
+    case 0x1a:
+    case 0x1b:
+    case 0x45 ... 0xbf:
+      mputchar(c);
+      break;
+
+    case 0x02 ... 0x04:
+      block++;
+    case 0x0c:
+    case 0x0d:
+    case 0x10:
+    case 0x20 ... 0x24:
+    case 0x3f:
+    case 0x40 ... 0x41:
+      mputchar(c);
+      mputsleb128(mgetsleb128(), 32);
+      delta += msynch();
+      break;
+    case 0x42:
+      mputchar(c);
+      mputsleb128(mgetsleb128(), 64);
+      delta += msynch();
+      break;
+    case 0x43:
+      mputchar(c);
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      delta += msynch();
+      break;
+    case 0x44:
+      mputchar(c);
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      mputchar(mgetchar());
+      delta += msynch();
+      break;
+
+    case 0x11:
+    case 0x28 ... 0x3e:
+      mputchar(c);
+      mputuleb128(mgetuleb128());
+      mputuleb128(mgetuleb128());
+      delta += msynch();
+      break;
+
+    case 0x0e:
+      mputchar(c);
+      mputuleb128(target_count = mgetuleb128());
+      while (target_count--)
+        mputuleb128(mgetuleb128());
+      mputuleb128(mgetuleb128());
+      delta += msynch();
+      break;
+
+    case 0x06:
+      switch (mgetchar()) {
+      case 1: /* jump */
+        //mputchar(0x41);
+        //mputchar(0x01);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+1, 32);
+        break;
+      case 2: /* throw */
+        //mputchar(0x41);
+        //mputchar(0x02);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+2, 32);
+        break;
+      case 3: /* jump1 */
+        //mputchar(0x41);
+        //mputchar(0x03);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+2, 32);
+        break;
+      case 4: /* throw1 */
+        //mputchar(0x41);
+        //mputchar(0x04);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+3, 32);
+        break;
+      case 5: /* jump2 */
+        //mputchar(0x41);
+        //mputchar(0x05);
+        //mputchar(0x1a);
+        mputchar(0x0c);
+        mputsleb128(mgetsleb128()+1, 32);
+        break;
+      }
+      delta += msynch();
+      break;
+
+    default:
+      fprintf(stderr, "ast %02x %lx\n", (int)c, roff);
+      for(;;);
+      abort();
+    }
+  }
+ out:
+  if (block != -1) {
+    fprintf(stderr, "unbalanced %ld %lx %lx\n", block, roff, index);
+    for(;;);
+  }
+
+  return delta;
+}
+
 long section_global()
 {
   unsigned long off0, off1;
@@ -745,9 +878,8 @@ long section_global()
     delta += msynch();
     while (count--) {
       mputuleb128(mgetuleb128());
-      mputuleb128(mgetuleb128());
-      mputuleb128(mgetuleb128());
       delta += msynch();
+      delta += init_expr();
     }
     delta += msetsize(off0, off1, delta);
   } else {
