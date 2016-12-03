@@ -84,8 +84,8 @@ SECTIONS
     SECTION_SIZED(type)
     SECTION_SIZED(import)
     SECTION_SIZED(function)
-    SECTION_SIZED(table)
-    SECTION_SIZED(memory)
+    //SECTION_SIZED(table)
+    //SECTION_SIZED(memory)
     SECTION_SIZED(global)
     SECTION_SIZED(export)
       //SECTION_UNSIZED(start, LONGLEB128(1+(_start>>32)))
@@ -227,13 +227,13 @@ SECTIONS
   SECTION_CHARS(type)
   SECTION_CHARS(import)
   SECTION_CHARS(function)
-  SECTION_CHARS(table)
-  SECTION_CHARS(memory)
+  //SECTION_CHARS(table)
+  //SECTION_CHARS(memory)
   SECTION_CHARS(global)
   SECTION_CHARS(export)
   SECTION_CHARS(element)
   SECTION_CHARS(code)
   SECTION_CHARS(data)
   SECTION_CHARS(name)
-  /DISCARD/ : { *(.asmjs.header) *(.asmjs.term) }
+  /DISCARD/ : { *(.asmjs.header) *(.asmjs.term) *(.got.plt) *(.dynamic) }
 }
