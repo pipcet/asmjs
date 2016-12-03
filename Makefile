@@ -763,5 +763,10 @@ examples/002-perl/perl.js: asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/perl5.25.
 %.cpp-lds.lds: %.cpp-lds
 	cpp < $< | egrep -v '^#' > $@
 
+lib/wasm32-headers.o: headers/wasm32-headers.s build/wasm32/gcc-final.make
+	./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gcc -c $< -o $@
+
+bin/wasmrewrite: wasmrewrite/wasmrewrite.c
+	gcc -g3 $< -o $@
 
 .PHONY: FORCE clean fetch
