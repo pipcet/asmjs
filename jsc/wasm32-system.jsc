@@ -26,6 +26,7 @@ Wasm32ModuleSection.prototype.fill_table = function (thread)
 {
     var pc = 0;
     var seen = 0;
+    var count = 0;
     do {
         var str = pc.toString(16);
         while (str.length < 16)
@@ -34,7 +35,7 @@ Wasm32ModuleSection.prototype.fill_table = function (thread)
         if (f) {
             thread.table.set(pc, f);
             seen++;
-        } else if (seen) {
+        } else if (seen || count++ == 128) {
             break;
         }
         pc++;
@@ -50,6 +51,9 @@ Wasm32ModuleSection.prototype.instantiate = function (thread)
     this.imports.sys.eh_return = thread.eh_return.bind(thread);
     this.imports.sys.indcall = thread.indcall.bind(thread);
     this.imports.sys.trace = thread.trace.bind(thread);
+    this.imports.sys.got = 0;
+    this.imports.sys.table = new WebAssembly.Table({element:"anyfunc",initial:1024,maximum:65536});
+    this.imports.sys.memory = new WebAssembly.Memory({initial:16384, maximum:16384});
 
     this.instancePromise = WebAssembly.instantiate(this.bytes, this.imports).then((instance) => {
         this.instance = instance.instance;
