@@ -323,7 +323,11 @@ It is sometimes necessary for a C function to return control not to the function
 In both cases, the asm.js function corresponding to the C or C++ function returns an =rp= value with a tag value of 2, and a pointer value corresponding to the code that is to be executed next.
 
 **** dynamic linking
-Dynamic linking/loading does not currently work.
+Dynamic linking/loading does not currently work, though some initial code has been committed. Even when it does work, it will be subject to many limitations:
+- wasm32 only
+- no PLT for now
+- that means all code, including the main executable, must be compiled with -fPIC
+- it also means all calls of global functions will be indirect
 
 **** debugging
 Explicitly calling a gdb stub from C code to allow GDB to inspect data on the VM stack and modify it used to work. Breakpoints do not yet work, and are expected to require special build options and incur significant performance penalties when they do. Function calls made by GDB do not yet work.
