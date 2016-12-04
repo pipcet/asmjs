@@ -428,28 +428,34 @@ Wasm32Thread.prototype.step = function ()
     return rp&-4;
 };
 
-Wasm32Thread.prototype.trace = function (off, pc0, dpc)
+Wasm32Thread.prototype.trace = function (off, pc0, dpc, a0, a1, a2)
 {
-    //console.log("trace off " + off + " pc0 " + pc0 + " dpc " + dpc);
+    console.log("trace off " + off + " sp " + pc0 + " fp " + dpc +
+                a0 + " " + a1 + " " + a2);
 
+    var start = new Date();
+
+    while ((new Date()) - start < 100);
     return 0;
 };
 
 Wasm32Thread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 {
+    return this.vm.table.get(pc)(mbz, sp, r0, r1, rpc, pc);
     //console.log("indcall! " + pc);
     var str = pc.toString(16);
     while (str.length < 16)
         str = str + " ";
     //console.log("str " + str);
     if (this.exports["f_" + str]) {
-        //console.log("found!");
+        console.log("found!");
         let ret = this.exports["f_" + str](mbz, sp, r0, r1, rpc, pc);
-        //console.log("ret " + ret);
+        console.log("ret " + ret);
         return ret;
-    } //else
-        //for (let name in this.exports)
-            //console.log("!= " + name);
+    } else
+        for (let name in this.exports)
+            console.log("!= " + name);
+    throw "bad indcall";
     for (;;) ;
 };
 
