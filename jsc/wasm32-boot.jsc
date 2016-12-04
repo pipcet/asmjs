@@ -26,44 +26,12 @@ system.instantiate(module, vm, args, environment_variables()).then(() => {
         eval(s);
     }
     try {
-        var first = true;
-        var dpc = -1;
-        var pc0 = 0xa;
-        /* The 0x10 offset is for... err... making things work. Somehow.
-         * Possibly a remnant of the incomplete 64-bitification. */
-        var sp = system.threads[0].%{tp1[&threadpage::sp]} + 0x10;
-        var rpc = 0;
-        while (1) {
-            //console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
-            var ret;
-            if (first) {
-                ret = system.threads[0].exports._start(dpc, sp, 0, 0, rpc, pc0);
-                first = false;
-            } else {
-                ret = system.threads[0].indcall(dpc, sp, 0, 0, rpc, pc0);
-            }
-            //console.log("called: " + ret);
-
-            if (ret & 3) {
-                sp = ret;
-                sp &= -4;
-                //for (var off = -48; off < 48; off += 4)
-                    //console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
-                pc0 = system.threads[0].HEAPU32[sp+8>>2];
-                dpc = 0;
-                //console.log("pc0 " + pc0 + " dpc " + dpc);
-                sp += 16;
-            } else {
-                sp = ret; //system.threads[0].HEAPU32[ret+16>>2];
-                sp = system.threads[0].HEAPU32[ret>>2];
-                //for (var off = -48; off < 48; off += 4)
-                    //console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
-                pc0 = system.threads[0].HEAPU32[sp+8>>2];
-                dpc = 0; //system.threads[0].HEAPU32[sp+28>>2];
-                //console.log("pc0 " + pc0 + " dpc " + dpc);
-                sp += 16;
-            }
-        }
+        var f;
+        f = () => {
+            system.threads[0].step();
+            Promise.resolve().then(f);
+        };
+        f();
     } catch (e) {
         console.log("exception");
         console.log(e);

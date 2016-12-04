@@ -383,39 +383,50 @@ Wasm32Thread.prototype.restart = function (dst, src, len, entry)
 
 Wasm32Thread.prototype.step = function ()
 {
-    var pc = this.pc();
-    var sp = this.sp();
-    var rp = 0;
-    var isp = pc ? 0 : sp;
+    var first = this.first;
+    if (first === undefined)
+        first = true;
+    var dpc = this.$dpc;
+    var pc0 = this.$pc0 || 0xa;
+    var sp = this.%{tp1[&threadpage::sp]};
     var rpc = 0;
+    var ret;
 
     while (true) {
-
-        if (!f)
-            throw "no f for " + cpc.toString(16);
-
-        rp = this.exports.indcall(pc, sp,
-                                  0, 0,
-                                  rpc, pc);
-        //putstr('rp ' + rp.toString(16));
-
-        sp = rp;
-
-        if (sp & 3) {
-            sp &= -4;
-            pc = HEAPU32[sp+12>>2];
-            sp += 16;
+        console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
+        if (first) {
+            ret = system.threads[0].exports._start(-1, sp+16, 0, 0, rpc, pc0);
+            this.first = false;
         } else {
-            sp = HEAPU32[rp>>2];
-            pc = HEAPU32[sp+20>>2];
-            sp += 16;
+            ret = system.threads[0].indcall(dpc, sp+16, 0, 0, rpc, pc0);
+        }
+        console.log("called: " + ret);
+
+        if (ret & 3) {
+            sp = ret;
+            sp &= -4;
+            //for (var off = -48; off < 48; off += 4)
+            //console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
+            pc0 = system.threads[0].HEAPU32[sp+8>>2];
+            dpc = 0;
+            break;
+            //console.log("pc0 " + pc0 + " dpc " + dpc);
+        } else {
+            sp = ret; //system.threads[0].HEAPU32[ret+16>>2];
+            sp = system.threads[0].HEAPU32[ret>>2];
+            //for (var off = -48; off < 48; off += 4)
+            //console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
+            pc0 = system.threads[0].HEAPU32[sp+8>>2];
+            dpc = 0; //system.threads[0].HEAPU32[sp+28>>2];
+            //console.log("pc0 " + pc0 + " dpc " + dpc);
         }
     }
 
-    this.set_pc(pc);
-    this.set_sp(sp);
+    this.$pc0 = pc0;
+    this.$dpc = dpc;
+    this.%{tp1[&threadpage::sp]} = sp;
 
-    return rp&-4;
+    return ret&-4;
 };
 
 Wasm32Thread.prototype.trace = function (off, pc0, dpc, a0, a1, a2)
