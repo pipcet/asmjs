@@ -19,7 +19,6 @@ var global = this;
 
 /* process -> vm
  *         -> thread
- * module -> module_section
  */
 
 /* A virtual memory object. */
@@ -37,6 +36,10 @@ function Wasm32VM()
     this.HEAPU32 = new Uint32Array(this.memory.buffer);
     this.HEAPF32 = new Float32Array(this.memory.buffer);
     this.HEAPF64 = new Float64Array(this.memory.buffer);
+
+    this.defs = {};
+    this.defuns = {};
+    this.refs = [];
 }
 
 Wasm32VM.prototype.sbrk = function ()
@@ -44,24 +47,26 @@ Wasm32VM.prototype.sbrk = function ()
     return 512 * 1024 * 1024; // XXX
 };
 
-function Wasm32ModuleSection(bytes)
+function Wasm32Module(bytes)
 {
     this.bytes = bytes;
 }
 
-Wasm32ModuleSection.prototype.fill_table = function (thread, vm)
+Wasm32Module.prototype.fill_table = function (thread, vm, got, plt)
 {
+    //for (var i = 0; i < vm.table_length; i++)
+    //    console.log('old entry ' + vm.table.get(i));
     var pc = 0;
     var seen = 0;
     var count = 0;
-    var off = vm.table_length;
     do {
         var str = pc.toString(16);
         while (str.length < 16)
             str = str + " ";
         var f = thread.exports["f_" + str];
         if (f) {
-            thread.table.set(pc+off, f);
+            console.log("defining " + pc + "+" + plt)
+            thread.table.set(pc+plt, f);
             seen++;
         } else if (seen || count++ == 128) {
             break;
@@ -71,9 +76,12 @@ Wasm32ModuleSection.prototype.fill_table = function (thread, vm)
     vm.table_length += pc;
 };
 
-Wasm32ModuleSection.prototype.instantiate = function (thread, vm)
+var first = true;
+
+Wasm32Module.prototype.instantiate = function (thread, vm)
 {
     this.vm = vm;
+    thread.vm = vm;
     this.imports = {};
     this.imports.sys = {};
 
@@ -81,43 +89,25 @@ Wasm32ModuleSection.prototype.instantiate = function (thread, vm)
     this.imports.sys.eh_return = thread.eh_return.bind(thread);
     this.imports.sys.indcall = thread.indcall.bind(thread);
     this.imports.sys.trace = thread.trace.bind(thread);
-    this.imports.sys.got = 0x4000;
+    this.imports.sys.got = first ? 0x4000 : 512 * 1024 * 1024;
+    first = false;
     this.imports.sys.plt = vm.table_length;
     this.imports.sys.table = vm.table;
     this.imports.sys.memory = vm.memory;
 
     this.instancePromise = WebAssembly.instantiate(this.bytes, this.imports).then((instance) => {
         this.instance = instance.instance;
-        this.wamodule = instance.module;
+        this.module = instance.module;
         thread.exports = this.instance.exports;
         thread.memory = this.instance.exports._memory.buffer;
         thread.table = this.instance.exports._table;
-        this.fill_table(thread, vm);
+        this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
         //console.log(thread.memory);
         //for (let l in thread.memory)
             //console.log(l);
     });
 
     return this.instancePromise;
-};
-
-function Wasm32Module()
-{
-    this.sections = {};
-}
-
-Wasm32Module.prototype.add_section = function (section)
-{
-    this.sections[section.name] = section;
-};
-
-Wasm32Module.prototype.instantiate = function (thread, vm)
-{
-    var promises = [];
-    for (var name in this.sections) {
-        promises.push(this.sections[name].instantiate(thread, vm));
-    }
-    return Promise.all(promises);
 };
 
 function Wasm32Thread(process, module, threadpage)
@@ -288,7 +278,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
-    //console.log('extcall ' + mod + ' ' + fun);
+    console.log('extcall ' + mod + ' ' + fun + ' ' + sp1);
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
@@ -331,7 +321,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
                 retv = ThinThin[fun].apply(this, args);
                 break;
             } catch (e) {
-                throw "died while executing " + fun + ' arg0 ' + args[0] + " e " + e;
+                throw "died while executing " + fun + ' arg0 ' + args[0] + " e " + e + "\n" + e.stack;
             }
         }
         throw "couldn't find " + fun;
