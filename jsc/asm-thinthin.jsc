@@ -1384,24 +1384,31 @@ ThinThin.dlopen = function (cpath)
 
     return module.instantiate(this, this.vm).then(() => {
         var cs = WebAssembly.Module.customSections(module.module, "dyninfo");
-        for (let c of cs)
+        console.log(cs.length + " sections");
+        for (let c of cs) {
+            console.log("evalling");
             eval(abtoascii(c));
+            console.log("evalled");
+        }
 
         for (let [symbol, addr] of dyninfo.def) {
+            console.log("symbol " + symbol + " addr " + addr)
             if (symbol in this.vm.defs ||
                 symbol in this.vm.defuns) {
                 throw "double definition: " + symbol;
             }
-            this.vm.defs[symbol] = addr;
+            this.vm.defs[symbol] = addr - 0x4000 + module.imports.sys.got;
         }
         for (let [symbol, addr] of dyninfo.defun) {
+            console.log("symbol " + symbol + " addr " + addr)
             if (symbol in this.vm.defs ||
                 symbol in this.vm.defuns) {
                 throw "double definition: " + symbol;
             }
-            this.vm.defuns[symbol] = addr;
+            this.vm.defuns[symbol] = addr + module.imports.sys.plt;
         }
         for (let [symbol, addr] of dyninfo.ref) {
+            console.log("Symbol " + symbol + " addr " + addr)
             if (symbol in this.vm.defs) {
                 this.HEAPU32[addr>>2] = this.vm.defs[symbol];
             } else if (symbol in this.vm.defuns) {
@@ -1410,12 +1417,18 @@ ThinThin.dlopen = function (cpath)
                 throw "unresolved reference: " + symbol;
             }
         }
-    }).catch((e) => { return -%{ENOMEM}; });
+    }).catch((e) => { console.log(e); return -%{ENOMEM}; });
 };
 
 ThinThin.dlsym = function (csym)
 {
-    var symbol = CStringAt(this.HEAP8, csym);
+    return new Promise((resolve, reject) => {
+        var symbol = CStringAt(this.HEAP8, csym);
 
-    return this.vm.defs[symbol] || this.vm.defuns[symbol];
+        let ret = this.vm.defs[symbol] || this.vm.defuns[symbol] || 777;
+
+        console.log("ret " + ret);
+
+        resolve(ret);
+    });
 };

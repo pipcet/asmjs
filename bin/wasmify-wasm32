@@ -1,0 +1,25 @@
+#!/bin/bash
+TMP1=$(mktemp);
+TMP2=$(mktemp);
+TMP3=$(mktemp);
+TMP4=$(mktemp);
+TMP5=$(mktemp);
+TMP6=$(mktemp);
+TMP7=$(mktemp);
+TMP8=$(mktemp);
+TMP9=$(mktemp);
+TMPD=$(mktemp -d);
+if [ x"$JS" = x ]; then
+    JS=$(which js)
+fi
+if [ x"$ASMJSDIR" = x ]; then
+    ASMJSDIR=$HOME/git/asmjs
+fi
+if [ x"$DELAY" = x ]; then
+    DELAY=1
+fi
+wasm32-virtual-wasm32-elfedit "$1" --output-type=exec
+wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32.cpp-lds.lds --warn-unresolved "$1" $ASMJSDIR/lib/wasm32-headers.o  -o $TMP5 --no-check-sections || exit 1
+wasm32-virtual-wasm32-ld -E -T $ASMJSDIR/lds/wasm32-wasmify.lds $TMP5 -o $TMP6 || exit 1
+$ASMJSDIR/bin/wasmrewrite $TMP6 > $TMP8
+cat $TMP8

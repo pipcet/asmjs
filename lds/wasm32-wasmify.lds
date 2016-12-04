@@ -4,6 +4,7 @@ SECTIONS
   .data : SUBALIGN(1)  {
       *(.output)
       *(.asmjs.header)
+      *(.got*)
       *(.data)
       *(.bss)
       *(.preinit_array)
