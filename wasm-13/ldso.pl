@@ -46,27 +46,33 @@ for my $file (@ARGV) {
 print "var dyninfo = {\n";
 
 print "    ref: [\n";
+my @l;
 for my $symbol (keys %ref) {
     for my $addr (keys %{$ref{$symbol}}) {
-        print "\t[\"$symbol\", $addr],\n";
+        push @l, "\t[\"$symbol\", $addr]";
     }
 }
+print join(",\n", @l);
 print "    ],\n";
 
 print "    def: [\n";
+my @l;
 for my $symbol (keys %def) {
     for my $addr (keys %{$def{$symbol}}) {
-        print "\t[\"$symbol\", $addr],\n";
+        push @l, "\t[\"$symbol\", $addr]";
     }
 }
+print join(",\n", @l);
 print "    ],\n";
 
 print "    defun: [\n";
+my @l;
 for my $symbol (keys %defun) {
     for my $addr (keys %{$defun{$symbol}}) {
-        print "\t[\"$symbol\", $addr],\n";
+        push @l, "\t[\"$symbol\", $addr]";
     }
 }
+print join(",\n", @l);
 print "    ],\n";
 
 print "};\n";
