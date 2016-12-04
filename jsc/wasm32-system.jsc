@@ -87,7 +87,9 @@ Wasm32ModuleSection.prototype.instantiate = function (thread, vm)
     this.imports.sys.memory = vm.memory;
 
     this.instancePromise = WebAssembly.instantiate(this.bytes, this.imports).then((instance) => {
+        console.log(instance.module + " " + module);
         this.instance = instance.instance;
+        this.wamodule = instance.module;
         thread.exports = this.instance.exports;
         thread.memory = this.instance.exports._memory.buffer;
         thread.table = this.instance.exports._table;
