@@ -37,8 +37,8 @@
   __wasm_##name##_header = .;                                       \
   BYTE(1);                                                           \
   BYTE(0);                                                           \
-  BYTE(0x23); \
-  BYTE(0x00); \
+  BYTE(0x41);                                                        \
+  LONGLEB128(0x4000);                                                \
   BYTE(0x0b);                                                        \
   LONGLEB128(__wasm_##name##_segment_end - __wasm_##name##_segment); \
   __wasm_##name##_header_end = .;
@@ -121,8 +121,6 @@ SECTIONS
      *(.got*)
      . = ALIGN(., 16);
      *(.data*)
-     . = ALIGN(., 16);
-     *(.tm_clone_table)
      . = ALIGN(., 16);
      *(.gnu.linkonce.d.*)
      . = ALIGN(., 16);
