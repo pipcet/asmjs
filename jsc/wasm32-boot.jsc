@@ -1,7 +1,5 @@
 var vm = new Wasm32VM();
-var section = new Wasm32ModuleSection(os.file.readFile(path, "binary"));
-var module = new Wasm32Module();
-module.add_section(section);
+var module = new Wasm32Module(os.file.readFile(path, "binary"));
 var system = new Wasm32System();
 
 function abtoascii(ab)
@@ -21,8 +19,10 @@ function abtoascii(ab)
     return s;
 }
 
+var mystep;
+
 system.instantiate(module, vm, args, environment_variables()).then(() => {
-    var cs = WebAssembly.Module.customSections(module.sections["undefined"].wamodule, "dyninfo");
+    var cs = WebAssembly.Module.customSections(module.module, "dyninfo");
     for (let c of cs) {
         let s = abtoascii(c);
         eval(s);
@@ -35,37 +35,46 @@ system.instantiate(module, vm, args, environment_variables()).then(() => {
          * Possibly a remnant of the incomplete 64-bitification. */
         var sp = system.threads[0].%{tp1[&threadpage::sp]} + 0x10;
         var rpc = 0;
-        while (1) {
-            //console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
+        mystep = () => {
+            console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
+                console.log("pc0 " + pc0 + " dpc " + dpc + " real dpc " + system.threads[0].HEAPU32[sp+16>>2] + " sp " + sp);
             var ret;
             if (first) {
+                console.log("first");
                 ret = system.threads[0].exports._start(dpc, sp, 0, 0, rpc, pc0);
                 first = false;
             } else {
-                ret = system.threads[0].indcall(dpc, sp, 0, 0, rpc, pc0);
+                try {
+                    ret = system.threads[0].indcall(dpc, sp, 0, 0, rpc, pc0);
+                } catch (e) {
+                    console.log("exception");
+                    console.log(e);
+                    console.log(e.stack);
+                }
             }
-            //console.log("called: " + ret);
+            console.log("called: " + ret);
 
             if (ret & 3) {
                 sp = ret;
                 sp &= -4;
-                //for (var off = -48; off < 48; off += 4)
-                    //console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
                 pc0 = system.threads[0].HEAPU32[sp+8>>2];
                 dpc = 0;
+                console.log("pc0 " + pc0 + " dpc " + dpc + " real dpc " + system.threads[0].HEAPU32[sp+16>>2] + " sp " + sp);
                 //console.log("pc0 " + pc0 + " dpc " + dpc);
-                sp += 16;
+                //sp += 16;
             } else {
                 sp = ret; //system.threads[0].HEAPU32[ret+16>>2];
-                sp = system.threads[0].HEAPU32[ret>>2];
-                //for (var off = -48; off < 48; off += 4)
-                    //console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
+                for (var off = -192; off < 192; off += 4)
+                    console.log("off " + off + " p " + (sp+off) + " v " + system.threads[0].HEAPU32[sp+off>>2]);
+                sp = system.threads[0].HEAPU32[sp>>2];
                 pc0 = system.threads[0].HEAPU32[sp+8>>2];
                 dpc = 0; //system.threads[0].HEAPU32[sp+28>>2];
-                //console.log("pc0 " + pc0 + " dpc " + dpc);
-                sp += 16;
+                console.log("pc0 " + pc0 + " dpc " + dpc + " real dpc " + system.threads[0].HEAPU32[sp+16>>2] + " sp " + sp);
+                //sp += 16;
             }
-        }
+            Promise.resolve().then(mystep);
+        };
+        mystep();
     } catch (e) {
         console.log("exception");
         console.log(e);
