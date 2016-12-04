@@ -17,33 +17,63 @@
 
 var global = this;
 
+/* process -> vm
+ *         -> thread
+ * module -> module_section
+ */
+
+/* A virtual memory object. */
+function Wasm32VM()
+{
+    this.table = new WebAssembly.Table({element:"anyfunc",initial:1024,maximum:65536});
+    this.table_length = 0;
+    this.memory = new WebAssembly.Memory({initial: 16384, maximum: 16384});
+
+    this.HEAP8 = new Int8Array(this.memory.buffer);
+    this.HEAP16 = new Int16Array(this.memory.buffer);
+    this.HEAP32 = new Int32Array(this.memory.buffer);
+    this.HEAPU8 = new Uint8Array(this.memory.buffer);
+    this.HEAPU16 = new Uint16Array(this.memory.buffer);
+    this.HEAPU32 = new Uint32Array(this.memory.buffer);
+    this.HEAPF32 = new Float32Array(this.memory.buffer);
+    this.HEAPF64 = new Float64Array(this.memory.buffer);
+}
+
+Wasm32VM.prototype.sbrk = function ()
+{
+    return 512 * 1024 * 1024; // XXX
+};
+
 function Wasm32ModuleSection(bytes)
 {
     this.bytes = bytes;
 }
 
-Wasm32ModuleSection.prototype.fill_table = function (thread)
+Wasm32ModuleSection.prototype.fill_table = function (thread, vm)
 {
     var pc = 0;
     var seen = 0;
     var count = 0;
+    var off = vm.table_length;
     do {
         var str = pc.toString(16);
         while (str.length < 16)
             str = str + " ";
         var f = thread.exports["f_" + str];
         if (f) {
-            thread.table.set(pc, f);
+            thread.table.set(pc+off, f);
             seen++;
         } else if (seen || count++ == 128) {
             break;
         }
         pc++;
     } while (true);
+    vm.table_length += pc;
 };
 
-Wasm32ModuleSection.prototype.instantiate = function (thread)
+Wasm32ModuleSection.prototype.instantiate = function (thread, vm)
 {
+    this.vm = vm;
     this.imports = {};
     this.imports.sys = {};
 
@@ -51,16 +81,17 @@ Wasm32ModuleSection.prototype.instantiate = function (thread)
     this.imports.sys.eh_return = thread.eh_return.bind(thread);
     this.imports.sys.indcall = thread.indcall.bind(thread);
     this.imports.sys.trace = thread.trace.bind(thread);
-    this.imports.sys.got = 0;
-    this.imports.sys.table = new WebAssembly.Table({element:"anyfunc",initial:1024,maximum:65536});
-    this.imports.sys.memory = new WebAssembly.Memory({initial:16384, maximum:16384});
+    this.imports.sys.got = 0x4040;
+    this.imports.sys.plt = vm.table_length;
+    this.imports.sys.table = vm.table;
+    this.imports.sys.memory = vm.memory;
 
     this.instancePromise = WebAssembly.instantiate(this.bytes, this.imports).then((instance) => {
         this.instance = instance.instance;
         thread.exports = this.instance.exports;
         thread.memory = this.instance.exports._memory.buffer;
         thread.table = this.instance.exports._table;
-        this.fill_table(thread);
+        this.fill_table(thread, vm);
         //console.log(thread.memory);
         //for (let l in thread.memory)
             //console.log(l);
@@ -79,11 +110,11 @@ Wasm32Module.prototype.add_section = function (section)
     this.sections[section.name] = section;
 };
 
-Wasm32Module.prototype.instantiate = function (thread)
+Wasm32Module.prototype.instantiate = function (thread, vm)
 {
     var promises = [];
     for (var name in this.sections) {
-        promises.push(this.sections[name].instantiate(thread));
+        promises.push(this.sections[name].instantiate(thread, vm));
     }
     return Promise.all(promises);
 };
@@ -99,14 +130,16 @@ function Wasm32Thread(process, module, threadpage)
     this.system = system;
     system.threads.push(this);
 
-    this.HEAP8 = process.HEAP8;
-    this.HEAP16 = process.HEAP16;
-    this.HEAP32 = process.HEAP32;
-    this.HEAPU8 = process.HEAPU8;
-    this.HEAPU16 = process.HEAPU16;
-    this.HEAPU32 = process.HEAPU32;
-    this.HEAPF32 = process.HEAPF32;
-    this.HEAPF64 = process.HEAPF64;
+    let vm = new Wasm32VM();
+
+    this.HEAP8 = vm.HEAP8;
+    this.HEAP16 = vm.HEAP16;
+    this.HEAP32 = vm.HEAP32;
+    this.HEAPU8 = vm.HEAPU8;
+    this.HEAPU16 = vm.HEAPU16;
+    this.HEAPU32 = vm.HEAPU32;
+    this.HEAPF32 = vm.HEAPF32;
+    this.HEAPF64 = vm.HEAPF64;
 
     this.threadpage = threadpage;
 
@@ -602,10 +635,10 @@ function Wasm32System()
     this.runqueue = [];
 }
 
-Wasm32System.prototype.init_sp = function (heap, off, args, env)
+Wasm32System.prototype.init_sp = function (vm, off, args, env)
 {
-    var HEAP8 = new Int8Array(heap);
-    var HEAP32 = new Int32Array(heap);
+    var HEAP8 = vm.HEAP8;
+    var HEAP32 = vm.HEAP32;
     var i;
     var eo = [];
     var ao = [];
@@ -663,35 +696,33 @@ Wasm32System.prototype.init_sp = function (heap, off, args, env)
 #{JSV<zeropage*> zp("4096", "HEAP");}
 #{JSV<threadpage*> tp1("8192", "HEAP");}
 
-Wasm32System.prototype.instantiate = function (module, args, env)
+Wasm32System.prototype.instantiate = function (module, vm, args, env)
 {
     var process;
     var thread;
     if (!this.threads.length) {
         process = new Wasm32Process(this);
         thread = new Wasm32Thread(process, module, 8192);
-        return thread.module.instantiate(thread).then(() => {
+        return thread.module.instantiate(thread, vm).then(() => {
             var size = module.top_of_memory;
-            var heap = thread.memory;
-            process.heap = heap;
-            process.HEAP8 = new Int8Array(process.heap);
-            process.HEAP16 = new Int16Array(process.heap);
-            process.HEAP32 = new Int32Array(process.heap);
-            process.HEAPU8 = new Uint8Array(process.heap);
-            process.HEAPU16 = new Uint16Array(process.heap);
-            process.HEAPU32 = new Uint32Array(process.heap);
-            process.HEAPF32 = new Float32Array(process.heap);
-            process.HEAPF64 = new Float64Array(process.heap);
-            thread.HEAP8 = new Int8Array(process.heap);
-            thread.HEAP16 = new Int16Array(process.heap);
-            thread.HEAP32 = new Int32Array(process.heap);
-            thread.HEAPU8 = new Uint8Array(process.heap);
-            thread.HEAPU16 = new Uint16Array(process.heap);
-            thread.HEAPU32 = new Uint32Array(process.heap);
-            thread.HEAPF32 = new Float32Array(process.heap);
-            thread.HEAPF64 = new Float64Array(process.heap);
+            process.HEAP8 = vm.HEAP8;
+            process.HEAP16 = vm.HEAP16;
+            process.HEAP32 = vm.HEAP32;
+            process.HEAPU8 = vm.HEAPU8;
+            process.HEAPU16 = vm.HEAPU16;
+            process.HEAPU32 = vm.HEAPU32;
+            process.HEAPF32 = vm.HEAPF32;
+            process.HEAPF64 = vm.HEAPF64;
+            thread.HEAP8 = vm.HEAP8;
+            thread.HEAP16 = vm.HEAP16;
+            thread.HEAP32 = vm.HEAP32;
+            thread.HEAPU8 = vm.HEAPU8;
+            thread.HEAPU16 = vm.HEAPU16;
+            thread.HEAPU32 = vm.HEAPU32;
+            thread.HEAPF32 = vm.HEAPF32;
+            thread.HEAPF64 = vm.HEAPF32;
 
-            var HEAP32 = new Int32Array(heap);
+            var HEAP32 = vm.HEAP32;
 
             %{zp[&zeropage::top_of_memory] = "module.top_of_memory"}
             %{zp[&zeropage::top_of_sbrk] = "module.start_of_sbrk"}
@@ -705,7 +736,7 @@ Wasm32System.prototype.instantiate = function (module, args, env)
             %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
 
             module.top_of_stack = 1023 * 1024 * 1024;
-            var sp = this.init_sp(heap, module.top_of_stack, args, env);
+            var sp = this.init_sp(vm, module.top_of_stack, args, env);
             %{tp1[&threadpage::sp] = "sp"}
             %{tp1[&threadpage::initsp] = "sp"}
 

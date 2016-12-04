@@ -1,9 +1,32 @@
+var vm = new Wasm32VM();
 var section = new Wasm32ModuleSection(os.file.readFile(path, "binary"));
 var module = new Wasm32Module();
 module.add_section(section);
 var system = new Wasm32System();
 
-system.instantiate(module, args, environment_variables()).then(() => {
+function abtoascii(ab)
+{
+    let h8 = new Uint8Array(ab);
+    let s = "";
+
+    for (var i = 0; i < h8.byteLength; i++) {
+        let c = h8[i];
+
+        if (c >= 0x80)
+            throw "non-ASCII byte";
+
+        s += String.fromCharCode(h8[i]);
+    }
+
+    return s;
+}
+
+system.instantiate(module, vm, args, environment_variables()).then(() => {
+    var cs = WebAssembly.Module.customSections(module, "dyninfo");
+    for (let c of cs) {
+        let s = abtoascii(c);
+        eval(s);
+    }
     try {
         var first = true;
         var dpc = -1;
