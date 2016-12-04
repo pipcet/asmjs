@@ -43,7 +43,7 @@ for my $file (@ARGV) {
     }
 }
 
-print "{\n";
+print "var dyninfo = {\n";
 
 print "    ref: [\n";
 for my $symbol (keys %ref) {
@@ -69,5 +69,26 @@ for my $symbol (keys %defun) {
 }
 print "    ],\n";
 
-print "}\n";
+print "};\n";
+
+print <<"EOF";
+let defun = {};
+let def = {};
+let ref = {};
+
+for (let [symbol, addr] of dyninfo.def)
+    def[symbol] = addr;
+for (let [symbol, addr] of dyninfo.defun)
+    defun[symbol] = addr;
+
+for (let [symbol, addr] of dyninfo.ref) {
+    if (symbol in def) {
+        system.HEAPU32[addr>>2] = def[symbol];
+    } else if (symbol in defun) {
+        this.HEAPU32[addr>>2] = defun[symbol];
+    } else {
+        throw "unresolved reference";
+    }
+}
+EOF
 exit 0;
