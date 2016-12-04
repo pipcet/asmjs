@@ -118,6 +118,8 @@ SECTIONS
   {
      . = ALIGN(., 16);
      __data_start = .;
+     *(.got*)
+     . = ALIGN(., 16);
      *(.data*)
      . = ALIGN(., 16);
      *(.gnu.linkonce.d.*)
