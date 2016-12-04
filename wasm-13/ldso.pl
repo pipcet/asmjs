@@ -89,7 +89,7 @@ for (let [symbol, addr] of dyninfo.defun)
 
 for (let [symbol, addr] of dyninfo.ref) {
     if (symbol in def) {
-        system.HEAPU32[addr>>2] = def[symbol];
+        this.HEAPU32[addr>>2] = def[symbol];
     } else if (symbol in defun) {
         this.HEAPU32[addr>>2] = defun[symbol];
     } else {

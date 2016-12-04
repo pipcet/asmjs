@@ -233,6 +233,7 @@ var run;
 
 Wasm32Thread.prototype.stop = function (reason)
 {
+    return;
     var stopped = this.stopped();
     %{tp[&threadpage::stop_reason]} = reason;
 

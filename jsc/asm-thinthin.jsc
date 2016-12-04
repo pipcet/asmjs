@@ -1410,13 +1410,20 @@ ThinThin.dlopen = function (cpath)
         for (let [symbol, addr] of dyninfo.ref) {
             console.log("Symbol " + symbol + " addr " + addr)
             if (symbol in this.vm.defs) {
+                addr -= 0x4000;
+                addr += module.imports.sys.got;
+            console.log("Symbol " + symbol + " addr " + addr)
                 this.HEAPU32[addr>>2] = this.vm.defs[symbol];
             } else if (symbol in this.vm.defuns) {
+                addr -= 0x4000;
+                addr += module.imports.sys.got;
                 this.HEAPU32[addr>>2] = this.vm.defuns[symbol];
             } else {
                 throw "unresolved reference: " + symbol;
             }
         }
+
+        return 0;
     }).catch((e) => { console.log(e); return -%{ENOMEM}; });
 };
 
