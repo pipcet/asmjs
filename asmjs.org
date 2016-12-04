@@ -328,6 +328,10 @@ Dynamic linking/loading does not currently work, though some initial code has be
 - no PLT for now
 - that means all code, including the main executable, must be compiled with -fPIC
 - it also means all calls of global functions will be indirect
+- eager linking only
+- needs WebAssembly.Module.customSections (https://bugzilla.mozilla.org/show_bug.cgi?id=1321122)
+
+The idea, for now, is not to have a dynamically-linked glibc, but to dlopen() some small-ish modules from a large static executable. Dynlinking glibc should work, of course, but it'll be too slow and not really advantageous.
 
 **** debugging
 Explicitly calling a gdb stub from C code to allow GDB to inspect data on the VM stack and modify it used to work. Breakpoints do not yet work, and are expected to require special build options and incur significant performance penalties when they do. Function calls made by GDB do not yet work.
