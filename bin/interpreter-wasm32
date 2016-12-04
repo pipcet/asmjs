@@ -26,7 +26,7 @@ $ASMJSDIR/bin/wasmrewrite $TMP6 > $TMP8
 rm $TMP1 $TMP2 $TMP3 $TMP4 $TMP5
 (sleep $DELAY && rm $TMP6 $TMP7) & disown
 chmod u+x $TMP7
-./wasmrewrite/wasmsect <(echo "console.log('hi')") >> $TMP8
+# ./wasmrewrite/wasmsect <(echo "console.log('hi')") >> $TMP8
 if [ x"$GDB" != x ]; then
     mkfifo $TMPD/in
     mkfifo $TMPD/out
