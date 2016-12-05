@@ -24,7 +24,7 @@ var global = this;
 /* A virtual memory object. */
 function Wasm32VM()
 {
-    this.table = new WebAssembly.Table({element:"anyfunc",initial:1024,maximum:65536});
+    this.table = new WebAssembly.Table({element:"anyfunc",initial:65536,maximum:65536});
     this.table_length = 0;
     this.memory = new WebAssembly.Memory({initial: 16384, maximum: 16384});
 
@@ -99,6 +99,8 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
         this.instance = instance.instance;
         this.module = instance.module;
         thread.exports = this.instance.exports;
+        for (var exp in thread.exports)
+            console.log(exp);
         thread.memory = this.instance.exports._memory.buffer;
         thread.table = this.instance.exports._table;
         this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
@@ -300,6 +302,9 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     }
 
     var nargs = this.HEAP32[sp1+8>>2];
+    console.log("nargs " + nargs);
+    if (nargs == -1)
+        nargs = 7;
     var is_void = ((nargs & 0x40000000) != 0) !=
         ((nargs & 0x80000000) != 0);
     var is_void_2 = this.HEAP32[sp1>>2] != 0;
@@ -396,7 +401,7 @@ Wasm32Thread.prototype.step = function ()
     while (true) {
         console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
         if (first) {
-            ret = system.threads[0].exports._start(-1, sp+16, 0, 0, rpc, pc0);
+            ret = system.threads[0].exports.main(-1, sp+16, 0, 0, rpc, pc0);
             this.first = false;
         } else {
             ret = system.threads[0].indcall(dpc, sp+16, 0, 0, rpc, pc0);

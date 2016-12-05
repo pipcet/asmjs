@@ -28,8 +28,14 @@ system.instantiate(module, vm, args, environment_variables()).then(() => {
     try {
         var f;
         f = () => {
-            system.threads[0].step();
-            Promise.resolve().then(f);
+            try {
+                system.threads[0].step();
+                Promise.resolve().then(f);
+            } catch (e) {
+                console.log("another exception");
+                console.log(e);
+                console.log(e.stack);
+            }
         };
         f();
     } catch (e) {

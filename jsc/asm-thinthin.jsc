@@ -8,6 +8,7 @@
 #{#include <errno.h>}
 #{#include <sys/ioctl.h>}
 #{#include <sys/poll.h>}
+#{#include <sys/uio.h>}
 #{#include <dirent.h>}
 #{#include "zeropage.h"}
 #{#define AT_FDROOTD -101}
@@ -25,6 +26,7 @@
 #{JSV<pollfd*> fdsptr("fdsptr");}
 #{JSV<int*> intptr("intptr");}
 #{JSV<size_t> i("i");}
+#{JSV<iovec*> iov("iov");}
 
 var ThinThin = {};
 
@@ -1438,4 +1440,26 @@ ThinThin.dlsym = function (csym)
 
         resolve(ret);
     });
+};
+
+ThinThin.writev = function (fd, iov, iovcnt)
+{
+    var gret = 0;
+    if (iovcnt == 0)
+        return 0;
+    var i = 0;
+    while (%{iov[i+&iovec::iov_len]} == 0)
+        i++;
+    var ret = ThinThin.write.call(this, fd, %{iov[i+&iovec::iov_base]}, %{iov[i+&iovec::iov_len]});
+
+    return ret;
+};
+
+ThinThin.syscall = function (n, ...args)
+{
+    switch (n) {
+    case 20:
+        return ThinThin.writev.call(this, args[1], args[3], args[5]);
+    }
+    return args[5];
 };

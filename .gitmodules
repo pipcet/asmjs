@@ -41,3 +41,7 @@
 [submodule "subrepos/binaryen"]
 	path = subrepos/binaryen
 	url = https://github.com/pipcet/binaryen
+[submodule "subrepos/musl"]
+	path = subrepos/musl
+	url = https://github.com/pipcet/musl
+	branch = asmjs
