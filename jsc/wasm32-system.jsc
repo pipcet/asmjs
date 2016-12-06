@@ -39,7 +39,8 @@ function Wasm32VM()
 
     this.defs = {};
     this.defuns = {};
-    this.refs = [];
+    this.refs = {};
+    this.refuns = {};
 }
 
 Wasm32VM.prototype.sbrk = function ()
@@ -65,7 +66,7 @@ Wasm32Module.prototype.fill_table = function (thread, vm, got, plt)
             str = str + " ";
         var f = thread.exports["f_" + str];
         if (f) {
-            console.log("defining " + pc + "+" + plt)
+            console.log("defining " + pc + "+" + plt + " to " + f)
             thread.table.set(pc+plt, f);
             seen++;
         } else if (seen || count++ == 128) {
@@ -74,6 +75,89 @@ Wasm32Module.prototype.fill_table = function (thread, vm, got, plt)
         pc++;
     } while (true);
     vm.table_length += pc;
+};
+
+Wasm32Module.prototype.parse_dyninfo = function ()
+{
+    var dyninfo = this.dyninfo;
+    var pltcount = dyninfo.plt_end - dyninfo.plt_bias;
+    var vm = this.vm;
+
+    for (let [symbol, addr] of dyninfo.def) {
+        console.log("symbol " + symbol + " addr " + addr)
+        if (symbol in vm.defs ||
+                symbol in vm.defuns) {
+            //throw "double definition: " + symbol;
+        }
+        vm.defs[symbol] = addr - 0x4000 + this.imports.sys.got;
+
+        if (vm.refs[symbol]) {
+            let refs = vm.refs[symbol];
+            delete vm.refs[symbol];
+
+            for (let addr2 of refs)
+                vm.HEAPU32[addr2>>2] = addr;
+        }
+    }
+    for (let [symbol, addr] of dyninfo.defun) {
+        console.log("symbol " + symbol + " addr " + addr)
+        if (symbol in vm.defs ||
+            symbol in vm.defuns) {
+            //throw "double definition: " + symbol;
+        }
+        addr += this.imports.sys.plt;
+        vm.defuns[symbol] = addr;
+
+        if (vm.refs[symbol]) {
+            let refs = vm.refs[symbol];
+            delete vm.refs[symbol];
+
+            for (let addr2 of refs)
+                vm.HEAPU32[addr2>>2] = addr;
+        }
+
+        if (vm.refuns[symbol]) {
+            let refs = vm.refuns[symbol];
+            delete vm.refuns[symbol];
+
+            for (let addr2 of refs) {
+                console.log('resolving ' + addr2 + ' to ' + addr);
+                vm.table.set(addr2, vm.table.get(addr));
+            }
+        }
+    }
+    for (let [symbol, addr] of dyninfo.ref) {
+        console.log("Symbol " + symbol + " addr " + addr)
+        if (symbol in vm.defs) {
+            addr -= 0x4000;
+            addr += this.imports.sys.got;
+            console.log("Symbol " + symbol + " addr " + addr)
+            vm.HEAPU32[addr>>2] = vm.defs[symbol];
+        } else if (symbol in vm.defuns) {
+            addr -= 0x4000;
+            addr += this.imports.sys.got;
+            vm.HEAPU32[addr>>2] = vm.defuns[symbol];
+        } else {
+            if (!vm.refs[symbol])
+                vm.refs[symbol] = [];
+            vm.refs[symbol].push(addr);
+            console.log("unresolved reference: " + symbol);
+        }
+    }
+    for (let [symbol, index] of dyninfo.refun) {
+        console.log("Symbol " + symbol + " addr " + index + " + " + this.imports.sys.plt)
+        if (symbol in vm.defuns) {
+            vm.table.set(index + this.imports.sys.plt, vm.table.get(vm.defuns[symbol]));
+            console.log("Symbol " + symbol + " addr " + vm.defuns[symbol] + " fun " + vm.table.get(index + this.imports.sys.plt));
+        } else {
+            if (!vm.refuns[symbol])
+                vm.refuns[symbol] = [];
+            vm.refuns[symbol].push(index);
+            console.log("unresolved reference: " + symbol);
+        }
+    }
+    console.log("should be resolving " + pltcount + " entries");
+    this.vm.table_length += pltcount;
 };
 
 var first = true;
@@ -95,21 +179,28 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
     this.imports.sys.table = vm.table;
     this.imports.sys.memory = vm.memory;
 
-    this.instancePromise = WebAssembly.instantiate(this.bytes, this.imports).then((instance) => {
-        this.instance = instance.instance;
-        this.module = instance.module;
+    this.modulePromise = WebAssembly.compile(this.bytes);
+    return this.modulePromise.then((module) => {
+        this.module = module;
+        var dyninfo;
+        var cs = WebAssembly.Module.customSections(module, "dyninfo");
+        for (let c of cs) {
+            let s = abtoascii(c);
+            this.dyninfo = eval(s);
+        }
+        //if (!first)
+        //  this.imports.sys.got = gotalloc(dyninfo.data_end - dyninfo.data);
+        return WebAssembly.instantiate(module, this.imports);
+    }).then((instance) => {
+        this.instance = instance;
         thread.exports = this.instance.exports;
-        for (var exp in thread.exports)
-            console.log(exp);
         thread.memory = this.instance.exports._memory.buffer;
         thread.table = this.instance.exports._table;
         this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
-        //console.log(thread.memory);
-        //for (let l in thread.memory)
-            //console.log(l);
+        this.parse_dyninfo();
+    }).catch((e) => {
+        console.log("died instantiating: " + e + "\n" + e.stack);
     });
-
-    return this.instancePromise;
 };
 
 function Wasm32Thread(process, module, threadpage)
@@ -269,13 +360,13 @@ Wasm32Thread.prototype.set_initsp = function (initsp)
 
 Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
 {
-    //console.log(a + " " + b + " " + c + " " + d)
+    console.log(a + " " + b + " " + c + " " + d + " " + pc + " " + sp1);
     //console.log("sp1 " + sp1);
-    //for (var diff = -48; diff < 48; diff += 4)
-        //console.log("@" + diff + ": " + this.HEAPU32[sp1+diff>>2]);
-    //for (var diff = 0; diff < 48; diff += 4)
-        //console.log("@" + diff + ": " + this.HEAPU32[diff>>2]);
-    var sp = sp1 + 16;
+    for (var diff = -48; diff < 48; diff += 4)
+        console.log("@" + diff + ": " + this.HEAPU32[sp1+diff>>2]);
+    for (var diff = 0; diff < 256; diff += 4)
+        console.log("@" + diff.toString(16) + ": " + this.HEAPU32[0x4000+diff>>2].toString(16));
+    var sp = sp1 - 56 - 16 + 16;
     var modstr = b;
     var funstr = c;
     var mod = CStringAt(this.HEAPU8, modstr);
@@ -316,7 +407,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     if (nargs >= 0) {
         for (var ai = 0; ai < nargs; ai++) {
             args[ai] = this.HEAP32[sp1+16+4*ai>>2];
-            //console.log("arg " + ai + " " + args[ai] + " " + CStringAt(this.HEAP8, args[ai]));
+            console.log("arg " + ai + " " + args[ai] + " " + CStringAt(this.HEAP8, args[ai]));
         }
     }
 
@@ -332,6 +423,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         }
         throw "couldn't find " + fun;
     default:
+        i.dont.exist++;
         throw("giving up, pc " + pc.toString(16) + " fun " + funstr.toString(16) + " " + fun + " mod " + modstr.toString(16) + " " + mod);
     }
 
@@ -348,7 +440,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         return sp|1;
     }
 
-    //console.log("retv " + retv)
+    console.log("retv " + retv)
     if (retv !== undefined && retv == retv) {
         this.set_rv(retv);
     } else if (retv != retv) {
