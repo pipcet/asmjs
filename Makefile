@@ -344,6 +344,11 @@ build/glibc.clean: FORCE
 	rm -f build/glibc.configure
 	rm -f build/glibc.make
 
+build/wasm32/musl.make: build/wasm32/musl.dir build/wasm32/musl.configure
+	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/musl
+	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/musl install
+	touch $@
+
 build/asmjs/gcc-final.configure: src/gcc-final.dir build/asmjs/gcc-final.dir | build/asmjs/glibc.make
 	(cd build/asmjs/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
@@ -654,6 +659,10 @@ src/glibc.dir: src/.dir
 src/graphviz.dir: src/.dir
 	test -d src/graphviz || mkdir src/graphviz
 	(cd subrepos/graphviz; tar c --exclude .git .) | (cd src/graphviz; tar x)
+	touch $@
+
+src/musl.dir: src/.dir
+	test -L src/musl || ln -sf ../subrepos/musl src/musl
 	touch $@
 
 src/ncurses.dir: src/.dir
