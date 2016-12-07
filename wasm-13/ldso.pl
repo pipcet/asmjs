@@ -6,6 +6,8 @@ my %def;
 my %defun;
 my %ref;
 my %refun;
+my %fixup;
+my %fixupfun;
 my $plt_bias;
 my $plt_end;
 my $data;
@@ -40,6 +42,14 @@ for my $file (@ARGV) {
                 my ($refaddr, $symbol) = (hex $1,$2);
 
                 $ref{$symbol}{$refaddr} = 1;
+            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32 \*ABS\*\+0x([0-9a-f]*)$/) {
+                my ($refaddr, $defaddr) = (hex $1, hex $2);
+
+                $fixup{$refaddr}{$defaddr} = 1;
+            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32 ([a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+                my ($refaddr, $defaddr) = (hex $1, hex $3);
+
+                $fixup{$refaddr}{$defaddr} = 1;
             } elsif (/^([0-9a-f]*) R_ASMJS_LEB128_PLT_INDEX ([a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$2);
 
@@ -106,6 +116,26 @@ my @l;
 for my $symbol (keys %defun) {
     for my $addr (keys %{$defun{$symbol}}) {
         push @l, "\t[\"$symbol\", $addr]";
+    }
+}
+print join(",\n", @l);
+print "    ],\n";
+
+print "    fixup: [\n";
+my @l;
+for my $addr1 (keys %fixup) {
+    for my $addr2 (keys %{$fixup{$addr1}}) {
+        push @l, "\t[$addr1, $addr2]";
+    }
+}
+print join(",\n", @l);
+print "    ],\n";
+
+print "    fixupfun: [\n";
+my @l;
+for my $addr1 (keys %fixupfun) {
+    for my $addr2 (keys %{$fixupfun{$addr1}}) {
+        push @l, "\t[$addr1, $addr2]";
     }
 }
 print join(",\n", @l);
