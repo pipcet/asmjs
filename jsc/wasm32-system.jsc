@@ -83,20 +83,43 @@ Wasm32Module.prototype.parse_dyninfo = function ()
     var pltcount = dyninfo.plt_end - dyninfo.plt_bias;
     var vm = this.vm;
 
+    for (let [addr1, addr2] of dyninfo.fixup) {
+        /* XXX this happens for function pointers cast to void * and stored
+         * as data. Fix it with a better check one day. */
+        if (addr2 < 0x4000) {
+            addr1 = addr1 - 0x4000 + this.imports.sys.got;
+            addr2 = addr2 + this.imports.sys.plt;
+
+            vm.HEAPU32[addr1>>2] += addr2;
+        } else {
+            addr1 = addr1 - 0x4000 + this.imports.sys.got;
+            addr2 = addr2 - 0x4000 + this.imports.sys.got;
+
+            vm.HEAPU32[addr1>>2] += addr2;
+        }
+    }
+
     for (let [symbol, addr] of dyninfo.def) {
-        console.log("symbol " + symbol + " addr " + addr)
+        console.log("defsymbol " + symbol + " addr " + addr + " got " + this.imports.sys.got)
         if (symbol in vm.defs ||
                 symbol in vm.defuns) {
             //throw "double definition: " + symbol;
         }
-        vm.defs[symbol] = addr - 0x4000 + this.imports.sys.got;
+        addr = addr - 0x4000 + this.imports.sys.got;
+        vm.defs[symbol] = addr;
 
         if (vm.refs[symbol]) {
             let refs = vm.refs[symbol];
             delete vm.refs[symbol];
 
-            for (let addr2 of refs)
+            for (let addr2 of refs) {
+                console.log("defining " + symbol + " at " + addr2 + " to " + addr);
+                if (symbol == "stderr") {
+                    for (var off = 0; off < 128; off+=4)
+                        console.log(addr + "+" + off + ": " + vm.HEAPU32[addr+off>>2]);
+                }
                 vm.HEAPU32[addr2>>2] = addr;
+            }
         }
     }
     for (let [symbol, addr] of dyninfo.defun) {
@@ -198,6 +221,8 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
         thread.table = this.instance.exports._table;
         this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
         this.parse_dyninfo();
+
+        return 0;
     }).catch((e) => {
         console.log("died instantiating: " + e + "\n" + e.stack);
     });
@@ -433,8 +458,8 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         this.stop(1);
 
         retv.then(r => {
+            console.log("promise fulfilled, sp " + sp);
             this.extcallRet[sp] = r;
-            this.stop(0);
         });
 
         return sp|1;
@@ -485,7 +510,7 @@ Wasm32Thread.prototype.step = function ()
     if (first === undefined)
         first = true;
     var dpc = this.$dpc;
-    var pc0 = this.$pc0 || 0xa;
+    var pc0 = this.$pc0 || 0x9;
     var sp = this.%{tp1[&threadpage::sp]};
     var rpc = 0;
     var ret;
