@@ -8,6 +8,8 @@ my %ref;
 my %refun;
 my %fixup;
 my %fixupfun;
+my %cachedsize;
+my %copy;
 my $plt_bias;
 my $plt_end;
 my $data;
@@ -20,10 +22,11 @@ for my $file (@ARGV) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^([0-9a-f]*) g D ([a-zA-Z0-9._*]*) [0-9a-f]* (\.protected |\.hidden )*([a-zA-Z0-9_\$]*)$/) {
-                my ($defaddr, $sec, $symbol) = (hex $1, $2, $4);
+            if (/^([0-9a-f]*) g DO? ([a-zA-Z0-9._*]*) ([0-9a-f]*) (\.protected |\.hidden )*([a-zA-Z0-9_\$]*)$/) {
+                my ($defaddr, $sec, $symbol, $size) = (hex $1, $2, $5, hex $3);
                 my $is_function = $sec eq ".wasm.chars.function_index";
 
+                $cachedsize{$symbol} = $size;
                 if ($is_function) {
                     $defun{$symbol}{$defaddr} = 1;
                 } else {
@@ -54,6 +57,10 @@ for my $file (@ARGV) {
                 my ($refaddr, $symbol) = (hex $1,$2);
 
                 $refun{$symbol}{$refaddr} = 1;
+            } elsif (/^([0-9a-f]*) R_ASMJS_COPY ([a-zA-Z0-9_\$]*)$/) {
+                my ($refaddr, $symbol) = (hex $1,$2);
+
+                $copy{$symbol}{$refaddr} = $cachedsize{$symbol};
             }
     }
 
@@ -136,6 +143,16 @@ my @l;
 for my $addr1 (keys %fixupfun) {
     for my $addr2 (keys %{$fixupfun{$addr1}}) {
         push @l, "\t[$addr1, $addr2]";
+    }
+}
+print join(",\n", @l);
+print "    ],\n";
+
+print "    copy: [\n";
+my @l;
+for my $symbol (keys %copy) {
+    for my $addr (keys %{$copy{$symbol}}) {
+        push @l, "\t[\"$symbol\", $addr, $copy{$symbol}{$addr}]";
     }
 }
 print join(",\n", @l);
