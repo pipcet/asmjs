@@ -41,6 +41,7 @@ function Wasm32VM()
     this.defuns = {};
     this.refs = {};
     this.refuns = {};
+    this.copy = {};
 }
 
 Wasm32VM.prototype.sbrk = function ()
@@ -83,6 +84,14 @@ Wasm32Module.prototype.parse_dyninfo = function ()
     var pltcount = dyninfo.plt_end - dyninfo.plt_bias;
     var vm = this.vm;
 
+    if ("copy" in dyninfo)
+    for (let [symbol, addr, size] of dyninfo.copy) {
+        if (!vm.copy[symbol])
+            vm.copy[symbol] = [];
+
+        vm.copy[symbol].push([addr, size]);
+    }
+
     for (let [addr1, addr2] of dyninfo.fixup) {
         /* XXX this happens for function pointers cast to void * and stored
          * as data. Fix it with a better check one day. */
@@ -119,6 +128,13 @@ Wasm32Module.prototype.parse_dyninfo = function ()
                         //console.log(addr + "+" + off + ": " + vm.HEAPU32[addr+off>>2]);
                 }
                 vm.HEAPU32[addr2>>2] = addr;
+            }
+        }
+
+        if (vm.copy[symbol]) {
+            for (let [addr2, size] of vm.copy[symbol]) {
+                for (let i = 0; i < size; i++)
+                    vm.HEAPU8[addr2+i] = vm.HEAPU8[addr+i];
             }
         }
     }
