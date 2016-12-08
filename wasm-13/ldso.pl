@@ -42,8 +42,8 @@ for my $file (@ARGV) {
                 my ($refaddr, $symbol) = (hex $1,$2);
 
                 $ref{$symbol}{$refaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32 \*ABS\*\+0x([0-9a-f]*)$/) {
-                my ($refaddr, $defaddr) = (hex $1, hex $2);
+            } elsif (/^([0-9a-f]*) R_ASMJS_(ABS|REL)32 \*ABS\*\+0x([0-9a-f]*)$/) {
+                my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixup{$refaddr}{$defaddr} = 1;
             } elsif (/^([0-9a-f]*) R_ASMJS_ABS32 ([a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
