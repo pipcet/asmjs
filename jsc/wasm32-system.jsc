@@ -90,12 +90,12 @@ Wasm32Module.prototype.parse_dyninfo = function ()
             addr1 = addr1 - 0x4000 + this.imports.sys.got;
             addr2 = addr2 + this.imports.sys.plt;
 
-            vm.HEAPU32[addr1>>2] += addr2;
+            vm.HEAPU32[addr1>>2] = addr2;
         } else {
             addr1 = addr1 - 0x4000 + this.imports.sys.got;
             addr2 = addr2 - 0x4000 + this.imports.sys.got;
 
-            vm.HEAPU32[addr1>>2] += addr2;
+            vm.HEAPU32[addr1>>2] = addr2;
         }
     }
 
