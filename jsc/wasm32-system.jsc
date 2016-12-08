@@ -164,7 +164,6 @@ Wasm32Module.prototype.parse_dyninfo = function ()
             if (!vm.refs[symbol])
                 vm.refs[symbol] = [];
             vm.refs[symbol].push(addr);
-            console.log("unresolved reference: " + symbol);
         }
     }
     for (let [symbol, index] of dyninfo.refun) {
@@ -176,7 +175,6 @@ Wasm32Module.prototype.parse_dyninfo = function ()
             if (!vm.refuns[symbol])
                 vm.refuns[symbol] = [];
             vm.refuns[symbol].push(index);
-            console.log("unresolved reference: " + symbol);
         }
     }
     //console.log("should be resolving " + pltcount + " entries");
