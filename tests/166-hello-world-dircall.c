@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdio.h>
 
 asm(".include \"wasm32-import-macros.s\"");
 
@@ -9,8 +10,6 @@ asm(".import3 thinthin,dlopen,__thinthin_dlopen\n"
 
 extern int __thinthin_dlopen(const char *path) __attribute__((stackcall));
 extern void *__thinthin_dlsym(const char *sym) __attribute__((stackcall));
-
-#include <stdio.h>
 
 asm(".import3 thinthin,syscall,__thinthin_syscall");
 
@@ -28,9 +27,7 @@ int main(void)
   __thinthin_dlopen("libc.wasm");
   __thinthin_syscall(1, 1, "hi1\n", 4);
   for (;;) {
-    int count = fprintf(stderr, "hey there: %d\n", 3);
-      fputc("0123456789abcdef"[errno&0xf], stderr);
-      fputc("0123456789abcdef"[(errno>>4)&0xf], stderr);
+    int count = fprintf(stderr, "hey there: %p %p\n", stdout, stderr);
     break;
   }
 }
