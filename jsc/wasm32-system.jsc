@@ -366,7 +366,6 @@ var run;
 
 Wasm32Thread.prototype.stop = function (reason)
 {
-    return;
     var stopped = this.stopped();
     %{tp[&threadpage::stop_reason]} = reason;
 
@@ -475,6 +474,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         retv.then(r => {
             //console.log("promise fulfilled, sp " + sp);
             this.extcallRet[sp] = r;
+            this.stop(0);
         });
 
         return sp|1;

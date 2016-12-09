@@ -26,18 +26,20 @@ system.instantiate(module, vm, args, environment_variables()).then(() => {
         eval(s);
     }
     try {
-        var f;
-        f = () => {
+        run = () => {
             try {
                 system.threads[0].step();
-                Promise.resolve().then(f);
+                if (!system.threads[0].stopped())
+                    Promise.resolve().then(run);
+                else
+                    console.log('stopped');
             } catch (e) {
                 console.log("another exception");
                 console.log(e);
                 console.log(e.stack);
             }
         };
-        f();
+        run();
     } catch (e) {
         console.log("exception");
         console.log(e);
