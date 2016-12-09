@@ -18,7 +18,7 @@ my $pc_end;
 my @libs;
 
 for my $file (@ARGV) {
-    open $fh, "./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-objdump -T $file|" or die;
+    open $fh, "wasm32-virtual-wasm32-objdump -T $file|" or die;
 
     while (<$fh>) {
         s/[ \t]+/ /g;
@@ -37,7 +37,7 @@ for my $file (@ARGV) {
             }
     }
 
-    open $fh, "./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-objdump -R $file|" or die;
+    open $fh, "wasm32-virtual-wasm32-objdump -R $file|" or die;
 
     while (<$fh>) {
         s/[ \t]+/ /g;
@@ -66,7 +66,7 @@ for my $file (@ARGV) {
             }
     }
 
-    open $fh, "./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-objdump -t $file|" or die;
+    open $fh, "wasm32-virtual-wasm32-objdump -t $file|" or die;
 
     while (<$fh>) {
         s/[ \t]+/ /g;
