@@ -23,7 +23,7 @@ for my $file (@ARGV) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^([0-9a-f]*) g DO? ([a-zA-Z0-9._*]*) ([0-9a-f]*) (\.protected |\.hidden )*([a-zA-Z0-9_\$]*)$/) {
+            if (/^([0-9a-f]*) g D[OF]? ([a-zA-Z0-9._*]*) ([0-9a-f]*) (\.protected |\.hidden )*([a-zA-Z0-9_\$]*)$/) {
                 my ($defaddr, $sec, $symbol, $size) = (hex $1, $2, $5, hex $3);
                 my $is_function = $sec eq ".wasm.chars.function_index";
 
