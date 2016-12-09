@@ -117,7 +117,7 @@ build/wasm32/musl.dir: build/wasm32/.dir
 	touch $@
 
 build/wasm32/musl.configure: build/wasm32/musl.dir src/musl.dir
-	(cd build/wasm32/musl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/musl/configure --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --build=x86_64-pc-linux-gnu --enable-shared --enable-static)
+	(cd build/wasm32/musl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/musl/configure LDFLAGS="-Wl,-soname=libc.wasm" --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --build=x86_64-pc-linux-gnu --enable-shared --enable-static)
 	touch $@
 
 build/asmjs/ncurses.dir: build/asmjs/.dir
