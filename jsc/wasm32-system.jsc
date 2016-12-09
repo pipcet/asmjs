@@ -555,7 +555,7 @@ Wasm32Thread.prototype.step = function ()
     while (true) {
         console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
         if (first) {
-            ret = system.threads[0].exports.main(-1, sp+16, 0, 0, rpc, pc0);
+            ret = system.threads[0].exports._start(-1, sp+16, 0, 0, rpc, pc0);
             this.first = false;
         } else {
             ret = system.threads[0].indcall(dpc, sp+16, 0, 0, rpc, pc0);
