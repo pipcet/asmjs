@@ -14,6 +14,7 @@ my $plt_bias;
 my $plt_end;
 my $data;
 my $data_end;
+my $pc_end;
 
 for my $file (@ARGV) {
     open $fh, "./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-objdump -T $file|" or die;
@@ -81,6 +82,8 @@ for my $file (@ARGV) {
                     $data = $value;
                 } elsif ($symbol eq ".wasm.data_end") {
                     $data_end = $value;
+                } elsif ($symbol eq ".wasm.pc_end") {
+                    $pc_end = $value;
                 }
             }
     }
@@ -161,7 +164,8 @@ print "    ],\n";
 print "    plt_bias: $plt_bias,\n";
 print "    plt_end: $plt_end,\n";
 print "    data: $data,\n";
-print "    data_end: $data_end\n";
+print "    data_end: $data_end,\n";
+print "    pc_end: $pc_end\n";
 print "};\n";
 
 

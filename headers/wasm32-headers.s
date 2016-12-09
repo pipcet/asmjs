@@ -115,6 +115,17 @@ __wasm_chars_\name\():
         .popsection
         .pushsection .wasm.payload.import
         lstring "sys"
+        lstring "gpo"
+        .byte 3                 ; global
+        .byte 0x7f              ; i32
+        .byte 0                 ; immutable
+        .popsection
+
+        .pushsection .wasm.chars.import
+        .byte 0x00
+        .popsection
+        .pushsection .wasm.payload.import
+        lstring "sys"
         lstring "table"
         .byte 1                 ; table
         .byte 0x70

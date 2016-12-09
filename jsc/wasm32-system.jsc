@@ -211,6 +211,7 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
     this.imports.sys.indcall = thread.indcall.bind(thread);
     this.imports.sys.trace = thread.trace.bind(thread);
     this.imports.sys.got = first ? 0x4000 : 512 * 1024 * 1024;
+    this.imports.sys.gpo = first ? 0 : 0;
     first = false;
     this.imports.sys.plt = vm.table_length;
     this.imports.sys.table = vm.table;
@@ -524,7 +525,7 @@ Wasm32Thread.prototype.step = function ()
     if (first === undefined)
         first = true;
     var dpc = this.$dpc;
-    var pc0 = this.$pc0 || 0x9;
+    var pc0 = this.$pc0 || 0xdeadbeef;
     var sp = this.%{tp1[&threadpage::sp]};
     var rpc = 0;
     var ret;
