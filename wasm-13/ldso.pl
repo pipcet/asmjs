@@ -15,6 +15,7 @@ my $plt_end;
 my $data;
 my $data_end;
 my $pc_end;
+my @libs;
 
 for my $file (@ARGV) {
     open $fh, "./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-objdump -T $file|" or die;
@@ -85,6 +86,19 @@ for my $file (@ARGV) {
                 } elsif ($symbol eq ".wasm.pc_end") {
                     $pc_end = $value;
                 }
+            }
+    }
+
+    open $fh, "wasm32-virtual-wasm32-readelf -d $file|" or die;
+
+    while (<$fh>) {
+        s/[ \t]+/ /g;
+        s/[ \t]+/ /g;
+        chomp;
+            if (/^ ?0x([0-9a-f]*) \(NEEDED\) Shared library: \[([a-zA-Z0-9._*]*)\]$/) {
+                my ($lib) = ($2);
+
+                push @libs, $lib;
             }
     }
 }
@@ -159,6 +173,10 @@ for my $symbol (keys %copy) {
     }
 }
 print join(",\n", @l);
+print "    ],\n";
+
+print "    libs: [\n";
+print join(",\n", map { "\t\"$_\"" } (@libs));
 print "    ],\n";
 
 print "    plt_bias: $plt_bias,\n";
