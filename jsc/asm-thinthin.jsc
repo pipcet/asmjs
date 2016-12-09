@@ -1424,7 +1424,7 @@ ThinThin.syscall = function (n, ...args)
     case 14:
         i.dont.exist++;
     case 20:
-        return ThinThin.writev.call(this, args[1], args[3], args[5]);
+        return ThinThin.writev.call(this, args[0], args[1], args[2]);
     }
     return args[5];
 };

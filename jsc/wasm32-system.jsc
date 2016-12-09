@@ -76,7 +76,6 @@ Wasm32Module.prototype.fill_table = function (thread, vm, got, plt)
         }
         pc++;
     } while (true);
-    vm.table_length += pc;
 };
 
 Wasm32Module.prototype.parse_dyninfo = function ()
@@ -94,19 +93,17 @@ Wasm32Module.prototype.parse_dyninfo = function ()
     }
 
     for (let [addr1, addr2] of dyninfo.fixup) {
-        /* XXX this happens for function pointers cast to void * and stored
-         * as data. Fix it with a better check one day. */
-        if (addr2 < 0x4000) {
-            addr1 = addr1 - 0x4000 + this.imports.sys.got;
-            addr2 = addr2 + this.imports.sys.plt;
+        addr1 = addr1 - 0x4000 + this.imports.sys.got;
+        addr2 = addr2 - 0x4000 + this.imports.sys.got;
 
-            vm.HEAPU32[addr1>>2] = addr2;
-        } else {
-            addr1 = addr1 - 0x4000 + this.imports.sys.got;
-            addr2 = addr2 - 0x4000 + this.imports.sys.got;
+        vm.HEAPU32[addr1>>2] = addr2;
+    }
 
-            vm.HEAPU32[addr1>>2] = addr2;
-        }
+    for (let [addr1, addr2] of dyninfo.fixupfun) {
+        addr1 = addr1 - 0x4000 + this.imports.sys.got;
+        addr2 = addr2 + this.imports.sys.plt;
+
+        vm.HEAPU32[addr1>>2] = addr2;
     }
 
     for (let [symbol, addr] of dyninfo.def) {
@@ -124,10 +121,6 @@ Wasm32Module.prototype.parse_dyninfo = function ()
 
             for (let addr2 of refs) {
                 //console.log("defining " + symbol + " at " + addr2 + " to " + addr);
-                if (symbol == "stderr") {
-                    //for (var off = 0; off < 128; off+=4)
-                        //console.log(addr + "+" + off + ": " + vm.HEAPU32[addr+off>>2]);
-                }
                 vm.HEAPU32[addr2>>2] = addr;
             }
         }
@@ -194,8 +187,7 @@ Wasm32Module.prototype.parse_dyninfo = function ()
             vm.refuns[symbol].push(index);
         }
     }
-    //console.log("should be resolving " + pltcount + " entries");
-    this.vm.table_length += pltcount;
+
     if ("libs" in dyninfo)
         for (let lib of dyninfo.libs) {
             console.log("registering " + lib);
@@ -257,7 +249,11 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
         return WebAssembly.instantiate(module, this.imports);
     }).then((instance) => {
         this.instance = instance;
-        thread.exports = this.instance.exports;
+        if (!thread.exports)
+            thread.exports = {};
+        for (let e in this.instance.exports) {
+            thread.exports[e] = this.instance.exports[e];
+        }
         thread.memory = this.instance.exports._memory.buffer;
         thread.table = this.instance.exports._table;
         this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
