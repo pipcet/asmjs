@@ -42,6 +42,7 @@ function Wasm32VM()
     this.refs = {};
     this.refuns = {};
     this.copy = {};
+    this.libs = {};
 }
 
 Wasm32VM.prototype.sbrk = function ()
@@ -195,6 +196,31 @@ Wasm32Module.prototype.parse_dyninfo = function ()
     }
     //console.log("should be resolving " + pltcount + " entries");
     this.vm.table_length += pltcount;
+    if ("libs" in dyninfo)
+        for (let lib of dyninfo.libs) {
+            console.log("registering " + lib);
+            vm.libs[lib] = -1;
+        }
+    console.log("should be resolving " + pltcount + " entries");
+    this.vm.table_length += dyninfo.plt_end;
+};
+
+Wasm32Module.prototype.check_libs = function (thread)
+{
+    console.log("check_libs");
+    for (let lib in this.vm.libs) {
+
+        if (this.vm.libs[lib] === -1) {
+            console.log("loading " + lib);
+            this.vm.libs[lib] = 0;
+
+            var module = new Wasm32Module(os.file.readFile(lib, "binary"));
+
+            return module.instantiate(thread, this.vm);
+        }
+    }
+
+    return Promise.resolve(0);
 };
 
 var first = true;
@@ -237,7 +263,7 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
         this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
         this.parse_dyninfo();
 
-        return 0;
+        return this.check_libs(thread);
     }).catch((e) => {
         console.log("died instantiating: " + e + "\n" + e.stack);
     });
