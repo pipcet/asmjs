@@ -161,62 +161,76 @@ function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
     };
 }
 
-var Syscalls = {
-    read:         new Syscall(  0, "fd", "ptr", "u64"),
-    write:        new Syscall(  1, "fd", "ptr", "u64"),
-    open:         new Syscall(  2, "ptr", "u64", "u64"),
-    close:        new Syscall(  3, "fd"),
-    stat:         new Syscall(  4, "ptr", "ptr"),
-    fstat:        new Syscall(  5, "u64", "ptr"),
-    lseek:        new Syscall(  8, "u64", "u64", "u64"),
-    ioctl_p:      new Syscall( 16, "u64", "u64", "ptr"),
-    access:       new Syscall( 21, "ptr", "u64"),
-    select:       new Syscall( 23, "u64", "ptr", "ptr", "ptr", "ptr"),
-    sched_yield:  new Syscall( 24),
-    dup:          new Syscall( 32, "u64"),
-    dup2:         new Syscall( 33, "u64", "u64"),
-    getpid:       new Syscall( 39),
-    clone:        new Syscall( 56, "u64", "ptr", "ptr", "ptr", "ptr"),
-    fork:         new Syscall( 57),
-    execve:       new Syscall64( 59, "path", "strs", "strs"),
-    exit:         new Syscall( 60, "u64"),
-    wait4:        new Syscall( 61, "u64", "ptr", "u64", "ptr"),
-    kill:         new Syscall( 62, "u64", "u64"),
-    fcntl_v:      new Syscall( 72, "u64", "u64"),
-    fcntl_i:      new Syscall( 72, "u64", "u64", "u64"),
-    fcntl_p:      new Syscall( 72, "u64", "u64", "ptr"),
-    ftruncate:    new Syscall( 77, "u64", "u64"),
-    getcwd:       new Syscall( 79, "ptr", "u64"),
-    chdir:        new Syscall( 80, "ptr"),
-    fchdir:       new Syscall( 81, "u64"),
-    rename:       new Syscall( 82, "ptr", "ptr"),
-    mkdir:        new Syscall( 83, "ptr", "u64"),
-    rmdir:        new Syscall( 84, "ptr"),
-    unlink:       new Syscall( 87, "ptr"),
-    rename:       new Syscall( 82, "ptr", "ptr"),
-    chdir:        new Syscall( 80, "ptr"),
-    fchmod:       new Syscall( 91, "fd", "u64"),
-    gettimeofday: new Syscall( 96, "ptr", "u64"),
-    getuid:       new Syscall(102),
-    getgid:       new Syscall(104),
-    geteuid:      new Syscall(107),
-    getegid:      new Syscall(108),
-    getdents:     new Syscall(217, "fd", "ptr", "u64"),
-    clock_gettime:new Syscall(228, "u64", "ptr"),
-    openat:       new Syscall(257, "fd", "ptr", "u64", "u64"),
-    mkdirat:      new Syscall(258, "fd", "ptr", "u64"),
-    newfstatat:   new Syscall(262, "fd", "ptr", "ptr", "u64"),
-    unlinkat:     new Syscall(263, "fd", "ptr", "u64"),
-    linkat:       new Syscall(265, "fd", "ptr", "fd", "ptr", "u64"),
-    readlinkat:   new Syscall(267, "fd", "ptr", "ptr", "u64"),
-    fchmodat:     new Syscall(268, "fd", "ptr", "u64", "u64"),
-    faccessat:    new Syscall(269, "fd", "ptr", "u64", "u64"),
-    ppoll:        new Syscall(271, "ptr", "u64", "ptr", "ptr"),
-    utimensat:    new Syscall(280, "fd", "ptr", "ptr", "u64"),
-    pipe2:        new Syscall(293, "ptr", "u64"),
-    renameat2:    new Syscall(316, "fd", "ptr", "fd", "ptr", "u64"),
-    execveat:     new Syscall(333, "fd", "ptr", "aptr", "aptr", "u64"),
-};
+function init_syscall(name, number, ...args)
+{
+    Syscalls[name] = Syscalls[number] = new Syscall(number, ...args);
+}
+
+function init_syscall64(name, number, ...args)
+{
+    Syscalls[name] = Syscalls[number] = new Syscall64(number, ...args);
+}
+
+var Syscalls = {};
+
+init_syscall(  "read",            0, "fd", "ptr", "u64");
+init_syscall(  "write",           1, "fd", "ptr", "u64");
+init_syscall(  "open",            2, "ptr", "u64", "u64");
+init_syscall(  "close",           3, "fd");
+init_syscall(  "stat",            4, "ptr", "ptr");
+init_syscall(  "fstat",           5, "u64", "ptr");
+init_syscall(  "lseek",           8, "u64", "u64", "u64");
+init_syscall(  "rt_sigprocmask",    14, "u64", "ptr", "ptr");
+init_syscall(  "ioctl_p",        16, "u64", "u64", "ptr");
+init_syscall(  "access",         21, "ptr", "u64");
+init_syscall(  "select",         23, "u64", "ptr", "ptr", "ptr", "ptr");
+init_syscall(  "sched_yield",    24);
+init_syscall(  "dup",            32, "u64");
+init_syscall(  "dup2",           33, "u64", "u64");
+init_syscall(  "getpid",         39);
+init_syscall(  "clone",          56, "u64", "ptr", "ptr", "ptr", "ptr");
+init_syscall(  "fork",           57);
+init_syscall64("execve",         59, "path", "strs", "strs");
+init_syscall(  "exit",           60, "u64");
+init_syscall(  "wait4",          61, "u64", "ptr", "u64", "ptr");
+init_syscall(  "kill",           62, "u64", "u64");
+init_syscall(  "fcntl_v",        72, "u64", "u64");
+init_syscall(  "fcntl_i",        72, "u64", "u64", "u64");
+init_syscall(  "fcntl_p",        72, "u64", "u64", "ptr");
+init_syscall(  "ftruncate",      77, "u64", "u64");
+init_syscall(  "getcwd",         79, "ptr", "u64");
+init_syscall(  "chdir",          80, "ptr");
+init_syscall(  "fchdir",         81, "u64");
+init_syscall(  "rename",         82, "ptr", "ptr");
+init_syscall(  "mkdir",          83, "ptr", "u64");
+init_syscall(  "rmdir",          84, "ptr");
+init_syscall(  "unlink",         87, "ptr");
+init_syscall(  "rename",         82, "ptr", "ptr");
+init_syscall(  "chdir",          80, "ptr");
+init_syscall(  "fchmod",         91, "fd", "u64");
+init_syscall(  "gettimeofday",   96, "ptr", "u64");
+init_syscall(  "getuid",        102);
+init_syscall(  "getgid",        104);
+init_syscall(  "geteuid",       107);
+init_syscall(  "getegid",       108);
+init_syscall(  "gettid",        186);
+init_syscall(  "tkill",         200);
+init_syscall(  "getdents",      217, "fd", "ptr", "u64");
+init_syscall(  "clock_gettime", 228, "u64", "ptr");
+init_syscall(  "exit_group",    231, "u64");
+init_syscall(  "openat",        257, "fd", "ptr", "u64", "u64");
+init_syscall(  "mkdirat",       258, "fd", "ptr", "u64");
+init_syscall(  "newfstatat",    262, "fd", "ptr", "ptr", "u64");
+init_syscall(  "unlinkat",      263, "fd", "ptr", "u64");
+init_syscall(  "linkat",        265, "fd", "ptr", "fd", "ptr", "u64");
+init_syscall(  "readlinkat",    267, "fd", "ptr", "ptr", "u64");
+init_syscall(  "fchmodat",      268, "fd", "ptr", "u64", "u64");
+init_syscall(  "faccessat",     269, "fd", "ptr", "u64", "u64");
+init_syscall(  "ppoll",         271, "ptr", "u64", "ptr", "ptr");
+init_syscall(  "utimensat",     280, "fd", "ptr", "ptr", "u64");
+init_syscall(  "pipe2",         293, "ptr", "u64");
+init_syscall(  "renameat2",     316, "fd", "ptr", "fd", "ptr", "u64");
+init_syscall(  "execveat",      333, "fd", "ptr", "aptr", "aptr", "u64");
 
 var SyscallSignatures = {
     read:         [  0, "fd", "ptr", "u64"],
@@ -1403,7 +1417,7 @@ ThinThin.dlsym = function (csym)
     });
 };
 
-ThinThin.writev = function (fd, iov, iovcnt)
+ThinThin[20] = ThinThin.writev = function (fd, iov, iovcnt)
 {
     var gret = 0;
     if (iovcnt == 0)
@@ -1418,13 +1432,5 @@ ThinThin.writev = function (fd, iov, iovcnt)
 
 ThinThin.syscall = function (n, ...args)
 {
-    switch (n) {
-    case 1:
-        return ThinThin.write.call(this, ...args);
-    case 14:
-        i.dont.exist++;
-    case 20:
-        return ThinThin.writev.call(this, args[0], args[1], args[2]);
-    }
-    return args[5];
+    return ThinThin[n].call(this, ...args);
 };
