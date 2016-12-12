@@ -175,6 +175,8 @@ Wasm32Module.prototype.parse_dyninfo = function ()
         }
     }
     for (let [symbol, index] of dyninfo.refun) {
+        symbol = symbol.replace(/@@.*/, "");
+        symbol = symbol.replace(/@.*/, "");
         //console.log("Symbol " + symbol + " addr " + index + " + " + this.imports.sys.plt)
         if (symbol in vm.defuns) {
             vm.table.set(index + this.imports.sys.plt, vm.table.get(vm.defuns[symbol]));
