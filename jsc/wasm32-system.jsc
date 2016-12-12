@@ -249,9 +249,9 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
         return WebAssembly.instantiate(module, this.imports);
     }).then((instance) => {
         this.instance = instance;
-        if (!thread.exports)
             thread.exports = {};
         for (let e in this.instance.exports) {
+            //console.log("e " + e);
             thread.exports[e] = this.instance.exports[e];
         }
         thread.memory = this.instance.exports._memory.buffer;
