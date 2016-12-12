@@ -309,7 +309,7 @@ build/wasm/glibc.configure: src/glibc.dir build/wasm/glibc.dir | build/wasm/gcc-
 	touch $@
 
 build/wasm32/glibc.configure: src/glibc.dir build/wasm32/glibc.dir | build/wasm32/gcc-preliminary.make
-	(cd build/wasm32/glibc; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	(cd build/wasm32/glibc; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/glibc/configure CFLAGS="-fPIC -O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
 	touch $@
 
 build/wasm64/glibc.configure: src/glibc.dir build/wasm64/glibc.dir | build/wasm64/gcc-preliminary.make
