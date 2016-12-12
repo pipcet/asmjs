@@ -192,6 +192,10 @@ build/asmjs/graphviz.dir: build/asmjs/.dir
 	test -d build/asmjs/graphviz || $(MKDIR) build/asmjs/graphviz
 	touch $@
 
+build/wasm32/coreutils.dir: build/wasm32/.dir
+	test -d build/wasm32/coreutils || $(MKDIR) build/wasm32/coreutils
+	touch $@
+
 build/asmjs/binutils-gdb.configure: src/binutils-gdb.dir build/asmjs/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/asmjs/binutils-gdb; ../../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs CFLAGS=$(OPT_NATIVE))
@@ -575,6 +579,16 @@ build/asmjs/coreutils.configure: src/coreutils.dir build/asmjs/coreutils.dir | b
 build/asmjs/coreutils.make: build/asmjs/coreutils.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/coreutils
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/coreutils install
+	touch $@
+
+build/wasm32/coreutils.configure: src/coreutils.dir build/wasm32/coreutils.dir | build/wasm32/gcc-final.make
+	(cd src/coreutils; ./bootstrap --gnulib-srcdir=gnulib --skip-po)
+	(cd build/wasm32/coreutils; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/coreutils/configure --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	touch $@
+
+build/wasm32/coreutils.make: build/wasm32/coreutils.configure
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/coreutils
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/coreutils install
 	touch $@
 
 build/asmjs/graphviz.configure: src/graphviz.dir build/asmjs/graphviz.dir | build/asmjs/gcc-final.make
