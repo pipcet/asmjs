@@ -67,8 +67,8 @@ Wasm32Module.prototype.fill_table = function (thread, vm, got, plt)
         while (str.length < 16)
             str = str + " ";
         var f = thread.exports["f_" + str];
+        //console.log("defining " + pc + "+" + plt + " to " + f)
         if (f) {
-            //console.log("defining " + pc + "+" + plt + " to " + f)
             thread.table.set(pc+plt, f);
             seen++;
         } else if (seen || count++ == 128) {
@@ -83,14 +83,6 @@ Wasm32Module.prototype.parse_dyninfo = function ()
     var dyninfo = this.dyninfo;
     var pltcount = dyninfo.plt_end - dyninfo.plt_bias;
     var vm = this.vm;
-
-    if ("copy" in dyninfo)
-    for (let [symbol, addr, size] of dyninfo.copy) {
-        if (!vm.copy[symbol])
-            vm.copy[symbol] = [];
-
-        vm.copy[symbol].push([addr, size]);
-    }
 
     for (let [addr1, addr2] of dyninfo.fixup) {
         addr1 = addr1 - 0x4000 + this.imports.sys.got;
@@ -107,12 +99,25 @@ Wasm32Module.prototype.parse_dyninfo = function ()
     }
 
     for (let [symbol, addr] of dyninfo.def) {
+        addr = addr - 0x4000 + this.imports.sys.got;
+        if (vm.copy[symbol]) {
+            for (let [addr2, size] of vm.copy[symbol]) {
+                for (let i = 0; i < size; i++) {
+                    //console.log("byte at " + addr + " "  + vm.HEAPU8[addr+i].toString(16));
+                    vm.HEAPU8[addr2+i] = vm.HEAPU8[addr+i];
+                }
+            }
+
+            delete vm.copy[symbol];
+
+            continue;
+        }
         //console.log("defsymbol " + symbol + " addr " + addr + " got " + this.imports.sys.got)
         if (symbol in vm.defs ||
-                symbol in vm.defuns) {
-            //throw "double definition: " + symbol;
+            symbol in vm.defuns) {
+            //console.log("double definition: " + symbol + " previous value " + vm.defs[symbol]);
+            //continue;
         }
-        addr = addr - 0x4000 + this.imports.sys.got;
         vm.defs[symbol] = addr;
 
         if (vm.refs[symbol]) {
@@ -122,13 +127,6 @@ Wasm32Module.prototype.parse_dyninfo = function ()
             for (let addr2 of refs) {
                 //console.log("defining " + symbol + " at " + addr2 + " to " + addr);
                 vm.HEAPU32[addr2>>2] = addr;
-            }
-        }
-
-        if (vm.copy[symbol]) {
-            for (let [addr2, size] of vm.copy[symbol]) {
-                for (let i = 0; i < size; i++)
-                    vm.HEAPU8[addr2+i] = vm.HEAPU8[addr+i];
             }
         }
     }
@@ -186,6 +184,13 @@ Wasm32Module.prototype.parse_dyninfo = function ()
                 vm.refuns[symbol] = [];
             vm.refuns[symbol].push(index);
         }
+    }
+
+    for (let [symbol, addr, size] of dyninfo.copy) {
+        if (!vm.copy[symbol])
+            vm.copy[symbol] = [];
+
+        vm.copy[symbol].push([addr, size]);
     }
 
     if ("libs" in dyninfo)
