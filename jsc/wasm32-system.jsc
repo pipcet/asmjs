@@ -195,20 +195,20 @@ Wasm32Module.prototype.parse_dyninfo = function ()
 
     if ("libs" in dyninfo)
         for (let lib of dyninfo.libs) {
-            console.log("registering " + lib);
+            //console.log("registering " + lib);
             vm.libs[lib] = -1;
         }
-    console.log("should be resolving " + pltcount + " entries");
+    //console.log("should be resolving " + pltcount + " entries");
     this.vm.table_length += dyninfo.plt_end;
 };
 
 Wasm32Module.prototype.check_libs = function (thread)
 {
-    console.log("check_libs");
+    //console.log("check_libs");
     for (let lib in this.vm.libs) {
 
         if (this.vm.libs[lib] === -1) {
-            console.log("loading " + lib);
+            //console.log("loading " + lib);
             this.vm.libs[lib] = 0;
 
             var module = new Wasm32Module(os.file.readFile(lib, "binary"));
@@ -558,14 +558,14 @@ Wasm32Thread.prototype.step = function ()
     var ret;
 
     while (true) {
-        console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
+        //console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
         if (first) {
             ret = system.threads[0].exports._start(-1, sp+16, 0, 0, rpc, pc0);
             this.first = false;
         } else {
             ret = system.threads[0].indcall(dpc, sp+16, 0, 0, rpc, pc0);
         }
-        console.log("called: " + ret);
+        //console.log("called: " + ret);
 
         if (ret & 3) {
             sp = ret;
