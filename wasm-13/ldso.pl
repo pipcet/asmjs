@@ -24,8 +24,9 @@ for my $file (@ARGV) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^([0-9a-f]*) g D[OF]? ([a-zA-Z0-9._*]*) ([0-9a-f]*) (\.protected |\.hidden )*([a-zA-Z0-9_\$]*)$/) {
+            if (/^([0-9a-f]*) [gw] D[OF]? ([a-zA-Z0-9._*]*) ([0-9a-f]*) (\.protected |\.hidden |Base |[A-Za-z0-9_@.]* )*([a-zA-Z0-9_\$]*)$/) {
                 my ($defaddr, $sec, $symbol, $size) = (hex $1, $2, $5, hex $3);
+                next if $sec eq "*UND*";
                 my $is_function = $sec eq ".wasm.chars.function_index";
 
                 $cachedsize{$symbol} = $size;
@@ -34,6 +35,8 @@ for my $file (@ARGV) {
                 } else {
                     $def{$symbol}{$defaddr} = 1;
                 }
+            } else {
+                #warn("unhandled dynsym " . $_);
             }
     }
 
@@ -43,7 +46,7 @@ for my $file (@ARGV) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^([0-9a-f]*) R_ASMJS_ABS32 +([a-zA-Z0-9_\$]*)$/) {
+            if (/^([0-9a-f]*) R_ASMJS_ABS32 ([@.a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$2);
 
                 $ref{$symbol}{$refaddr} = 1;
@@ -51,15 +54,19 @@ for my $file (@ARGV) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixup{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32 ([a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32 ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixup{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32_CODE ([a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32_CODE ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixupfun{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_LEB128_PLT_INDEX ([a-zA-Z0-9_\$]*)$/) {
+            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32_CODE (\*ABS\*)\+0x([0-9a-f]*)$/) {
+                my ($refaddr, $defaddr) = (hex $1, hex $3);
+
+                $fixupfun{$refaddr}{$defaddr} = 1;
+            } elsif (/^([0-9a-f]*) R_ASMJS_LEB128_PLT_INDEX ([@.a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$2);
 
                 $refun{$symbol}{$refaddr} = 1;
@@ -67,6 +74,9 @@ for my $file (@ARGV) {
                 my ($refaddr, $symbol) = (hex $1,$2);
 
                 $copy{$symbol}{$refaddr} = $cachedsize{$symbol};
+            } elsif (/^00000000 R_ASMJS_NONE /) {
+            } else {
+                #warn("unhandled dynreloc " . $_);
             }
     }
 
@@ -76,7 +86,7 @@ for my $file (@ARGV) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^([0-9a-f]*) g ([a-zA-Z0-9._*]*) [0-9a-f]* ([a-zA-Z0-9_.\$]*)$/) {
+            if (/^([0-9a-f]*) [gl] ([a-zA-Z0-9._*]*) [0-9a-f]* ([a-zA-Z0-9_.\$]*)$/) {
                 my ($value, $symbol) = (hex $1,$3);
 
                 if ($symbol eq ".wasm.plt_bias") {
@@ -101,6 +111,8 @@ for my $file (@ARGV) {
         chomp;
             if (/^ ?0x([0-9a-f]*) \(NEEDED\) Shared library: \[([a-zA-Z0-9._*]*)\]$/) {
                 my ($lib) = ($2);
+                $lib =~ s/[0-9.]*$//;
+                $lib =~ s/\.so$/.wasm/;
 
                 push @libs, $lib;
             }
