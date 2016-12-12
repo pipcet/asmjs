@@ -1430,7 +1430,23 @@ ThinThin[20] = ThinThin.writev = function (fd, iov, iovcnt)
     return ret;
 };
 
+
+// mmap
+ThinThin[9] = function ()
+{
+    return -1;
+};
+
+// brk
+ThinThin[12] = function (brk)
+{
+    return brk;
+};
+
 ThinThin.syscall = function (n, ...args)
 {
-    return ThinThin[n].call(this, ...args);
+    if (n.toString() in ThinThin)
+        return ThinThin[n].call(this, ...args);
+    else
+        return -38;
 };
