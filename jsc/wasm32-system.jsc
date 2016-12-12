@@ -213,7 +213,7 @@ Wasm32Module.prototype.check_libs = function (thread)
             //console.log("loading " + lib);
             this.vm.libs[lib] = 0;
 
-            var module = new Wasm32Module(os.file.readFile(lib, "binary"));
+            var module = new Wasm32Module(os.file.readFile(os.getenv("ASMJSDIR") + "/" + lib, "binary"));
 
             return module.instantiate(thread, this.vm);
         }
