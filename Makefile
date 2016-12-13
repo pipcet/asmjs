@@ -342,6 +342,10 @@ build/wasm32/glibc.make: build/wasm32/glibc.dir build/wasm32/glibc.configure
 	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/glibc install
 	touch $@
 
+build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
+	$(PWD)/wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld -shared --whole-archive $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.a --no-whole-archive $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc_s.a -o $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so
+	touch $@
+
 build/wasm64/glibc.make: build/wasm64/glibc.dir build/wasm64/glibc.configure
 	CC=wasm64-virtual-wasm64-gcc PATH=$(PWD)/wasm64-virtual-wasm64/bin:$$PATH $(MAKE) -C build/wasm64/glibc
 	CC=wasm64-virtual-wasm64-gcc PATH=$(PWD)/wasm64-virtual-wasm64/bin:$$PATH $(MAKE) -C build/wasm64/glibc install
@@ -608,13 +612,13 @@ build/asmjs/graphviz.make: build/asmjs/graphviz.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/graphviz install
 	touch $@
 
-build/binfmt_misc.install:
+build/binfmt_misc.install: /proc/sys/binfmt_misc
 	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/interpreter || true
 	sudo ./binfmt_misc/binfmt_misc-wasm32 $(PWD)/bin/interpreter-wasm32 || true
 	sudo ./binfmt_misc/binfmt_misc-wasm64 $(PWD)/bin/interpreter-wasm64 || true
 	touch $@
 
-build/binfmt_misc-caching.install:
+build/binfmt_misc-caching.install: /proc/sys/binfmt_misc
 	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/caching-interpreter || true
 	touch $@
 
