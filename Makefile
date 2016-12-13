@@ -26,6 +26,10 @@ build/common3/.dir: build/.dir
 	test -d build/common3 || $(MKDIR) build/common3
 	touch $@
 
+build/common3x/.dir: build/.dir
+	test -d build/common3x || $(MKDIR) build/common3x
+	touch $@
+
 build/debug/.dir: build/.dir
 	test -d build/debug || $(MKDIR) build/debug
 	touch $@
@@ -120,6 +124,10 @@ build/common/spidermonkey.dir: build/common/.dir
 
 build/common3/spidermonkey.dir: build/common3/.dir
 	test -d build/common3/spidermonkey || $(MKDIR) build/common3/spidermonkey
+	touch $@
+
+build/common3x/spidermonkey.dir: build/common3x/.dir
+	test -d build/common3x/spidermonkey || $(MKDIR) build/common3x/spidermonkey
 	touch $@
 
 build/debug/spidermonkey.dir: build/debug/.dir
@@ -434,10 +442,21 @@ build/common3/spidermonkey.configure: src/spidermonkey.dir build/common3/spiderm
 	(cd build/common3/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize="-O3" --disable-debug --disable-tests --prefix=$(PWD)/common3/spidermonkey --without-system-zlib)
 	touch $@
 
+build/common3x/spidermonkey.configure: src/spidermonkey.dir build/common3x/spidermonkey.dir
+	(cd src/spidermonkey/js/src; autoconf2.13)
+	(cd build/common3x/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize="-O3" --disable-debug --disable-tests --prefix=$(PWD)/common3x/spidermonkey --without-system-zlib)
+	touch $@
+
 build/common3/spidermonkey.make: build/common3/spidermonkey.configure
 	$(MAKE) -C build/common3/spidermonkey
 	$(MAKE) -C build/common3/spidermonkey install
 	test -L $(PWD)/common3/bin/js || ($(MKDIR) -p $(PWD)/common3/bin; ln -sf ../spidermonkey/bin/js $(PWD)/common3/bin/js)
+	touch $@
+
+build/common3x/spidermonkey.make: build/common3x/spidermonkey.configure
+	$(MAKE) -C build/common3x/spidermonkey
+	$(MAKE) -C build/common3x/spidermonkey install
+	test -L $(PWD)/common3x/bin/js || ($(MKDIR) -p $(PWD)/common3x/bin; ln -sf ../spidermonkey/bin/js $(PWD)/common3x/bin/js)
 	touch $@
 
 build/debug/spidermonkey.configure: src/spidermonkey.dir build/debug/spidermonkey.dir
