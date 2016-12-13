@@ -42,10 +42,6 @@ build/asmjs-cross/.dir: build/.dir
 	test -d build/asmjs-cross || $(MKDIR) build/asmjs-cross
 	touch $@
 
-build/wasm/.dir: build/.dir
-	test -d build/wasm || $(MKDIR) build/wasm
-	touch $@
-
 build/wasm32/.dir: build/.dir
 	test -d build/wasm32 || $(MKDIR) build/wasm32
 	touch $@
@@ -58,10 +54,6 @@ build/asmjs/binutils-gdb.dir: build/asmjs/.dir
 	test -d build/asmjs/binutils-gdb || $(MKDIR) build/asmjs/binutils-gdb
 	touch $@
 
-build/wasm/binutils-gdb.dir: build/wasm/.dir
-	test -d build/wasm/binutils-gdb || $(MKDIR) build/wasm/binutils-gdb
-	touch $@
-
 build/wasm32/binutils-gdb.dir: build/wasm32/.dir
 	test -d build/wasm32/binutils-gdb || $(MKDIR) build/wasm32/binutils-gdb
 	touch $@
@@ -72,10 +64,6 @@ build/wasm64/binutils-gdb.dir: build/wasm64/.dir
 
 build/asmjs/gcc-preliminary.dir: build/asmjs/.dir
 	test -d build/asmjs/gcc-preliminary || $(MKDIR) build/asmjs/gcc-preliminary
-	touch $@
-
-build/wasm/gcc-preliminary.dir: build/wasm/.dir
-	test -d build/wasm/gcc-preliminary || $(MKDIR) build/wasm/gcc-preliminary
 	touch $@
 
 build/wasm32/gcc-preliminary.dir: build/wasm32/.dir
@@ -92,10 +80,6 @@ build/asmjs/glibc.dir: build/asmjs/.dir
 
 build/asmjs-cross/glibc.dir: build/asmjs-cross/.dir
 	test -d build/asmjs-cross/glibc || $(MKDIR) build/asmjs-cross/glibc
-	touch $@
-
-build/wasm/glibc.dir: build/wasm/.dir
-	test -d build/wasm/glibc || $(MKDIR) build/wasm/glibc
 	touch $@
 
 build/wasm32/glibc.dir: build/wasm32/.dir
@@ -207,11 +191,6 @@ build/asmjs/binutils-gdb.configure: src/binutils-gdb.dir build/asmjs/binutils-gd
 	(cd build/asmjs/binutils-gdb; ../../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs CFLAGS=$(OPT_NATIVE))
 	touch $@
 
-build/wasm/binutils-gdb.configure: src/binutils-gdb.dir build/wasm/binutils-gdb.dir
-	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/wasm/binutils-gdb; ../../../src/binutils-gdb/configure --target=wasm-virtual-wasm --prefix=$(PWD)/wasm-virtual-wasm CFLAGS=$(OPT_NATIVE))
-	touch $@
-
 build/wasm32/binutils-gdb.configure: src/binutils-gdb.dir build/wasm32/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
 	(cd build/wasm32/binutils-gdb; ../../../src/binutils-gdb/configure --target=wasm32-virtual-wasm32 --enable-debug --prefix=$(PWD)/wasm32-virtual-wasm32 CFLAGS=$(OPT_NATIVE))
@@ -225,11 +204,6 @@ build/wasm64/binutils-gdb.configure: src/binutils-gdb.dir build/wasm64/binutils-
 build/asmjs/binutils-gdb.make: build/asmjs/binutils-gdb.dir build/asmjs/binutils-gdb.configure
 	$(MAKE) -C build/asmjs/binutils-gdb
 	$(MAKE) -C build/asmjs/binutils-gdb install
-	touch $@
-
-build/wasm/binutils-gdb.make: build/wasm/binutils-gdb.dir build/wasm/binutils-gdb.configure
-	$(MAKE) -C build/wasm/binutils-gdb
-	$(MAKE) -C build/wasm/binutils-gdb install
 	touch $@
 
 build/wasm32/binutils-gdb.make: build/wasm32/binutils-gdb.dir build/wasm32/binutils-gdb.configure
@@ -253,10 +227,6 @@ build/asmjs/gcc-preliminary.configure: src/gcc-preliminary.dir build/asmjs/gcc-p
 	(cd build/asmjs/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
 	touch $@
 
-build/wasm/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm/gcc-preliminary.dir | build/wasm/binutils-gdb.make
-	(cd build/wasm/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm-virtual-wasm --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm-virtual-wasm)
-	touch $@
-
 build/wasm32/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm32/gcc-preliminary.dir | build/wasm32/binutils-gdb.make
 	(cd build/wasm32/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm32-virtual-wasm32 --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm32-virtual-wasm32)
 	touch $@
@@ -272,13 +242,6 @@ build/asmjs/gcc-preliminary.make: build/asmjs/gcc-preliminary.dir build/asmjs/gc
 	$(MAKE) -C build/asmjs/gcc-preliminary install
 	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a
 	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_s.a
-	touch $@
-
-build/wasm/gcc-preliminary.make: build/wasm/gcc-preliminary.dir build/wasm/gcc-preliminary.configure
-	$(MAKE) -C build/wasm/gcc-preliminary
-	$(MAKE) -C build/wasm/gcc-preliminary install
-	cp wasm-virtual-wasm/lib/gcc/wasm-virtual-wasm/7.0.0/libgcc.a wasm-virtual-wasm/lib/gcc/wasm-virtual-wasm/7.0.0/libgcc_eh.a
-	cp wasm-virtual-wasm/lib/gcc/wasm-virtual-wasm/7.0.0/libgcc.a wasm-virtual-wasm/lib/gcc/wasm-virtual-wasm/7.0.0/libgcc_s.a
 	touch $@
 
 build/wasm32/gcc-preliminary.make: build/wasm32/gcc-preliminary.dir build/wasm32/gcc-preliminary.configure
@@ -310,10 +273,6 @@ build/asmjs-cross/glibc.configure: src/glibc.dir build/asmjs-cross/glibc.dir | b
 	(cd build/asmjs-cross/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
 	touch $@
 
-build/wasm/glibc.configure: src/glibc.dir build/wasm/glibc.dir | build/wasm/gcc-preliminary.make
-	(cd build/wasm/glibc; CC=wasm-virtual-wasm-gcc PATH=$(PWD)/wasm-virtual-wasm/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=wasm-virtual-wasm --target=wasm-virtual-wasm --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/wasm-virtual-wasm/wasm-virtual-wasm)
-	touch $@
-
 build/wasm32/glibc.configure: src/glibc.dir build/wasm32/glibc.dir | build/wasm32/gcc-preliminary.make
 	(cd build/wasm32/glibc; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/glibc/configure CFLAGS="-fPIC -O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
 	touch $@
@@ -330,11 +289,6 @@ build/asmjs/glibc.make: build/asmjs/glibc.dir build/asmjs/glibc.configure
 build/asmjs-cross/glibc.make: build/asmjs-cross/glibc.dir build/asmjs-cross/glibc.configure
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc install
-	touch $@
-
-build/wasm/glibc.make: build/wasm/glibc.dir build/wasm/glibc.configure
-	CC=wasm-virtual-wasm-gcc PATH=$(PWD)/wasm-virtual-wasm/bin:$$PATH $(MAKE) -C build/wasm/glibc
-	CC=wasm-virtual-wasm-gcc PATH=$(PWD)/wasm-virtual-wasm/bin:$$PATH $(MAKE) -C build/wasm/glibc install
 	touch $@
 
 build/wasm32/glibc.make: build/wasm32/glibc.dir build/wasm32/glibc.configure
@@ -725,14 +679,6 @@ js/asmjs-%.jsc.js: jsc/asmjs-%.jsc js/.dir build/asmjs/gcc-final.make
 js/asmjs-%.jsc.js: jsc/asm-%.jsc js/.dir build/asmjs/gcc-final.make
 	test -d cache || mkdir cache
 	perl ./bin/interpolate asmjs-virtual-asmjs < $< > $@
-
-js/wasm-%.jsc.js: jsc/wasm-%.jsc js/.dir
-	test -d cache || mkdir cache
-	perl ./bin/interpolate wasm-virtual-wasm < $< > $@
-
-js/wasm-%.jsc.js: jsc/asm-%.jsc js/.dir
-	test -d cache || mkdir cache
-	perl ./bin/interpolate wasm-virtual-wasm < $< > $@
 
 js/wasm32-%.jsc.js: jsc/wasm32-%.jsc js/.dir
 	test -d cache || mkdir cache
