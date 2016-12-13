@@ -5,6 +5,12 @@ PWD ?= $(shell pwd)
 OPT_NATIVE ?= "-O0 -g3"
 OPT_ASMJS ?= "-O2"
 
+env:
+	@echo "export ASMJSDIR=$(PWD)"
+	@echo "export PATH=$(PWD)/common3/bin:$(PWD)/asmjs-virtual-asmjs/bin:$(PWD)/wasm32-virtual-wasm32/bin:$$PATH"
+	@echo "export LANG=C"
+	@echo "export JSFLAGS=\"--wasm-always-baseline --no-threads\""
+
 # asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a: asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a
 #	cp $< $@
 
@@ -798,6 +804,9 @@ lib/wasm32-headers.o: headers/wasm32-headers.s build/wasm32/gcc-final.make
 	./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gcc -c $< -o $@
 
 bin/wasmrewrite: wasmrewrite/wasmrewrite.c
+	gcc -g3 $< -o $@
+
+bin/wasmsect: wasmrewrite/wasmsect.c
 	gcc -g3 $< -o $@
 
 .PHONY: FORCE clean fetch
