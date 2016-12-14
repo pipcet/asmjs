@@ -3,7 +3,6 @@ This is pre-release software. In fact, it's pre-announcement software: feel free
 Build instructions
 
  * clone recursively
- * export ASMJSDIR=/path/to/asmjs
- * make build/binfmt_misc.install (this will call sudo)
- * export PATH=$ASMJSDIR/asmjs-virtual-asmjs/bin:$PATH
- * make all
+ * `eval $(make env)`
+ * `make build/binfmt_misc.install` (this will call `sudo`)
+ * `make all`
