@@ -78,6 +78,10 @@ build/wasm32/glibc.dir: build/wasm32/.dir
 	test -d build/wasm32/glibc || $(MKDIR) build/wasm32/glibc
 	touch $@
 
+build/wasm32/glibc-static.dir: build/wasm32/.dir
+	test -d build/wasm32/glibc-static || $(MKDIR) build/wasm32/glibc-static
+	touch $@
+
 build/asmjs/gcc-final.dir: build/asmjs/.dir
 	test -d build/asmjs/gcc-final || $(MKDIR) build/asmjs/gcc-final
 	touch $@
@@ -242,6 +246,10 @@ build/wasm32/glibc.configure: src/glibc.dir build/wasm32/glibc.dir | build/wasm3
 	(cd build/wasm32/glibc; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/glibc/configure CFLAGS="-fPIC -O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
 	touch $@
 
+build/wasm32/glibc-static.configure: src/glibc.dir build/wasm32/glibc-static.dir | build/wasm32/gcc-preliminary.make
+	(cd build/wasm32/glibc-static; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/glibc/configure CFLAGS="-O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	touch $@
+
 build/asmjs/glibc.make: build/asmjs/glibc.dir build/asmjs/glibc.configure
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/glibc
 	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/glibc install
@@ -255,6 +263,10 @@ build/asmjs-cross/glibc.make: build/asmjs-cross/glibc.dir build/asmjs-cross/glib
 build/wasm32/glibc.make: build/wasm32/glibc.dir build/wasm32/glibc.configure
 	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/glibc
 	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/glibc install
+	touch $@
+
+build/wasm32/glibc-static.make: build/wasm32/glibc-static.dir build/wasm32/glibc-static.configure
+	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/glibc-static
 	touch $@
 
 build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
