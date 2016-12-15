@@ -1007,6 +1007,8 @@ if (typeof(os) !== "undefined" &&
     for (var syscall in Syscalls)
         ThinThin[syscall] = Syscalls[syscall];
     ThinThin.exit = function (code) {
+        if (os.getenv("STATS"))
+            console.log("runtime: " + (Date.now() - lastdonetime));
         quit(code);
         if (code != 0 && code !== undefined)
             throw "Exit Status " + code;
@@ -1324,7 +1326,8 @@ if (typeof(os) !== "undefined" &&
     ThinThin.access = function (ptr, mode) {
         return ThinThin.stat.call(this, ptr, 0);
     };
-    ThinThin.exit =         function (code) {
+    ThinThin.exit = function (code) {
+        console.log("runtime: " + Date.now() - lastdonetime);
         if (typeof quit !== "undefined")
             quit(code);
         else if (typeof process !== "undefined")

@@ -53,6 +53,7 @@ Wasm32VM.prototype.sbrk = function ()
 function Wasm32Module(bytes)
 {
     this.bytes = bytes;
+    this.ctime = Date.now();
 }
 
 Wasm32Module.prototype.fill_table = function (thread, vm, got, plt)
@@ -223,6 +224,7 @@ Wasm32Module.prototype.check_libs = function (thread)
 };
 
 var first = true;
+var lastdonetime = 0;
 
 Wasm32Module.prototype.instantiate = function (thread, vm)
 {
@@ -245,6 +247,7 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
     this.modulePromise = WebAssembly.compile(this.bytes);
     return this.modulePromise.then((module) => {
         this.module = module;
+        this.comtime = Date.now();
         var dyninfo;
         var cs = WebAssembly.Module.customSections(module, "dyninfo");
         for (let c of cs) {
@@ -256,7 +259,8 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
         return WebAssembly.instantiate(module, this.imports);
     }).then((instance) => {
         this.instance = instance;
-            thread.exports = {};
+        this.instime = Date.now();
+        thread.exports = {};
         for (let e in this.instance.exports) {
             //console.log("e " + e);
             thread.exports[e] = this.instance.exports[e];
@@ -265,6 +269,10 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
         thread.table = this.instance.exports._table;
         this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
         this.parse_dyninfo();
+
+        lastdonetime = this.donetime = Date.now();
+
+        //console.log("times: " + (this.donetime - this.ctime) + " = " + (this.comtime - this.ctime) + " + " + (this.instime - this.comtime) + " + " + (this.donetime - this.instime));
 
         return this.check_libs(thread);
     }).catch((e) => {
@@ -440,7 +448,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
-    //console.log('extcall ' + mod + ' ' + fun + ' ' + sp1);
+    //console.log('extcall ' + mod + '/' + modstr + ' ' + fun + '/' + funstr + ' ' + sp1);
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];

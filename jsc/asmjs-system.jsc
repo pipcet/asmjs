@@ -60,6 +60,8 @@ AsmJSCodeSection.prototype.instantiate = function (thread)
         fo.code = mod[fo.address];
         thread.process.deffun(page, fo);
     }
+
+    lastdonetime = Date.now();
 };
 
 function AsmJSDataSection(name, offset, data)
