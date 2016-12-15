@@ -531,13 +531,13 @@ build/asmjs/graphviz.make: build/asmjs/graphviz.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/graphviz install
 	touch $@
 
-build/binfmt_misc.install: /proc/sys/binfmt_misc
+build/binfmt_misc.install: /proc/sys/fs/binfmt_misc
 	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/interpreter || true
 	sudo ./binfmt_misc/binfmt_misc-wasm32 $(PWD)/bin/interpreter-wasm32 || true
 	sudo ./binfmt_misc/binfmt_misc-wasm64 $(PWD)/bin/interpreter-wasm64 || true
 	touch $@
 
-build/binfmt_misc-caching.install: /proc/sys/binfmt_misc
+build/binfmt_misc-caching.install: /proc/sys/fs/binfmt_misc
 	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/caching-interpreter || true
 	touch $@
 
