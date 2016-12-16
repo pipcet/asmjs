@@ -27,7 +27,7 @@ for my $file (@ARGV) {
             if (/^([0-9a-f]*) [gw] D[OF]? ([a-zA-Z0-9._*]*) ([0-9a-f]*) (\.protected |\.hidden |Base |[A-Za-z0-9_@.]* )*([a-zA-Z0-9_\$]*)$/) {
                 my ($defaddr, $sec, $symbol, $size) = (hex $1, $2, $5, hex $3);
                 next if $sec eq "*UND*";
-                my $is_function = $sec eq ".wasm.chars.function_index";
+                my $is_function = ($sec eq ".wasm.chars.function_index");
 
                 $cachedsize{$symbol} = $size;
                 if ($is_function) {
