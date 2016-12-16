@@ -1,5 +1,7 @@
 function AllocatorRange(free, start, end)
 {
+    this.start = start;
+    this.end = end;
     this.length = end - start;
     this.free = free;
 }
@@ -38,7 +40,7 @@ RangeAllocator.prototype.merge_range = function (range0, range1)
 
 RangeAllocator.prototype.alloc_range = function (n)
 {
-    for (let start of this.ranges_by_start) {
+    for (let start in this.ranges_by_start) {
         let range = this.ranges_by_start[start];
 
         if (range.free && range.length >= n) {
@@ -55,7 +57,7 @@ RangeAllocator.prototype.alloc_range = function (n)
     }
 
     let lastrange = this.ranges_by_end[this.end];
-    if (lastrange.free) {
+    if (lastrange && lastrange.free) {
         this.grow(n - lastrange.length);
         this.end += n - lastrange.length;
         lastrange.end = this.end;
@@ -63,6 +65,7 @@ RangeAllocator.prototype.alloc_range = function (n)
     } else {
         this.grow(n);
         let range = new AllocatorRange(true, this.end, this.end + n);
+        this.end += n;
         return range;
     }
 };
