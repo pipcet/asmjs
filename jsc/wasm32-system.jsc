@@ -219,11 +219,10 @@ Wasm32Module.prototype.parse_dyninfo = function ()
         vm.copy[symbol].push([addr, size]);
     }
 
-    if ("libs" in dyninfo)
-        for (let lib of dyninfo.libs) {
-            //console.log("registering " + lib);
-            vm.libs[lib] = -1;
-        }
+    for (let lib of dyninfo.libs) {
+        console.log("registering " + lib);
+        vm.libs[lib] = -1;
+    }
     //console.log("should be resolving " + pltcount + " entries");
     this.vm.table_length += dyninfo.plt_end;
 };
