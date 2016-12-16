@@ -44,6 +44,7 @@ function Wasm32VM()
     this.copy = {};
     this.libs = {};
 
+    this.off = 512 * 1024 * 1024;
     //this.space_functions = new RangeAllocator(this.grow_functions.bind(this));
     //this.space_pcs = new RangeAllocator(this.grow_pcs.bind(this));
     this.memory_allocator = "0x4000";
@@ -152,7 +153,6 @@ Wasm32Module.prototype.parse_dyninfo = function ()
         }
     }
     for (let [symbol, addr] of dyninfo.defun) {
-        //console.log("defun " + symbol + " addr " + addr)
         if (symbol in vm.defs ||
             symbol in vm.defuns) {
             //console.log("dd");
@@ -160,14 +160,17 @@ Wasm32Module.prototype.parse_dyninfo = function ()
             continue;
         }
         addr += this.imports.sys.plt;
+        //console.log("defun " + symbol + " addr " + addr)
         vm.defuns[symbol] = addr;
 
         if (vm.refs[symbol]) {
             let refs = vm.refs[symbol];
             delete vm.refs[symbol];
 
-            for (let addr2 of refs)
+            for (let addr2 of refs) {
+                //console.log("defun@" + addr2 + " " + symbol + " addr " + addr);
                 vm.HEAPU32[addr2>>2] = addr;
+            }
         }
 
         if (vm.refuns[symbol]) {
@@ -213,6 +216,7 @@ Wasm32Module.prototype.parse_dyninfo = function ()
     }
 
     for (let [symbol, addr, size] of dyninfo.copy) {
+        //console.log("copy " + symbol + " " + addr + " " + size);
         if (!vm.copy[symbol])
             vm.copy[symbol] = [];
 
@@ -220,7 +224,7 @@ Wasm32Module.prototype.parse_dyninfo = function ()
     }
 
     for (let lib of dyninfo.libs) {
-        console.log("registering " + lib);
+        //console.log("registering " + lib);
         vm.libs[lib] = -1;
     }
     //console.log("should be resolving " + pltcount + " entries");
@@ -259,7 +263,8 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
     this.imports.sys.eh_return = thread.eh_return.bind(thread);
     this.imports.sys.indcall = thread.indcall.bind(thread);
     this.imports.sys.trace = thread.trace.bind(thread);
-    this.imports.sys.got = first ? 0x4000 : 512 * 1024 * 1024;
+    this.imports.sys.got = first ? 0x4000 : vm.off;
+    vm.off += 1024 * 1024;
     this.imports.sys.gpo = first ? 0 : 0;
     first = false;
     this.imports.sys.plt = vm.table_length;
