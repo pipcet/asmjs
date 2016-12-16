@@ -10,7 +10,6 @@ SECTIONS
       *(.preinit_array)
       *(.ctors)
       *(.dtors)
-      *(.asmjs.term)
       *(.output.named)
   }
   /DISCARD/ : { *(.discard*) *(*) }
