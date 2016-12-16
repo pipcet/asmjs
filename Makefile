@@ -270,7 +270,8 @@ build/wasm32/glibc-static.make: build/wasm32/glibc-static.dir build/wasm32/glibc
 	touch $@
 
 build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
-	$(PWD)/wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld -shared --whole-archive $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.a --no-whole-archive $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc_s.a -o $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so
+	$(PWD)/wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld -shared --whole-archive $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.a --no-whole-archive $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc.a -o $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so
+	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so > $(PWD)/libc.wasm
 	touch $@
 
 build/glibc.clean: FORCE
