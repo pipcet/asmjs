@@ -533,6 +533,7 @@ build/asmjs/graphviz.make: build/asmjs/graphviz.configure
 
 build/binfmt_misc.install: /proc/sys/fs/binfmt_misc
 	sudo ./binfmt_misc/binfmt_misc $(PWD)/bin/interpreter || true
+	sudo ./binfmt_misc/binfmt_misc-wasm $(PWD)/bin/interpreter-wasm || true
 	sudo ./binfmt_misc/binfmt_misc-wasm32 $(PWD)/bin/interpreter-wasm32 || true
 	sudo ./binfmt_misc/binfmt_misc-wasm64 $(PWD)/bin/interpreter-wasm64 || true
 	touch $@
