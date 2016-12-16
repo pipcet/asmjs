@@ -109,7 +109,7 @@ for my $file (@ARGV) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^ ?0x([0-9a-f]*) \(NEEDED\) Shared library: \[([a-zA-Z0-9._*]*)\]$/) {
+            if (/^ ?0x([0-9a-f]*) \(NEEDED\) Shared library: \[([-a-zA-Z0-9._*]*)\]$/) {
                 my ($lib) = ($2);
                 $lib =~ s/[0-9.]*$//;
                 $lib =~ s/\.so$/.wasm/;
