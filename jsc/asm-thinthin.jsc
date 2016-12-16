@@ -1393,6 +1393,36 @@ ThinThin.getpid = ThinThin.getppid = function ()
     return 1;
 };
 
+ThinThin.dlload = function (cpath, memp)
+{
+    var path = CStringAt(this.HEAP8, cpath);
+    var module = new Wasm32Module(os.file.readFile(path, "binary"));
+
+    return module.load(this, this.vm).then((ret) => {
+        this.HEAP32[memp>>2] = module.dyninfo.data_end - module.dyninfo.data;
+
+        return ret;
+    }).catch((e) => {
+        return -%{ENOMEM};
+    });
+};
+
+ThinThin.dlinstantiate = function (modi, mem)
+{
+    var module = Wasm32Modules[modi];
+
+    return module.instantiate(this, this.vm, mem).catch((e) => {
+        return -%{ENOMEM};
+    });
+};
+
+ThinThin.dlkill = function (modi)
+{
+    var module = Wasm32Modules[modi];
+
+    return module.kill(this, this.vm);
+};
+
 ThinThin.dlopen = function (cpath)
 {
     console.log('dlopen')
