@@ -18,7 +18,7 @@
 #{Heap thisheap("this.HEAP");}
 #{Context context(&thisheap);}
 
-#{JSV<zeropage*> zp("4096");}
+#{JSV<zeropage*> zp("4096", "HEAP");}
 #{JSV<timeval*> tvptr("tvptr");}
 #{JSV<timespec*> timespec("timespec");}
 #{JSV<struct stat*> statbufptr("statbufptr");}
@@ -33,11 +33,11 @@ var ThinThin = {};
 ThinThin.sbrk = function (size)
 {
     size = (size + 4095) & -4096;
-    var ret = %{zp[&zeropage::top_of_sbrk]};
+    var ret = this.%{zp[&zeropage::top_of_sbrk]};
 
-    %{zp[&zeropage::top_of_sbrk]} += size;
+    this.%{zp[&zeropage::top_of_sbrk]} += size;
 
-    if (%{zp[&zeropage::top_of_sbrk]} > %{zp[&zeropage::top_of_memory]}) {
+    if (this.%{zp[&zeropage::top_of_sbrk]} > this.%{zp[&zeropage::top_of_memory]}) {
         throw "OOM";
     }
 
