@@ -46,8 +46,8 @@ for my $file (@ARGV) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^([0-9a-f]*) R_ASMJS_ABS32 ([@.a-zA-Z0-9_\$]*)$/) {
-                my ($refaddr, $symbol) = (hex $1,$2);
+            if (/^([0-9a-f]*) R_ASMJS_ABS32(_CODE)? ([@.a-zA-Z0-9_\$]*)$/) {
+                my ($refaddr, $symbol) = (hex $1,$3);
 
                 $ref{$symbol}{$refaddr} = 1;
             } elsif (/^([0-9a-f]*) R_ASMJS_(ABS|REL)32 \*ABS\*\+0x([0-9a-f]*)$/) {
@@ -66,8 +66,8 @@ for my $file (@ARGV) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixupfun{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_LEB128_PLT_INDEX ([@.a-zA-Z0-9_\$]*)$/) {
-                my ($refaddr, $symbol) = (hex $1,$2);
+            } elsif (/^([0-9a-f]*) R_ASMJS_(LEB128_)?PLT_INDEX ([@.a-zA-Z0-9_\$]*)$/) {
+                my ($refaddr, $symbol) = (hex $1,$3);
 
                 $refun{$symbol}{$refaddr} = 1;
             } elsif (/^([0-9a-f]*) R_ASMJS_COPY ([a-zA-Z0-9_\$]*)$/) {
