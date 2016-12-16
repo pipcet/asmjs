@@ -43,6 +43,24 @@ function Wasm32VM()
     this.refuns = {};
     this.copy = {};
     this.libs = {};
+
+    //this.space_functions = new RangeAllocator(this.grow_functions.bind(this));
+    //this.space_pcs = new RangeAllocator(this.grow_pcs.bind(this));
+    this.memory_allocator = "0x4000";
+}
+
+Wasm32VM.prototype.allocate_memory = function (size)
+{
+    if (this.memory_allocator === "0x4000") {
+        this.memory_allocator = "sbrk";
+        return Promise.resolve(0x4000);
+    } else if (this.memory_allocator === "sbrk") {
+        var ret = this.%{zp[&zeropage::bottom_of_sbrk]};
+        var new_sbrk = ret + size;
+        this.%{zp[&zeropage::bottom_of_sbrk] = "new_sbrk"};
+        return Promise.resolve(ret);
+    } else if (this.memory_allocator === "malloc") {
+    }
 }
 
 Wasm32VM.prototype.sbrk = function ()
@@ -100,6 +118,7 @@ Wasm32Module.prototype.parse_dyninfo = function ()
     }
 
     for (let [symbol, addr] of dyninfo.def) {
+        //console.log("def " + symbol + " addr " + addr)
         addr = addr - 0x4000 + this.imports.sys.got;
         if (vm.copy[symbol]) {
             for (let [addr2, size] of vm.copy[symbol]) {
@@ -114,10 +133,11 @@ Wasm32Module.prototype.parse_dyninfo = function ()
             continue;
         }
         //console.log("defsymbol " + symbol + " addr " + addr + " got " + this.imports.sys.got)
-        if (symbol in vm.defs ||
-            symbol in vm.defuns) {
-            //console.log("double definition: " + symbol + " previous value " + vm.defs[symbol]);
-            //continue;
+        if ((symbol in vm.defs ||
+             symbol in vm.defuns) &&
+            !symbol.match(/^__(start|stop)_/)) {
+            //console.log("double definition: " + symbol + " previous value " + vm.defs[symbol] + " new value " + addr);
+            continue;
         }
         vm.defs[symbol] = addr;
 
@@ -132,10 +152,12 @@ Wasm32Module.prototype.parse_dyninfo = function ()
         }
     }
     for (let [symbol, addr] of dyninfo.defun) {
-        //console.log("symbol " + symbol + " addr " + addr)
+        //console.log("defun " + symbol + " addr " + addr)
         if (symbol in vm.defs ||
             symbol in vm.defuns) {
+            //console.log("dd");
             //throw "double definition: " + symbol;
+            continue;
         }
         addr += this.imports.sys.plt;
         vm.defuns[symbol] = addr;
@@ -159,7 +181,7 @@ Wasm32Module.prototype.parse_dyninfo = function ()
         }
     }
     for (let [symbol, addr] of dyninfo.ref) {
-        //console.log("Symbol " + symbol + " addr " + addr)
+        //console.log("ref " + symbol + " addr " + addr)
         if (symbol in vm.defs) {
             addr -= 0x4000;
             addr += this.imports.sys.got;
@@ -176,6 +198,7 @@ Wasm32Module.prototype.parse_dyninfo = function ()
         }
     }
     for (let [symbol, index] of dyninfo.refun) {
+        //console.log("refun " + symbol + " addr " + index)
         symbol = symbol.replace(/@@.*/, "");
         symbol = symbol.replace(/@.*/, "");
         //console.log("Symbol " + symbol + " addr " + index + " + " + this.imports.sys.plt)
@@ -252,8 +275,11 @@ Wasm32Module.prototype.instantiate = function (thread, vm)
         var cs = WebAssembly.Module.customSections(module, "dyninfo");
         for (let c of cs) {
             let s = abtoascii(c);
+            //onsole.log(s);
             this.dyninfo = eval(s);
         }
+        //for (let key in this.dyninfo)
+        //    console.log("dyninfo " + key + " " + this.dyninfo[key].length);
         //if (!first)
         //  this.imports.sys.got = gotalloc(dyninfo.data_end - dyninfo.data);
         return WebAssembly.instantiate(module, this.imports);

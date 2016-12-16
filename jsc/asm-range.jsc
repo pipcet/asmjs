@@ -1,0 +1,95 @@
+function AllocatorRange(free, start, end)
+{
+    this.length = end - start;
+    this.free = free;
+}
+
+function RangeAllocator(grow)
+{
+    this.start = 0;
+    this.end = 0;
+    this.ranges_by_start = {};
+    this.ranges_by_end = {};
+
+    this.grow = grow;
+}
+
+RangeAllocator.prototype.split_range = function (range, new_start)
+{
+    let new_range = new AllocatorRange(range.free, new_start, range.end);
+    this.ranges_by_end[range.end] = new_range;
+    range.end = new_start;
+    this.ranges_by_start[new_start] = new_range;
+    this.ranges_by_end[range.end] = range;
+};
+
+RangeAllocator.prototype.merge_range = function (range0, range1)
+{
+    if (range0.free !== range1.free)
+        throw "merging heterogenous ranges";
+
+    delete this.ranges_by_start[range0.end];
+    delete this.ranges_by_end[range0.end];
+    this.ranges_by_end[range1.end] = range0;
+    range0.end = range1.end;
+
+    return range0;
+};
+
+RangeAllocator.prototype.alloc_range = function (n)
+{
+    for (let start of this.ranges_by_start) {
+        let range = this.ranges_by_start[start];
+
+        if (range.free && range.length >= n) {
+            if (range.length == n) {
+                range.free = false;
+                return range;
+            }
+            let range0 = this.split_range(range, start + n);
+
+            range0.free = false;
+
+            return range0;
+        }
+    }
+
+    let lastrange = this.ranges_by_end[this.end];
+    if (lastrange.free) {
+        this.grow(n - lastrange.length);
+        this.end += n - lastrange.length;
+        lastrange.end = this.end;
+        return lastrange;
+    } else {
+        this.grow(n);
+        let range = new AllocatorRange(true, this.end, this.end + n);
+        return range;
+    }
+};
+
+RangeAllocator.prototype.free_range = function (range)
+{
+    range.free = true;
+    let range1;
+    if (range1 = this.ranges_by_end[range.start].free)
+        range = this.merge_range(range1, range);
+    if (range1 = this.ranges_by_start[range.end].free)
+        range = this.merge_range(range, range1);
+
+    this.ranges_by_start[range.start] = range;
+    this.ranges_by_end[range.end] = range;
+};
+
+RangeAllocator.prototype.alloc = function (n)
+{
+    let range = this.alloc_range(n);
+
+    return range.start;
+};
+
+RangeAllocator.prototype.free = function (start)
+{
+    let range = this.ranges_by_start[start];
+
+    this.free_range(range);
+};
