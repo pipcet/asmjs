@@ -72,3 +72,8 @@ int dlclose(void *handle)
 {
   return 0;
 }
+
+char *dlerror(void)
+{
+  return NULL;
+}
