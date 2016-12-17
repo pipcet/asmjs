@@ -20,11 +20,6 @@ function abtoascii(ab)
 }
 
 system.instantiate(module, vm, args, environment_variables()).then(() => {
-    var cs = WebAssembly.Module.customSections(module.module, "dyninfo");
-    for (let c of cs) {
-        let s = abtoascii(c);
-        eval(s);
-    }
     try {
         run = () => {
             try {

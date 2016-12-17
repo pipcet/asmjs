@@ -1462,10 +1462,12 @@ ThinThin.dlopen = function (cpath)
 
 ThinThin.dlsym = function (modi, csym)
 {
+    var module = Wasm32Modules[modi];
+
     return new Promise((resolve, reject) => {
         var symbol = CStringAt(this.HEAP8, csym);
 
-        let ret = this.vm.base_lm.def[symbol] || this.vm.base_lm.defun[symbol];
+        let ret = module.symtab[symbol] || 0;
 
         console.log("symbol " + symbol + " ret " + ret);
 

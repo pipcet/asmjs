@@ -56,9 +56,9 @@ void *my_dlopen(const char *path)
 
 int main(void)
 {
-  my_dlopen("003-f.wasm");
+  void *handle = my_dlopen("003-f.wasm");
 
-  int (*f)(void) = __thinthin_dlsym(0, "f");
+  int (*f)(void) = __thinthin_dlsym((long)handle, "f");
 
   printf("f: %d\n", f());
 

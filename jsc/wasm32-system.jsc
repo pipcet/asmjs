@@ -37,7 +37,7 @@ function Wasm32LM(vm)
     this.dep = {};
 }
 
-Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports)
+Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
 {
     var vm = this.vm;
 
@@ -62,12 +62,14 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports)
                 for (let i = 0; i < size; i++) {
                     vm.HEAPU8[addr2+i] = vm.HEAPU8[addr+i];
                 }
+                module.symtab[symbol] = addr2;
             }
 
             delete this.copy[symbol];
 
             continue;
         }
+        module.symtab[symbol] = addr;
         if ((symbol in this.def ||
              symbol in this.defun) &&
             !symbol.match(/^__(start|stop)_/)) {
@@ -79,8 +81,10 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports)
             let ref = this.ref[symbol];
             delete this.ref[symbol];
 
-            for (let addr2 of ref) {
+            for (let [addr2, module] of ref) {
                 vm.HEAPU32[addr2>>2] = addr;
+                console.log("ref0 " + symbol + " " + addr);
+                module.symtab[symbol] = addr;
             }
         }
     }
@@ -91,13 +95,15 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports)
         }
         addr += imports.sys.plt;
         this.defun[symbol] = addr;
+        module.symtab[symbol] = addr;
 
         if (this.ref[symbol]) {
             let ref = this.ref[symbol];
             delete this.ref[symbol];
 
-            for (let addr2 of ref) {
+            for (let [addr2, module] of ref) {
                 vm.HEAPU32[addr2>>2] = addr;
+                console.log("refun2 " + symbol + " " + addr);
             }
         }
 
@@ -105,8 +111,10 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports)
             let ref = this.refun[symbol];
             delete this.refun[symbol];
 
-            for (let addr2 of ref) {
+            for (let [addr2, module] of ref) {
                 vm.table.set(addr2, vm.table.get(addr));
+                console.log("defun " + symbol + " " + addr);
+                module.symtab[symbol] = addr;
             }
         }
     }
@@ -120,7 +128,7 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports)
         } else {
             if (!this.ref[symbol])
                 this.ref[symbol] = [];
-            this.ref[symbol].push(addr);
+            this.ref[symbol].push([addr, module]);
         }
     }
     for (let [symbol, index] of dyninfo.refun) {
@@ -131,7 +139,7 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports)
         } else {
             if (!this.refun[symbol])
                 this.refun[symbol] = [];
-            this.refun[symbol].push(index);
+            this.refun[symbol].push([index, module]);
         }
     }
 
@@ -186,6 +194,7 @@ function Wasm32Module(bytes)
     this.bytes = bytes;
     this.ctime = Date.now();
     this.index = Wasm32ModuleIndex++;
+    this.symtab = {};
     Wasm32Modules[this.index] = this;
 }
 
@@ -281,7 +290,7 @@ Wasm32Module.prototype.instantiate = function (thread, vm, mem, recurse)
             thread.memory = this.instance.exports._memory.buffer;
             thread.table = this.instance.exports._table;
             this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
-            this.vm.base_lm.open_dyninfo(this.dyninfo, this.imports);
+            this.vm.base_lm.open_dyninfo(this.dyninfo, this.imports, this);
             lastdonetime = this.donetime = Date.now();
 
             if (recurse)
