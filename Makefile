@@ -7,7 +7,7 @@ OPT_ASMJS ?= "-O2"
 
 env:
 	@echo "export ASMJSDIR=$(PWD)"
-	@echo "export PATH=$(PWD)/common3/bin:$(PWD)/asmjs-virtual-asmjs/bin:$(PWD)/wasm32-virtual-wasm32/bin:$$PATH"
+	@echo "export PATH=$(PWD)/common3/bin:$(PWD)/asmjs-virtual-asmjs/bin:$(PWD)/wasm32-virtual-wasm32/bin:$(PWD)/bin:$$PATH"
 	@echo "export LANG=C"
 	@echo "export JSFLAGS=\"--wasm-always-baseline --no-threads\""
 
@@ -420,7 +420,7 @@ build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.c
 build/wasm32/perl.configure: src/perl.dir build/wasm32/perl.dir | build/wasm32/gcc-final.make
 	test -f build/wasm32/perl/config.sh && mv build/wasm32/perl/config.sh build/wasm32/perl/config.sh.old || true
 	touch build/wasm32/perl/config.sh
-	(cd build/wasm32/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
+	(cd build/wasm32/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/lib' -Dcccdlflags='-fPIC -Wl,--shared -shared' -Dlddlflags='-Wl,--shared -shared' -Dccdlflags='-Wl,-E'  -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
 	touch $@
 
 build/wasm32/perl.make: build/wasm32/perl.dir build/wasm32/perl.configure
