@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -75,8 +76,10 @@ void *dlopen(const char *path, int flags)
   long off;
   long len;
   char *p;
+  char *realpath = alloca(strlen(path) + 8);
+  sprintf(realpath, "%s.wasm", path);
 
-  printf("dlopen %s\n", path);
+  printf("dlopen %s\n", realpath);
 
   if (!(flags & RTLD_LAZY) &&
       !(flags & RTLD_NOW))
@@ -85,7 +88,16 @@ void *dlopen(const char *path, int flags)
   if (path)
     {
       size_t modlen;
-      void *data = slurp(path, &modlen);
+      void *data;
+
+      while ((data = slurp(realpath, &modlen)) == NULL) {
+        fprintf(stderr, "couldn't find %s, creating...\n", realpath);
+        char *command;
+        asprintf(&command, "wasmify-wasm32 %s > %s", path, realpath);
+        system(command);
+
+        free(command);
+      };
 
       modi = __thinthin_dlload(data, modlen, &mem);
 
