@@ -159,6 +159,7 @@ function Wasm32VM()
     this.table_length = 0;
     this.memory = new WebAssembly.Memory({initial: 16384, maximum: 16384});
 
+    this.heap = this.memory.buffer;
     this.HEAP8 = new Int8Array(this.memory.buffer);
     this.HEAP16 = new Int16Array(this.memory.buffer);
     this.HEAP32 = new Int32Array(this.memory.buffer);
@@ -925,6 +926,7 @@ Wasm32System.prototype.instantiate = function (module, vm, args, env)
             process.HEAPF32 = vm.HEAPF32;
             process.HEAPF64 = vm.HEAPF64;
 
+            thread.heap = vm.heap;
             thread.HEAP8 = vm.HEAP8;
             thread.HEAP16 = vm.HEAP16;
             thread.HEAP32 = vm.HEAP32;
