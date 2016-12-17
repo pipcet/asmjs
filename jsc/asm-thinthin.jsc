@@ -1398,8 +1398,15 @@ ThinThin.dlload = function (cpath, memp)
     var path = CStringAt(this.HEAP8, cpath);
     var module = new Wasm32Module(os.file.readFile(path, "binary"));
 
+    console.log("dlload " + path);
+
     return module.load(this, this.vm).then((ret) => {
         this.HEAP32[memp>>2] = module.dyninfo.data_end - module.dyninfo.data;
+        if (module.dyninfo.libs.length)
+            module.depstring = module.dyninfo.libs.join(String.fromCharCode(0)) + String.fromCharCode(0);
+        else
+            module.depstring = "";
+        console.log("depstring " + module.depstring);
 
         return ret;
     }).catch((e) => {
@@ -1407,11 +1414,27 @@ ThinThin.dlload = function (cpath, memp)
     });
 };
 
+ThinThin.dlreaddep = function (modi, mem, len)
+{
+    var module = Wasm32Modules[modi];
+    var ret = 0;
+
+    while (module.depstring.length > 0 && ret < len) {
+        this.HEAPU8[mem+ret] = module.depstring.charCodeAt(0);
+        module.depstring = module.depstring.substr(1);
+        ret++;
+    }
+
+    return ret;
+};
+
 ThinThin.dlinstantiate = function (modi, mem)
 {
     var module = Wasm32Modules[modi];
 
-    return module.instantiate(this, this.vm, mem).catch((e) => {
+    return module.instantiate(this, this.vm, mem).then(() => {
+        return 0;
+    }).catch((e) => {
         return -%{ENOMEM};
     });
 };
@@ -1437,17 +1460,21 @@ ThinThin.dlopen = function (cpath)
     }).catch((e) => { console.log(e); return -%{ENOMEM}; });
 };
 
-ThinThin.dlsym = function (csym)
+ThinThin.dlsym = function (modi, csym)
 {
     return new Promise((resolve, reject) => {
         var symbol = CStringAt(this.HEAP8, csym);
 
-        let ret = this.vm.defs[symbol] || this.vm.defuns[symbol] || 777;
+        let ret = this.vm.base_lm.def[symbol] || this.vm.base_lm.defun[symbol];
 
         console.log("symbol " + symbol + " ret " + ret);
 
         resolve(ret);
-    });
+    }).catch((e) => {
+        console.log(e);
+
+        return -%{ENOMEM};
+    })
 };
 
 ThinThin[20] = ThinThin.writev = function (fd, iov, iovcnt)
