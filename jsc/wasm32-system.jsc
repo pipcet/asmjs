@@ -83,7 +83,6 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
 
             for (let [addr2, module] of ref) {
                 vm.HEAPU32[addr2>>2] = addr;
-                console.log("ref0 " + symbol + " " + addr);
                 module.symtab[symbol] = addr;
             }
         }
@@ -103,7 +102,6 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
 
             for (let [addr2, module] of ref) {
                 vm.HEAPU32[addr2>>2] = addr;
-                console.log("refun2 " + symbol + " " + addr);
             }
         }
 
@@ -113,7 +111,6 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
 
             for (let [addr2, module] of ref) {
                 vm.table.set(addr2, vm.table.get(addr));
-                console.log("defun " + symbol + " " + addr);
                 module.symtab[symbol] = addr;
             }
         }
