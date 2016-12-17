@@ -136,7 +136,7 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
         } else {
             if (!this.refun[symbol])
                 this.refun[symbol] = [];
-            this.refun[symbol].push([index, module]);
+            this.refun[symbol].push([index + imports.sys.plt, module]);
         }
     }
 
@@ -220,20 +220,19 @@ Wasm32Module.prototype.check_libs = function (thread)
     var promise = Promise.resolve(0);
 
     for (var lib0 in this.vm.base_lm.dep) {
-        var lib = lib0;
+        let lib = lib0;
         if (this.vm.base_lm.dep[lib] === -1) {
-            console.log("loading " + lib);
-
             promise = promise.then(() => {
-                if (this.vm.base_lm.dep[lib] !== -1)
+                if (this.vm.base_lm.dep[lib] !== -1) {
                     return;
+                }
 
                 var module = new Wasm32Module(os.file.readFile(os.getenv("ASMJSDIR") + "/" + lib, "binary"));
                 return module.load(thread, this.vm).then(() => {
                     var mem = this.vm.%{zp[&zeropage::top_of_sbrk]};
                     var tom = (mem + module.dyninfo.data_end - 0x4000 + 4095)&-4096;
                     this.vm.%{zp[&zeropage::top_of_sbrk] = "tom"}
-                    var ret = module.instantiate(thread, this.vm, mem);
+                    var ret = module.instantiate(thread, this.vm, mem, true);
                     this.vm.base_lm.dep[lib] = 0;
 
                     return ret;
