@@ -220,26 +220,32 @@ Wasm32Module.prototype.fill_table = function (thread, vm, got, plt)
 
 Wasm32Module.prototype.check_libs = function (thread)
 {
-    for (let lib in this.vm.base_lm.dep) {
+    var promise = Promise.resolve(0);
 
+    for (var lib0 in this.vm.base_lm.dep) {
+        var lib = lib0;
         if (this.vm.base_lm.dep[lib] === -1) {
-            this.vm.base_lm.dep[lib] = 0;
+            console.log("loading " + lib);
 
-            var module = new Wasm32Module(os.file.readFile(os.getenv("ASMJSDIR") + "/" + lib, "binary"));
+            promise = promise.then(() => {
+                if (this.vm.base_lm.dep[lib] !== -1)
+                    return;
 
-            return module.load(thread, this.vm).then(() => {
-                var mem = this.vm.%{zp[&zeropage::top_of_sbrk]};
-                var tom = (mem + module.dyninfo.data_end - 0x4000 + 4095)&-4096;
-                var ret = module.instantiate(thread, this.vm, mem);
+                var module = new Wasm32Module(os.file.readFile(os.getenv("ASMJSDIR") + "/" + lib, "binary"));
+                return module.load(thread, this.vm).then(() => {
+                    var mem = this.vm.%{zp[&zeropage::top_of_sbrk]};
+                    var tom = (mem + module.dyninfo.data_end - 0x4000 + 4095)&-4096;
+                    this.vm.%{zp[&zeropage::top_of_sbrk] = "tom"}
+                    var ret = module.instantiate(thread, this.vm, mem);
+                    this.vm.base_lm.dep[lib] = 0;
 
-                this.vm.%{zp[&zeropage::top_of_sbrk] = "tom"}
-
-                return ret;
+                    return ret;
+                });
             });
         }
     }
 
-    return Promise.resolve(0);
+    return promise;
 };
 
 Wasm32Module.prototype.load = function (thread, vm)
