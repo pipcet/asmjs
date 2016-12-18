@@ -1398,15 +1398,12 @@ ThinThin.dlload = function (addr, len, memp)
     var ab = this.heap.slice(addr, addr+len);
     var module = new Wasm32Module(ab);
 
-    console.log("dlload");
-
     return module.load(this, this.vm).then((ret) => {
         this.HEAP32[memp>>2] = module.dyninfo.data_end - module.dyninfo.data;
         if (module.dyninfo.libs.length)
             module.depstring = module.dyninfo.libs.join(String.fromCharCode(0)) + String.fromCharCode(0);
         else
             module.depstring = "";
-        console.log("depstring " + module.depstring);
 
         return ret;
     }).catch((e) => {
@@ -1470,8 +1467,6 @@ ThinThin.dlsym = function (modi, csym)
         var symbol = CStringAt(this.HEAP8, csym);
 
         let ret = module.symtab[symbol] || 0;
-
-        console.log("symbol " + symbol + " ret " + ret);
 
         resolve(ret);
     }).catch((e) => {

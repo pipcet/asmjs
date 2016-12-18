@@ -79,8 +79,6 @@ void *dlopen(const char *path, int flags)
   char *realpath = alloca(strlen(path) + 8);
   sprintf(realpath, "%s.wasm", path);
 
-  printf("dlopen %s\n", realpath);
-
   if (!(flags & RTLD_LAZY) &&
       !(flags & RTLD_NOW))
     return NULL;
@@ -91,7 +89,6 @@ void *dlopen(const char *path, int flags)
       void *data;
 
       while ((data = slurp(realpath, &modlen)) == NULL) {
-        fprintf(stderr, "couldn't find %s, creating...\n", realpath);
         char *command;
         asprintf(&command, "wasmify-wasm32 %s > %s", path, realpath);
         system(command);

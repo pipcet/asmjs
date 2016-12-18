@@ -26,8 +26,6 @@ system.instantiate(module, vm, args, environment_variables()).then(() => {
                 system.threads[0].step();
                 if (!system.threads[0].stopped())
                     Promise.resolve().then(run);
-                else
-                    console.log('stopped');
             } catch (e) {
                 console.log("another exception");
                 console.log(e);
