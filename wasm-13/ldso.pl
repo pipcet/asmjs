@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 use strict;
 
+my $flag_lazy = 0; # disabled for now
+
 my $fh;
 my %def;
 my %defun;
@@ -10,12 +12,14 @@ my %fixup;
 my %fixupfun;
 my %cachedsize;
 my %copy;
+my %lazy;
 my $plt_bias;
 my $plt_end;
 my $data;
 my $data_end;
 my $pc_end;
 my $entry = -1;
+my @rawlibs;
 my @libs;
 
 for my $file (@ARGV) {
@@ -25,8 +29,8 @@ for my $file (@ARGV) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^([0-9a-f]*) [gw] D[OF]? ([a-zA-Z0-9._*]*) ([0-9a-f]*) (\.protected |\.hidden |Base |[A-Za-z0-9_@.]* )*([a-zA-Z0-9_\$]*)$/) {
-                my ($defaddr, $sec, $symbol, $size) = (hex $1, $2, $5, hex $3);
+            if (/^([0-9a-f]*) [gw] D[OF]? ([a-zA-Z0-9._*]*) ([0-9a-f]*) (\.protected |\.hidden |([A-Za-z0-9_@.]*) )*([a-zA-Z0-9_\$]*)$/) {
+                my ($defaddr, $sec, $version, $symbol, $size) = (hex $1, $2, $5, $6, hex $3);
                 next if $sec eq "*UND*";
                 my $is_function = ($sec eq ".wasm.chars.function_index");
 
@@ -53,6 +57,8 @@ for my $file (@ARGV) {
         chomp;
             if (/^([0-9a-f]*) R_ASMJS_ABS32(_CODE)? ([@.a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$3);
+                my $version;
+                $symbol =~ s/@+(.*)// and $version = $1;
 
                 $ref{$symbol}{$refaddr} = 1;
             } elsif (/^([0-9a-f]*) R_ASMJS_(ABS|REL)32 \*ABS\*\+0x([0-9a-f]*)$/) {
@@ -73,10 +79,28 @@ for my $file (@ARGV) {
                 $fixupfun{$refaddr}{$defaddr} = 1;
             } elsif (/^([0-9a-f]*) R_ASMJS_(LEB128_)?PLT_INDEX ([@.a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$3);
+                my $version;
+                $symbol =~ s/@+(.*)// and $version = $1;
+
+                if ($symbol eq "_start") {
+                    $entry = $refaddr;
+                }
 
                 $refun{$symbol}{$refaddr} = 1;
+            } elsif (/^([0-9a-f]*) R_ASMJS_PLT_LAZY ([@.a-zA-Z0-9_\$]*)$/) {
+                my ($refaddr, $symbol) = (hex $1, $2);
+                my $version;
+                $symbol =~ s/@+(.*)// and $version = $1;
+
+                $lazy{$symbol}{$refaddr} = $version;
+
+                if (!defined($version)) {
+                    warn "undefined version for lazy symbol $symbol";
+                    $flag_lazy = 0;
+                }
             } elsif (/^([0-9a-f]*) R_ASMJS_COPY ([a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$2);
+                $symbol =~ s/@+.*//;
 
                 $copy{$symbol}{$refaddr} = $cachedsize{$symbol};
             } elsif (/^00000000 R_ASMJS_NONE /) {
@@ -116,6 +140,7 @@ for my $file (@ARGV) {
         chomp;
             if (/^ ?0x([0-9a-f]*) \(NEEDED\) Shared library: \[([-a-zA-Z0-9._*]*)\]$/) {
                 my ($lib) = ($2);
+                push @rawlibs, $lib;
                 $lib =~ s/[0-9.]*$//;
                 $lib =~ s/\.so$/.wasm/;
 
@@ -145,6 +170,18 @@ for my $symbol (keys %refun) {
 }
 print join(",\n", @l);
 print "    ],\n";
+
+if ($flag_lazy) {
+    print "    lazy: [\n";
+    my @l;
+    for my $symbol (keys %lazy) {
+        for my $addr (keys %{$lazy{$symbol}}) {
+            push @l, "\t[\"$symbol\", $addr, \"$lazy{$symbol}{$addr}\"]";
+        }
+    }
+    print join(",\n", @l);
+    print "    ],\n";
+}
 
 print "    def: [\n";
 my @l;
