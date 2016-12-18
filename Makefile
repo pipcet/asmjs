@@ -274,6 +274,15 @@ build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
 	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so > $(PWD)/libc.wasm
 	touch $@
 
+build/wasm32/libdl.make: build/wasm32/glibc-semishared.make build/wasm32/gcc-final.make
+	$(MAKE) -C libdl
+	cp libdl/libdl.so wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libdl.so
+	wasmify-wasm32 libdl/libdl.so > libdl.wasm
+	touch $@
+
+build/wasm32/libs.make: build/wasm32/glibc-semishared.make build/wasm32/gcc-final.make build/wasm32/libdl.make
+	touch $@
+
 build/glibc.clean: FORCE
 	rm -rf build/glibc src/glibc
 	rm -f build/glibc.dir
@@ -417,10 +426,10 @@ build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.c
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl install
 	touch $@
 
-build/wasm32/perl.configure: src/perl.dir build/wasm32/perl.dir | build/wasm32/gcc-final.make
+build/wasm32/perl.configure: src/perl.dir build/wasm32/perl.dir | build/wasm32/gcc-final.make build/wasm32/libs.make
 	test -f build/wasm32/perl/config.sh && mv build/wasm32/perl/config.sh build/wasm32/perl/config.sh.old || true
 	touch build/wasm32/perl/config.sh
-	(cd build/wasm32/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/lib' -Dcccdlflags='-fPIC -Wl,--shared -shared' -Dlddlflags='-Wl,--shared -shared' -Dccdlflags='-Wl,-E'  -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
+	(cd build/wasm32/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Uversiononly -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/lib' -Dcccdlflags='-fPIC -Wl,--shared -shared' -Dlddlflags='-Wl,--shared -shared' -Dccdlflags='-Wl,-E'  -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
 	touch $@
 
 build/wasm32/perl.make: build/wasm32/perl.dir build/wasm32/perl.configure
