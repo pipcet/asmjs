@@ -15,6 +15,7 @@ my $plt_end;
 my $data;
 my $data_end;
 my $pc_end;
+my $entry = -1;
 my @libs;
 
 for my $file (@ARGV) {
@@ -34,6 +35,10 @@ for my $file (@ARGV) {
                     $defun{$symbol}{$defaddr} = 1;
                 } else {
                     $def{$symbol}{$defaddr} = 1;
+                }
+
+                if ($symbol eq "_start") {
+                    $entry = $defaddr;
                 }
             } else {
                 #warn("unhandled dynsym " . $_);
@@ -199,7 +204,8 @@ print "    plt_bias: $plt_bias,\n";
 print "    plt_end: $plt_end,\n";
 print "    data: $data,\n";
 print "    data_end: $data_end,\n";
-print "    pc_end: $pc_end\n";
+print "    pc_end: $pc_end,\n";
+print "    entry: $entry\n";
 print "};\n";
 
 
