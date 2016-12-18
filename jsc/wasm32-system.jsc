@@ -35,6 +35,7 @@ function Wasm32LM(vm)
     this.refun = {};
     this.copy = {};
     this.dep = {};
+    this.lazy = {};
 }
 
 Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
@@ -149,6 +150,22 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
 
     for (let lib of dyninfo.libs) {
         this.dep[lib] = -1;
+    }
+
+    if ("lazy" in dyninfo) {
+        for (let [symbol, addr, version] of dyninfo.lazy) {
+            if (version === "libc.so") {
+                console.log("libc can't be lazy!");
+                continue;
+            }
+            if (version === undefined)
+                continue;
+            console.log("forwarding " + (addr + imports.sys.plt - 1) + " to " + vm.table.get(addr + imports.sys.plt) + " version " + version);
+            vm.table.set(addr + imports.sys.plt - 1, vm.table.get(addr + imports.sys.plt));
+            version = version.replace(/\.so$/, ".wasm");
+            this.lazy[addr+imports.sys.plt] = version;
+            delete this.dep[version];
+        }
     }
 };
 
