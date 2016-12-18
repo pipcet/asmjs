@@ -250,10 +250,13 @@ long ast(unsigned long len, unsigned long index)
   while (roff < off0 + len) {
     u8 c = mgetchar();
     switch (c) {
+    case 0x01:
+      delta += msynch();
+      break;
     case 0x0b:
       block--;
     case 0x0f:
-    case 0x00 ... 0x01:
+    case 0x00:
     case 0x05:
     case 0x1a:
     case 0x1b:
