@@ -762,6 +762,7 @@ long init_expr()
     u8 c = mgetchar();
     switch (c) {
     case 0x0b:
+      mputchar(c);
       block--;
       goto out;
     case 0x0f:
@@ -909,26 +910,40 @@ long section_global()
   return delta;
 }
 
+long elem_segment()
+{
+  unsigned long count;
+  long delta = 0;
+
+  mputuleb128(mgetuleb128());
+  delta += msynch();
+  delta += init_expr();
+  mputuleb128(count = mgetuleb128());
+  delta += msynch();
+  while (count--) {
+    mputuleb128(mgetuleb128());
+    delta += msynch();
+  }
+
+  return delta;
+}
+
 long section_element()
 {
   unsigned long off0, off1;
   unsigned long len;
-  unsigned long count;
   long delta = 0;
-
   len = mgetsize(&off0, &off1);
   if (len) {
+    unsigned long count;
     /* delta += */ msynch();
     mputuleb128(count = mgetuleb128());
     delta += msynch();
-    while (count--) {
-      mputuleb128(mgetuleb128());
-      mputuleb128(mgetuleb128());
-      mputuleb128(mgetuleb128());
-      delta += msynch();
-    }
+    while (count--)
+      delta += elem_segment();
     delta += msetsize(off0, off1, delta);
   } else {
+    delta += msetsize(off0, off1, delta);
     delta += msynch();
   }
 
