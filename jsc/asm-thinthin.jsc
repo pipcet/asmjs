@@ -838,7 +838,10 @@ ThinThinFetchFD.prototype.startStuffing = function ()
     }
 
     return fetch(url).then(response => {
-        return response.arrayBuffer();
+        if (response.ok)
+            return response.arrayBuffer();
+
+        return Promise.reject(response);
     }).then((abuf) => {
         var view = new Uint8Array(abuf);
         var text = "";
