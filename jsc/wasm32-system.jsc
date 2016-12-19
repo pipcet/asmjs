@@ -783,7 +783,10 @@ function Wasm32Process(system)
     system.processes.push(this);
 
     this.fds = [];
-    this.ddroot = system.ddroot = new SparseDD(new ThinThinFetchDD(this, undefined, ".", undefined));
+    this.ddroot = system.ddroot = new SparseDD(new ThinThinFetchDD(this, undefined, ".", undefined, undefined));
+    caches.open("v3").then((cache) => {
+        this.ddroot.base.cache = cache;
+    });
     this.ddcwd = system.ddroot;
 
     system.ddroot.open();

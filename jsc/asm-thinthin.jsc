@@ -367,10 +367,11 @@ ThinThinDD.prototype.openat = function (path)
     return Promise.reject(-%{ENOENT});
 };
 
-function ThinThinFetchDD(process, parent, stem, fdno)
+function ThinThinFetchDD(process, parent, stem, cache, fdno)
 {
     ThinThinDD.call(this, process, fdno);
     this.stem = stem;
+    this.cache = cache;
 }
 
 ThinThinFetchDD.prototype = Object.create(ThinThinDD.prototype);
@@ -394,9 +395,9 @@ ThinThinFetchDD.prototype.discover = function (component, isdir)
     var ret;
 
     if (isdir) {
-        ret = new ThinThinFetchDD(this.process, url);
+        ret = new ThinThinFetchDD(this.process, this, url, this.cache);
     } else {
-        ret = new ThinThinFetchFD(this.process, url);
+        ret = new ThinThinFetchFD(this.process, url, this.cache);
     }
 
     return ret;
@@ -404,13 +405,15 @@ ThinThinFetchDD.prototype.discover = function (component, isdir)
 
 ThinThinFetchDD.prototype.openat_dir = function (path)
 {
-    return (new ThinThinFetchDD(this.process, this, this.stem + "/" + path))
+    return (new ThinThinFetchDD(this.process, this, this.stem + "/" + path,
+                                this.cache))
         .open();
 };
 
 ThinThinFetchDD.prototype.openat = function (path)
 {
-    return (new ThinThinFetchFD(this.process, this.stem + "/" + path))
+    return (new ThinThinFetchFD(this.process, this.stem + "/" + path,
+                                this.cache))
         .open();
 };
 
@@ -801,10 +804,11 @@ FrozenThinThinFD.prototype.thaw = function (process, target)
     return fd;
 };
 
-function ThinThinFetchFD(process, url, fdno)
+function ThinThinFetchFD(process, url, cache, fdno)
 {
     ThinThinFD.call(this, process, fdno);
     this.url = url;
+    this.cache = cache;
     this.makeSeekable();
 }
 
@@ -838,6 +842,38 @@ ThinThinFetchFD.prototype.startStuffing = function ()
 
     if (url === undefined) {
         return Promise.reject("EOF");
+    }
+
+    if (this.cache) {
+        var req = new Request(url);
+
+        return this.cache.match(req).then((response) => {
+            if (response === undefined) {
+                console.log("have to fetch " + url);
+                return fetch(url);
+            }
+            return response;
+        }).then(response => {
+            this.cache.put(url, response.clone());
+            if (response.ok)
+                return response.arrayBuffer();
+
+            return Promise.reject(response);
+        }).then((abuf) => {
+            var view = new Uint8Array(abuf);
+            var text = "";
+
+            for (var i = 0; i < abuf.byteLength; i++) {
+                var cc = view[i];
+                if (cc & 0x80) cc += 0x100;
+                text += String.fromCharCode(cc);
+            }
+
+            this.stuffString(text);
+            this.stuffEOF();
+        }).catch((e) => {
+            return Promise.reject(e);
+        });
     }
 
     return fetch(url).then(response => {
