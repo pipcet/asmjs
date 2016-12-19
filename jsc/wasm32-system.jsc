@@ -978,7 +978,7 @@ Wasm32System.prototype.instantiate = function (module, vm, args, env)
                 new VT100FD(process, document.getElementById("output2"), 1, 0);
                 new ThinThinFD(process, 2);
             } else if (typeof document !== "undefined") {
-                new ThinThinFD(process, 0);
+                new HTMLFD(process, undefined, 0);
                 new ThinThinFD(process, 1);
                 new ThinThinFD(process, 2);
 
@@ -1018,7 +1018,7 @@ Wasm32System.prototype.instantiate = function (module, vm, args, env)
         new VT100FD(process, document.getElementById("output2"), 1, 0);
         new ThinThinFD(process, 2);
     } else if (typeof document !== "undefined") {
-        new ThinThinFD(process, 0);
+        new HTMLFD(process, undefined, 0);
         new ThinThinFD(process, 1);
         new ThinThinFD(process, 2);
 
