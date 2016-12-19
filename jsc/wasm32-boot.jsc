@@ -1,6 +1,65 @@
 var vm = new Wasm32VM();
-var module = new Wasm32Module(os.file.readFile(path, "binary"));
 var system = new Wasm32System();
+var module;
+
+if (typeof os !== "undefined") {
+    module = new Wasm32Module(os.file.readFile(path, "binary"));
+
+    system.instantiate(module, vm, args, environment_variables()).then(() => {
+        try {
+            run = () => {
+                try {
+                    system.threads[0].step();
+                    if (!system.threads[0].stopped())
+                        Promise.resolve().then(run);
+                } catch (e) {
+                    console.log("another exception");
+                    console.log(e);
+                    console.log(e.stack);
+                }
+            };
+            run();
+        } catch (e) {
+            console.log("exception");
+            console.log(e);
+            console.log(e.stack);
+        }
+    }).catch((e) => {
+        console.log("caught");
+        console.log(e);
+    });
+} else if (typeof fetch !== "undefined") {
+    fetch(path).then((response) => {
+        return response.arrayBuffer();
+    }).then((ab) => {
+        module = new Wasm32Module(ab);
+
+        return system.instantiate(module, vm, args, []);
+    }).then(() => {
+        try {
+            run = () => {
+                try {
+                    system.threads[0].step();
+                    if (!system.threads[0].stopped())
+                        Promise.resolve().then(run);
+                } catch (e) {
+                    console.log("another exception");
+                    console.log(e);
+                    console.log(e.stack);
+                }
+            };
+            run();
+        } catch (e) {
+            console.log("exception");
+            console.log(e);
+            console.log(e.stack);
+        }
+    }).catch((e) => {
+        console.log("caught");
+        console.log(e);
+        console.log(e.stack);
+    });
+}
 
 function abtoascii(ab)
 {
@@ -19,26 +78,3 @@ function abtoascii(ab)
     return s;
 }
 
-system.instantiate(module, vm, args, environment_variables()).then(() => {
-    try {
-        run = () => {
-            try {
-                system.threads[0].step();
-                if (!system.threads[0].stopped())
-                    Promise.resolve().then(run);
-            } catch (e) {
-                console.log("another exception");
-                console.log(e);
-                console.log(e.stack);
-            }
-        };
-        run();
-    } catch (e) {
-        console.log("exception");
-        console.log(e);
-        console.log(e.stack);
-    }
-}).catch((e) => {
-    console.log("caught");
-    console.log(e);
-});

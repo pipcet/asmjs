@@ -247,16 +247,37 @@ Wasm32Module.prototype.check_libs = function (thread)
                     return;
                 }
 
-                var module = new Wasm32Module(os.file.readFile(os.getenv("ASMJSDIR") + "/" + lib, "binary"));
-                return module.load(thread, this.vm).then(() => {
-                    var mem = this.vm.%{zp[&zeropage::top_of_sbrk]};
-                    var tom = (mem + module.dyninfo.data_end - 0x4000 + 4095)&-4096;
-                    this.vm.%{zp[&zeropage::top_of_sbrk] = "tom"}
-                    var ret = module.instantiate(thread, this.vm, mem, true);
-                    this.vm.base_lm.dep[lib] = 0;
+                if (typeof os !== "undefined") {
+                    var module = new Wasm32Module(os.file.readFile(os.getenv("ASMJSDIR") + "/" + lib, "binary"));
+                    return module.load(thread, this.vm).then(() => {
+                        var mem = this.vm.%{zp[&zeropage::top_of_sbrk]};
+                        var tom = (mem + module.dyninfo.data_end - 0x4000 + 4095)&-4096;
+                        this.vm.%{zp[&zeropage::top_of_sbrk] = "tom"}
+                        var ret = module.instantiate(thread, this.vm, mem, true);
+                        this.vm.base_lm.dep[lib] = 0;
 
-                    return ret;
-                });
+                        return ret;
+                    });
+                } else if (typeof fetch !== "undefined") {
+                    var module;
+                    return fetch(lib).then((response) => {
+                        return response.arrayBuffer();
+                    }).then((buffer) => {
+                        module = new Wasm32Module(buffer);
+
+                        return module.load(thread, this.vm);
+                    }).then(() => {
+                        var mem = this.vm.%{zp[&zeropage::top_of_sbrk]};
+                        var tom = (mem + module.dyninfo.data_end - 0x4000 + 4095)&-4096;
+                        this.vm.%{zp[&zeropage::top_of_sbrk] = "tom"}
+                        var ret = module.instantiate(thread, this.vm, mem, true);
+                        this.vm.base_lm.dep[lib] = 0;
+
+                        return ret;
+                    }).catch((e) => {
+                        console.log("died resolving libraries: " + lib + "\n" + e + " " + e.stack);
+                    });
+                }
             });
         }
     }
