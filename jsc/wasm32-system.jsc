@@ -514,7 +514,6 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
-    //console.log('extcall ' + mod + '/' + modstr + ' ' + fun + '/' + funstr + ' ' + sp1);
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
@@ -575,7 +574,6 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         this.stop(1);
 
         retv.then((r) => {
-            //console.log("promise fulfilled, sp " + sp + " pc0 " + this.$pc0 + " r " + r);
             this.extcallRet[sp] = r;
             this.stop(0);
         });
@@ -583,7 +581,6 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         return sp|1;
     }
 
-    //console.log("retv " + retv)
     if (retv !== undefined && retv == retv) {
         this.set_rv(retv);
     } else if (retv != retv) {
@@ -786,8 +783,10 @@ function Wasm32Process(system)
     system.processes.push(this);
 
     this.fds = [];
-    this.ddroot = system.ddroot = new ThinThinFetchDD(this, undefined, ".", undefined);
+    this.ddroot = system.ddroot = new SparseDD(new ThinThinFetchDD(this, undefined, ".", undefined));
     this.ddcwd = system.ddroot;
+
+    system.ddroot.open();
 
     this.functions = {};
     this.threads = [];
