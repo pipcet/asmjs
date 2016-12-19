@@ -111,6 +111,7 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
             delete this.refun[symbol];
 
             for (let [addr2, module] of ref) {
+                //console.log("setting " + addr2 + " to " + vm.table.get(addr));
                 vm.table.set(addr2, vm.table.get(addr));
                 module.symtab[symbol] = addr;
             }
@@ -133,6 +134,7 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
         symbol = symbol.replace(/@@.*/, "");
         symbol = symbol.replace(/@.*/, "");
         if (symbol in this.defun) {
+            //console.log("setting " + (index + imports.sys.plt) + " to " + vm.table.get(this.defun[symbol]));
             vm.table.set(index + imports.sys.plt, vm.table.get(this.defun[symbol]));
         } else {
             if (!this.refun[symbol])
@@ -552,7 +554,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         this.stop(1);
 
         retv.then(r => {
-            //console.log("promise fulfilled, sp " + sp + " pc0 " + this.$pc0);
+            //console.log("promise fulfilled, sp " + sp + " pc0 " + this.$pc0 + " r " + r);
             this.extcallRet[sp] = r;
             this.stop(0);
         });
@@ -611,7 +613,7 @@ Wasm32Thread.prototype.step = function ()
     var ret;
 
     while (true) {
-        //console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp);
+        //console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp + " entry " + this.module.dyninfo.entry);
         if (first) {
             ret = system.threads[0].indcall(-1, sp+16, 0, 0, rpc, this.module.dyninfo.entry);
             this.first = false;

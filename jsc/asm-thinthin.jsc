@@ -985,7 +985,7 @@ FSDD.prototype.openat = function (path, flags, mode)
     if (mode === undefined)
         mode = 0;
     return new Promise((resolve, reject) => {
-        console.log("opening " + path);
+        //console.log("opening " + path);
         fs.open(path, flags, mode, (err, fd) => {
             if (err)
                 reject(err);
@@ -1100,9 +1100,13 @@ if (typeof(os) !== "undefined" &&
     ThinThin.openat = function (fdno, ptr, flags, mode) {
         var path = CStringAt(this.HEAPU8, ptr);
 
+        //console.log("openat " + path + " " + fdno);
+
         var dd = this.fds[fdno];
         if (!dd)
             return -%{EINVAL};
+
+        //console.log("dd " + dd);
 
         return dd.openat(path, flags, mode)
             .then((fd) => fd.fdno).catch((error) => -%{ENOENT});
@@ -1122,9 +1126,16 @@ if (typeof(os) !== "undefined" &&
         var dd = this.fds[fdno];
         var path = CStringAt(this.HEAPU8, pathstr);
 
+        //console.log("fstatat " + path);
+
         if (!dd)
             return -%{EBADF};
 
+        if (path.match(/NamedCapture$/) ||
+            path.match(/Util$/) ||
+            path.match(/\/re$/) ||
+            path.match(/R2$/))
+            path += "/.dir";
         if ("openat" in dd)
             return dd.openat(path).then(fd => {
                 var off;
