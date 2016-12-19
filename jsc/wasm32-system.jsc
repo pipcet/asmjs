@@ -574,7 +574,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         this.extcallRet[sp] = retv;
         this.stop(1);
 
-        retv.then(r => {
+        retv.then((r) => {
             //console.log("promise fulfilled, sp " + sp + " pc0 " + this.$pc0 + " r " + r);
             this.extcallRet[sp] = r;
             this.stop(0);
@@ -786,8 +786,8 @@ function Wasm32Process(system)
     system.processes.push(this);
 
     this.fds = [];
-    this.ddroot = system.ddroot;
-    this.ddcwd = system.ddcwd;
+    this.ddroot = system.ddroot = new ThinThinFetchDD(this, undefined, ".", undefined);
+    this.ddcwd = system.ddroot;
 
     this.functions = {};
     this.threads = [];

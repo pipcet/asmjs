@@ -1131,7 +1131,7 @@ if (typeof(os) !== "undefined" &&
 
         var dd = this.fds[fdno];
         if (!dd)
-            return -%{EINVAL};
+            dd = this.process.ddroot;
 
         //console.log("dd " + dd);
 
@@ -1150,7 +1150,7 @@ if (typeof(os) !== "undefined" &&
         return 0;
     };
     ThinThin.newfstatat = function (fdno, pathstr, statbufptr, flags) {
-        var dd = this.fds[fdno];
+        var dd = this.fds[fdno] || this.process.ddroot;
         var path = CStringAt(this.HEAPU8, pathstr);
 
         //console.log("fstatat " + path);
@@ -1170,10 +1170,15 @@ if (typeof(os) !== "undefined" &&
                     this.HEAP32[statbufptr+off>>2] = 0;
 
                 %{statbufptr[&stat::st_nlink] = 1LL}
-                %{statbufptr[&stat::st_mode] = 0666};
+                if (path.match(/\/\.dir$/))
+                    %{statbufptr[&stat::st_mode] = 0777 + S_IFDIR}
+                else
+                    %{statbufptr[&stat::st_mode] = 0777 + S_IFREG}
                 %{statbufptr[&stat::st_size] = "fd.size()"}
                 %{statbufptr[&stat::st_blksize] = "fd.size()"}
                 %{statbufptr[&stat::st_blocks] = "1"}
+
+                fd.close();
 
                 return 0;
             }).catch(err => -%{ENOENT});
