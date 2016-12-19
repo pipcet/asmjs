@@ -775,6 +775,9 @@ HTMLFD.prototype.startStuffing = function ()
     });
 };
 
+var gLimboFD;
+var gLimboPath;
+
 var gRemoteFDs = {};
 
 function FrozenThinThinFD(fd)
@@ -1238,6 +1241,14 @@ if (typeof(os) !== "undefined" &&
     ThinThin.openat = function (fdno, ptr, flags, mode) {
         var path = CStringAt(this.HEAPU8, ptr);
 
+        if (path.length && path === gLimboPath) {
+            console.log("match! path: " + path);
+            var ret = gLimboFD;
+            gLimboFD = undefined;
+            gLimboPath = undefined;
+            return ret.fdno;
+        }
+
         if (path.match(/^\//))
             return -%{ENOENT};
 
@@ -1282,7 +1293,11 @@ if (typeof(os) !== "undefined" &&
                 %{statbufptr[&stat::st_blksize] = "fd.size()"}
                 %{statbufptr[&stat::st_blocks] = "1"}
 
-                fd.close();
+                if (gLimboFD)
+                    gLimboFD.close();
+                gLimboFD = fd;
+                console.log("path " + path);
+                gLimboPath = path;
 
                 return 0;
             }).catch(err => -%{ENOENT});
