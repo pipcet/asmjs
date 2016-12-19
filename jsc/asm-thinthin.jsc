@@ -347,9 +347,29 @@ ImmediatePromise.prototype.then = function (consequence)
     return consequence(this.value);
 };
 
+function ThinThinDD(process, fdno)
+{
+    ThinThinFD.call(this, process, fdno);
+    this.entries = {
+        ".": this,
+        "..": this.parent,
+    }
+}
+ThinThinDD.prototype = Object.create(ThinThinFD.prototype);
+
+ThinThinDD.prototype.mode = function ()
+{
+    return %{S_IFDIR + 0777};
+};
+
+ThinThinDD.prototype.openat = function (path)
+{
+    return Promise.reject(-%{ENOENT});
+};
+
 function ThinThinFetchDD(process, parent, stem, fdno)
 {
-    ThinThinDD.call(this, process, parent);
+    ThinThinDD.call(this, process, fdno);
     this.stem = stem;
 }
 
@@ -374,12 +394,17 @@ ThinThinFetchDD.prototype.discover = function (component, isdir)
     var ret;
 
     if (isdir) {
-        ret = new ThinThinFetchDD(this.process, this, url, -1);
+        ret = new ThinThinFetchDD(this.process, url);
     } else {
-        ret = new ThinThinFetchFD(this.process, this, url, -1);
+        ret = new ThinThinFetchFD(this.process, url);
     }
 
     return ret;
+};
+
+ThinThinFetchDD.prototype.openat = function (path)
+{
+    return (new ThinThinFetchFD(this.process, this.stem + "/" + path)).open().then((r) => { return r; });
 };
 
 function ThinThinFD(process, fdno)
@@ -410,7 +435,7 @@ ThinThinFD.prototype.size = function ()
 
 ThinThinFD.prototype.open = function ()
 {
-    return this.fdno;
+    return this;
 };
 
 ThinThinFD.prototype.close = function ()
@@ -442,12 +467,15 @@ ThinThinFD.prototype.stuff = function (data)
 ThinThinFD.prototype.stuffError = function (error)
 {
     this.readError = error;
+    this.readEOF = true;
 
     var onstuff = this.onstuff;
     this.onstuff = new Set();
 
     for (var handler of onstuff)
         handler();
+
+    this.close();
 };
 
 ThinThinFD.prototype.stuffEOF = function ()
@@ -549,6 +577,13 @@ ThinThinFD.prototype.read = function(heap, ptr, len)
                 this.pause();
                 resolve(this.read(heap, ptr, len));
             });
+
+            if (this.readData.length > this.readPosition ||
+                this.readEOF) {
+                var onstuff = this.onstuff;
+                for (var handler of onstuff)
+                    handler();
+            }
         });
     });
 };
@@ -578,7 +613,8 @@ ThinThinFD.prototype.available = function ()
 
 ThinThinFD.prototype.inputPromise = function ()
 {
-    return new InputPromise(this, this.domPromise());
+    this.stuffEOF();
+    return Promise.resolve("");
 };
 
 ThinThinFD.prototype.write = function (heap, ptr, len)
@@ -743,7 +779,17 @@ ThinThinFetchFD.prototype = Object.create(ThinThinFD.prototype);
 
 ThinThinFetchFD.prototype.open = function ()
 {
-    return this.inputPromise().then(() => this.fdno);
+    return new Promise((resolve, reject) => {
+        this.onstuff.add(() => {
+            if (this.readError)
+                reject(this.readError);
+            else {
+                resolve(this);
+            }
+        });
+
+        this.startStuffing();
+    });
 };
 
 ThinThinFetchFD.prototype.startStuffing = function ()
@@ -756,7 +802,7 @@ ThinThinFetchFD.prototype.startStuffing = function ()
         return Promise.reject("EOF");
     }
 
-    fetch(url).then(response => {
+    return fetch(url).then(response => {
         var abp = response.arrayBuffer();
 
         return abp.then(abuf => {
@@ -941,25 +987,6 @@ RemoteFD.prototype.outputPromise = function (heap, ptr, len)
     this.target(["send", this.rfdno, buf]);
 
     return Promise.resolve(len);
-};
-
-function ThinThinDD(process, fdno)
-{
-    ThinThinFD.call(this, process, fdno);
-    this.entries = {
-        ".": this,
-        "..": this.parent,
-    }
-}
-ThinThinDD.prototype = Object.create(ThinThinFD.prototype);
-
-ThinThinDD.prototype.mode = function ()
-{
-    return %{S_IFDIR + 0777};
-};
-
-ThinThinDD.prototype.openat = function (path)
-{
 };
 
 var fs;
