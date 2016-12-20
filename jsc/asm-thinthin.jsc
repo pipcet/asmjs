@@ -601,6 +601,9 @@ ThinThinFD.prototype.read = function(heap, ptr, len)
         if (i == 0 || i == len)
             return i;
 
+        if (this.readUnbuffered)
+            return Promise.resolve(i);
+
         return Promise.resolve(this.read(heap, ptr+i, len-i)).then(j => i+j);
     }
 
@@ -705,11 +708,13 @@ function HTMLFD(process, dom, fdno)
     ThinThinFD.call(this, process, fdno);
 
     if (dom === undefined)
-        dom = document.getElementById("output");
+        dom = document.getElementById("input");
 
     this.dom = dom;
 }
 HTMLFD.prototype = Object.create(ThinThinFD.prototype);
+
+HTMLFD.prototype.readUnbuffered = true;
 
 HTMLFD.prototype.stopStuffing = function ()
 {
@@ -765,7 +770,7 @@ HTMLFD.prototype.startStuffing = function ()
 
         node_send.onclick = e => {
             var value = node_ta.value;
-            this.stuff(value == "" ? "" : (value + "\n"));
+            this.stuffString(value == "" ? "" : (value + "\n"));
 
             e.stopPropagation();
             e.preventDefault();
