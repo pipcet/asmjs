@@ -260,8 +260,22 @@ Wasm32Module.prototype.check_libs = function (thread)
                     });
                 } else if (typeof fetch !== "undefined") {
                     var module;
-                    return fetch(lib).then((response) => {
-                        return response.arrayBuffer();
+                    return caches.open("v3").then(cache => {
+                        var req = new Request(lib);
+
+                        return cache.match(req).then((response) => {
+                            if (response === undefined)
+                                return fetch(lib);
+
+                            return response;
+                        }).then(response => {
+                            cache.put(lib, response.clone());
+
+                            if (response.ok)
+                                return response.arrayBuffer();
+
+                            return Promise.reject(response);
+                        });
                     }).then((buffer) => {
                         module = new Wasm32Module(buffer);
 
