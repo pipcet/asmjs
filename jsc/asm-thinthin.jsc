@@ -1598,7 +1598,12 @@ ThinThin.getpid = ThinThin.getppid = function ()
 
 ThinThin.dlload = function (addr, len, memp)
 {
-    var ab = this.heap.slice(addr, addr+len);
+    var sab = this.heap.slice(addr, addr+len);
+    var ab = new ArrayBuffer(len);
+    var sav = new Uint8Array(sab);
+    var av = new Uint8Array(ab);
+    for (var i=0; i < len; i++)
+        av[i] = sav[i];
     var module = new Wasm32Module(ab);
 
     return module.load(this, this.vm).then((ret) => {
