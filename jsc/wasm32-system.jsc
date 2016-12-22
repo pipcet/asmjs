@@ -340,13 +340,13 @@ Wasm32Module.prototype.instantiate = function (thread, vm, mem, recurse)
         .then((instance) => {
             this.instance = instance;
             this.instime = Date.now();
-            thread.exports = {};
-            for (let e in this.instance.exports) {
-                thread.exports[e] = this.instance.exports[e];
-            }
+            thread.exports = this.instance.exports;
             thread.memory = this.instance.exports._memory.buffer;
             thread.table = this.instance.exports._table;
-            this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
+            if (this.instance.exports.entry !== undefined) {
+                thread.entry = this.imports.sys.plt + this.instance.exports.entry;
+            }
+            //this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
             this.vm.base_lm.open_dyninfo(this.dyninfo, this.imports, this);
             lastdonetime = this.donetime = Date.now();
 
@@ -647,7 +647,7 @@ Wasm32Thread.prototype.step = function ()
     while (true) {
         //console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp + " entry " + this.module.dyninfo.entry);
         if (first) {
-            ret = system.threads[0].indcall(-1, sp+16, 0, 0, rpc, this.module.dyninfo.entry);
+            ret = system.threads[0].indcall(-1, sp+16, 0, 0, rpc, this.entry);
             first = this.first = false;
         } else {
             ret = system.threads[0].indcall(dpc, sp+16, 0, 0, rpc, pc0);
