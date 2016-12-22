@@ -130,7 +130,7 @@ __wasm_chars_\name\():
         .byte 1                 ; table
         .byte 0x70
         .byte 1                 ; maximum present
-        rleb128_32 1024         ; initial size
+        rleb128_32 65536        ; initial size
         rleb128_32 65536        ; maximum size
         .popsection
 
