@@ -1530,7 +1530,7 @@ if (typeof(os) !== "undefined" &&
         return ThinThin.stat.call(this, ptr, 0);
     };
     ThinThin.exit = function (code) {
-        console.log("runtime: " + Date.now() - lastdonetime);
+        console.log("runtime: " + (Date.now() - lastdonetime));
         if (typeof quit !== "undefined")
             quit(code);
         else if (typeof process !== "undefined")
