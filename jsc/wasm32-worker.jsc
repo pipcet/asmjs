@@ -1,0 +1,89 @@
+var args = ["./fannkuch", "10"];
+var env = [];
+
+var system = new Wasm32System();
+
+onmessage = event => {
+    console.log("message " + event.data);
+    var [arraybuffer, rootdd_port, cwd_port, stdin_port, stdout_port, stderr_port] = event.data;
+
+    var vm = new Wasm32VM();
+    var module = new Wasm32Module(arraybuffer);
+
+    var process = new Wasm32Process(system);
+    var thread = new Wasm32Thread(process, module, 8192);
+    thread.module.load(thread, vm).then(() => {
+        var ret = thread.module.instantiate(thread, vm, 0x4000, true);
+        var tos = (thread.module.dyninfo.data_end + 4095) & -4096;
+
+        vm.%{zp[&zeropage::top_of_sbrk] = "tos"}
+
+        return ret;
+    }).then(() => {
+        process.HEAP8 = vm.HEAP8;
+        process.HEAP16 = vm.HEAP16;
+        process.HEAP32 = vm.HEAP32;
+        process.HEAPU8 = vm.HEAPU8;
+        process.HEAPU16 = vm.HEAPU16;
+        process.HEAPU32 = vm.HEAPU32;
+        process.HEAPF32 = vm.HEAPF32;
+        process.HEAPF64 = vm.HEAPF64;
+
+        thread.heap = vm.heap;
+        thread.HEAP8 = vm.HEAP8;
+        thread.HEAP16 = vm.HEAP16;
+        thread.HEAP32 = vm.HEAP32;
+        thread.HEAPU8 = vm.HEAPU8;
+        thread.HEAPU16 = vm.HEAPU16;
+        thread.HEAPU32 = vm.HEAPU32;
+        thread.HEAPF32 = vm.HEAPF32;
+        thread.HEAPF64 = vm.HEAPF32;
+
+        var HEAP32 = vm.HEAP32;
+
+        %{zp[&zeropage::top_of_memory] = "module.top_of_memory"}
+        %{zp[&zeropage::thread_list]} = %{tp1};
+        %{zp[&zeropage::bottom_of_sbrk] = "module.start_of_sbrk"}
+
+        %{tp1[&threadpage::next]} = %{tp1};
+        %{tp1[&threadpage::prev]} = %{tp1};
+        %{tp1[&threadpage::id] = "1"}
+        %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
+        %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
+
+        module.top_of_stack = 1023 * 1024 * 1024;
+        var sp = system.init_sp(vm, module.top_of_stack, args, env);
+        %{tp1[&threadpage::sp] = "sp"}
+        %{tp1[&threadpage::initsp] = "sp"}
+
+        %{tp1[&threadpage::pc] = "process.entry"}
+
+        new MessagePortFD(process, stdin_port, 0);
+        new MessagePortFD(process, stdout_port, 1);
+        new MessagePortFD(process, stderr_port, 2);
+
+        system.runqueue.push(thread);
+    }).then(() => {
+        console.log("started");
+        try {
+            run = () => {
+                try {
+                    system.threads[0].step();
+                    if (!system.threads[0].stopped())
+                        Promise.resolve().then(run);
+                } catch (e) {
+                    console.log("another exception");
+                    console.log(e);
+                    console.log(e.stack);
+                }
+            };
+            run();
+        } catch (e) {
+            console.log("exception");
+            console.log(e);
+            console.log(e.stack);
+        }
+    }).catch(e => {
+        console.log("e: " + e);
+    })
+};
