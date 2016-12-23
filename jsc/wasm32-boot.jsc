@@ -2,7 +2,36 @@ var vm = new Wasm32VM();
 var system = new Wasm32System();
 var module;
 
-if (typeof os !== "undefined") {
+if (remote) {
+    caches.open("v3").then((cache) => {
+        var req = new Request(path);
+
+        return cache.match(req).then((response) => {
+            if (response === undefined)
+                return fetch(path);
+
+            return response;
+        }).then(response => {
+            cache.put(path, response.clone());
+
+            if (response.ok)
+                return response.arrayBuffer();
+
+            return Promise.reject(response);
+        });
+    }).then((ab) => {
+        console.log("launching");
+        var [root, cwd, stdin, stdout, stderr] = remote_process(ab);
+        var process = new Wasm32Process(system);
+
+        (new ThinThinFD(process, 0)).connectPort(stdin);
+        (new ThinThinFD(process, 1)).connectPort(stdout);
+        (new ThinThinFD(process, 2)).connectPort(stderr);
+        console.log("launched");
+    }).catch(e => {
+        console.log("e2:" + e);
+    })
+} else if (typeof os !== "undefined") {
     module = new Wasm32Module(os.file.readFile(path, "binary"));
 
     system.instantiate(module, vm, args, environment_variables()).then(() => {
@@ -73,22 +102,5 @@ if (typeof os !== "undefined") {
         console.log(e);
         console.log(e.stack);
     });
-}
-
-function abtoascii(ab)
-{
-    let h8 = new Uint8Array(ab);
-    let s = "";
-
-    for (var i = 0; i < h8.byteLength; i++) {
-        let c = h8[i];
-
-        if (c >= 0x80)
-            throw "non-ASCII byte";
-
-        s += String.fromCharCode(h8[i]);
-    }
-
-    return s;
 }
 

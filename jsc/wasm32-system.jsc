@@ -944,6 +944,36 @@ Wasm32System.prototype.init_sp = function (vm, off, args, env)
     return off;
 };
 
+function remote_process(arraybuffer)
+{
+    var mchs = [new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel()];
+    var lports = mchs.map(x => x.port1);
+    var rports = mchs.map(x => x.port2);
+
+    var worker = new Worker("wasm32-worker.js");
+
+    worker.postMessage([arraybuffer].concat(rports), [arraybuffer].concat(rports));
+
+    return lports;
+}
+
+function abtoascii(ab)
+{
+    let h8 = new Uint8Array(ab);
+    let s = "";
+
+    for (var i = 0; i < h8.byteLength; i++) {
+        let c = h8[i];
+
+        if (c >= 0x80)
+            throw "non-ASCII byte";
+
+        s += String.fromCharCode(h8[i]);
+    }
+
+    return s;
+}
+
 Wasm32System.prototype.instantiate = function (module, vm, args, env)
 {
     var process;
