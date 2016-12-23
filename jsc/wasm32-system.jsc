@@ -341,8 +341,8 @@ Wasm32Module.prototype.instantiate = function (thread, vm, mem, recurse)
             this.instance = instance;
             this.instime = Date.now();
             thread.exports = this.instance.exports;
-            thread.memory = this.instance.exports._memory.buffer;
-            thread.table = this.instance.exports._table;
+            thread.memory = vm.memory;
+            thread.table = vm.table;
             if (this.instance.exports.entry !== undefined) {
                 thread.entry = this.imports.sys.plt + this.instance.exports.entry;
             }

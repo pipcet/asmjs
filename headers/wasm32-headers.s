@@ -70,6 +70,7 @@ __wasm_chars_\name\():
         .popsection
         .endif
 
+        .if 0
         .pushsection .wasm.chars.export
         .byte 0x00
         .popsection
@@ -87,6 +88,7 @@ __wasm_chars_\name\():
         .byte 0x01              ; external kind table
         .byte 0x00
         .popsection
+        .endif
 
         .pushsection .wasm.chars.import
         .byte 0x00
