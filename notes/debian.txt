@@ -1,0 +1,36 @@
+ - installed fresh jessie system
+ - copied git repos
+ - installed git, make, autoconf2.13, gcc, g++, libfile-slurp-perl automake1.11, libtool, autoconf2.64, flex, bison, libgmp-dev libmpc-dev libmpfr-dev gawk
+ - libtoolize binutils-gdb
+ - AUTOMAKE=automake-1.11 ACLOCAL=aclocal-1.11 autoreconf2.64 --force -i in bfd/ opcodes gas
+ - for a in src/binutils-gdb src/binutils-gdb/bfd src/binutils-gdb/opcodes src/binutils-gdb/opcodes src/binutils-gdb/gas; do (cd $a; AUTOMAKE=automake-1.11 ACLOCAL=aclocal-1.11 autoreconf2.64 --force -i); done
+ - cp config/config.sub src/binutils-gdb/config.sub
+ - PATH=/home/user/git/asmjs/common/bin:/home/user/git/asmjs/asmjs-virtual-asmjs/bin:$PATH make all
+ - make build/binfmt_misc.install
+ - make lib/asmjs.o
+
+renice 19 $$
+qemu-img create -f qcow2 asmjs.qcow2 120G
+sudo qemu-system-x86_64 -enable-kvm -smp 4 -m 4G -hda asmjs.qcow2 -cdrom ./debian-live-8.6.0-amd64-gnome-desktop.iso -net nic -net user
+ssh pip@192.168.43.208 tar cv git/asmjs/.git | tar xv
+edit /etc/apt/sources.list
+apt-get update
+aptitude install git make autoconf2.13 gcc g++ libfile-slurp-perl automake1.11 libtool autoconf2.64 flex bison libgmp-dev libmpc-dev libmpfr-dev gawk
+git reset --hard
+git submodule update --recursive
+export ASMJSDIR=$(pwd)
+time make -kj6 build/wasm32/perl.make
+sudo make build/binfmt_misc.install
+time make -kj6 build/common3/spidermonkey.make
+./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld -shared --whole-archive ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.a --no-whole-archive ./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc_s.a -o ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so
+make lds/wasm32.cpp-lds.lds
+make lib/wasm32-headers.o
+make bin/wasmrewrite
+make wasmrewrite/wasmsect
+bash -x bin/wasmify-wasm32 ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so > libc.wasm
+cp bootstrap/interpolate-cache.pl cache/interpolate-cache-asmjs-virtual-asmjs.pl
+make js/wasm32.js
+make -kj6 build/wasm32/perl.make
+export LANG=C
+time make -kj6 build/wasm32/perl.make 
+
