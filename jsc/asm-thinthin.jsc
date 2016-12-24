@@ -1,3 +1,4 @@
+// -*- mode: js; orgstruct-heading-prefix-regexp: "//"; -*-
 #{#define _GNU_SOURCE}
 #{#include <stdio.h>}
 #{#include <sys/stat.h>}
@@ -28,8 +29,9 @@
 #{JSV<size_t> i("i");}
 #{JSV<iovec*> iov("iov");}
 
+//* globals
 var ThinThin = {};
-
+//** ThinThin.sbrk (unused)
 ThinThin.sbrk = function (size)
 {
     size = (size + 4095) & -4096;
@@ -43,12 +45,12 @@ ThinThin.sbrk = function (size)
 
     return ret;
 };
-
+//** ThinThin.brk (unused)
 ThinThin.brk = function (addr)
 {
     return 0;
 };
-
+//* globals
 var data = {};
 var offsets = {};
 
@@ -62,7 +64,7 @@ var initsp;
 var MyCode;
 
 var args;
-
+//** argument initialization
 if (args) {
 }
 else if (typeof process !== "undefined") {
@@ -73,7 +75,7 @@ else if (typeof scriptArgs !== "undefined") {
 } else {
     args = ["<this program>"];
 }
-
+//* Syscall
 function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
 {
     var argspecs = [];
@@ -102,7 +104,7 @@ function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
         return ret;
     };
 }
-
+//* Syscall64
 function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
                    argspec4, argspec5)
 {
@@ -160,17 +162,17 @@ function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
         return ret;
     };
 }
-
+//* init_syscall
 function init_syscall(name, number, ...args)
 {
     Syscalls[name] = Syscalls[number] = new Syscall(number, ...args);
 }
-
+//* init_syscall64
 function init_syscall64(name, number, ...args)
 {
     Syscalls[name] = Syscalls[number] = new Syscall64(number, ...args);
 }
-
+//* syscall table
 var Syscalls = {};
 
 init_syscall(  "read",            0, "fd", "ptr", "u64");
@@ -287,14 +289,15 @@ var SyscallSignatures = {
     renameat2:    [316, "fd", "ptr", "fd", "ptr", "u64"],
     execveat:     [333, "fd", "ptr", "aptr", "aptr", "u64"],
 };
-
+//* utility
+//** TimeoutPromise
 function TimeoutPromise(timeout)
 {
     return new Promise((resolve, reject) => {
         window.setTimeout(resolve, timeout);
     });
 }
-
+//** SplitPromise
 function SplitPromise(n, promise)
 {
     var resolve_lhs, resolve_rhs;
@@ -320,7 +323,7 @@ function SplitPromise(n, promise)
 
     return [promise_lhs, promise_rhs];
 }
-
+//** DissectedPromise
 function DissectedPromise()
 {
     this.promise = new Promise((resolve, reject) => {
@@ -333,7 +336,7 @@ DissectedPromise.prototype.then = function (consequence)
 {
     return this.promise.then(consequence);
 };
-
+//** ImmediatePromise
 function ImmediatePromise(v)
 {
     if (v instanceof Promise)
@@ -346,7 +349,371 @@ ImmediatePromise.prototype.then = function (consequence)
 {
     return consequence(this.value);
 };
+//** ThinThinRWer
+function ThinThinRWer()
+{
+}
 
+ThinThinRWer.prototype.kind = () => "rw";
+
+ThinThinRWer.prototype.toString = function ()
+{
+    if ("data" in this)
+        return this.kind() + ` "${this.data}"`;
+    return this.kind();
+};
+
+ThinThinRWer.prototype.debug = function (f)
+{
+    this.debugf = f;
+
+    return this.toString();
+};
+//** ThinThinReader
+function ThinThinReader()
+{
+}
+
+ThinThinReader.prototype = Object.create(ThinThinRWer.prototype);
+
+ThinThinReader.prototype.kind = () => "reader";
+
+ThinThinReader.prototype.max = function ()
+{
+    return 0;
+};
+
+ThinThinReader.prototype.consume = function (s)
+{
+    return 0;
+};
+
+ThinThinReader.prototype.done = function ()
+{
+    return true;
+};
+//** ThinThinWriter
+function ThinThinWriter()
+{
+}
+
+ThinThinWriter.prototype = Object.create(ThinThinRWer.prototype);
+
+ThinThinWriter.prototype.kind = () => "writer";
+
+ThinThinWriter.prototype.provide = function (n)
+{
+    return "";
+};
+
+ThinThinWriter.prototype.advance = function (n)
+{
+};
+
+ThinThinWriter.prototype.done = function ()
+{
+    return true;
+};
+//** ThinThinMetaReader
+function ThinThinMetaReader(req, resolve, reject)
+{
+    this.req = req;
+    this.resolve = resolve;
+    this.reject = reject;
+}
+
+ThinThinMetaReader.prototype = Object.create(ThinThinRWer.prototype);
+
+ThinThinMetaReader.prototype.kind = () => "metareader";
+
+ThinThinMetaReader.prototype.request = function ()
+{
+    return this.req;
+};
+
+ThinThinMetaReader.prototype.consume = function (data)
+{
+    this.resolve(data);
+};
+
+ThinThinMetaReader.prototype.done = function ()
+{
+    return true;
+};
+//** ThinThinMetaWriter
+function ThinThinMetaWriter()
+{
+}
+
+ThinThinMetaWriter.prototype = Object.create(ThinThinRWer.prototype);
+
+ThinThinMetaWriter.prototype.kind = () => "metawriter";
+
+ThinThinMetaWriter.prototype.provide = function (request)
+{
+    return [[], []];
+};
+
+ThinThinMetaWriter.prototype.done = function ()
+{
+    return false;
+};
+//** ThinThinFlow
+function ThinThinFlow()
+{
+    this.readers = [];
+    this.writers = [];
+    this.metareaders = [];
+    this.metawriters = [];
+}
+
+ThinThinFlow.prototype.reader = function (reader)
+{
+    this.readers.push(reader);
+    this.connect();
+};
+
+ThinThinFlow.prototype.writer = function (writer)
+{
+    this.writers.push(writer);
+    this.connect();
+};
+
+ThinThinFlow.prototype.metareader = function (reader)
+{
+    this.metareaders.push(reader);
+    this.metaconnect();
+};
+
+ThinThinFlow.prototype.metawriter = function (writer)
+{
+    this.metawriters.push(writer);
+    this.metaconnect();
+};
+
+ThinThinFlow.prototype.connect = function ()
+{
+    if (this.readers.length && this.writers.length) {
+        var r = this.readers[0];
+        var w = this.writers[0];
+        var nmax;
+
+        this.state = 0;
+
+        Promise.resolve(r.max()).then(n => {
+            console.log("nmax " + n);
+            nmax = n;
+            return w.provide(n);
+        }).then(s => {
+            r.data = w.data = s;
+            if (s.length > nmax)
+                s = s.substr(0, nmax);
+
+            return r.consume(s);
+        }).then(n => {
+            return w.advance(n);
+        }).then(() => {
+            Promise.all([Promise.resolve(r.done()).then(done => {
+                            if (done)
+                                this.readers.shift();
+                         }),
+                         Promise.resolve(w.done()).then(done => {
+                             if (done)
+                                 this.writers.shift();
+                         })]).then(() => {
+                             this.connect();
+                         });
+        })/*.catch(err => {
+            console.log(err);
+            r.close(err);
+            w.close(err);
+            this.readers.shift();
+            this.writers.shift();
+        });*/
+    }
+};
+
+ThinThinFlow.prototype.metaconnect = function ()
+{
+    if (this.metareaders.length && this.metawriters.length) {
+        var r = this.metareaders[0];
+        var w = this.metawriters[0];
+
+        Promise.resolve(r.request()).then(request => {
+            console.log(request);
+            return w.provide(request);
+        }).then(data => {
+            console.log(data);
+            return r.consume(data);
+        }).then(() => {
+            Promise.all([Promise.resolve(r.done()).then(done => {
+                            if (done)
+                                this.metareaders.shift();
+                         }),
+                         Promise.resolve(w.done()).then(done => {
+                             if (done)
+                                 this.metawriters.shift();
+                         })]).then(() => {
+                             this.metaconnect();
+                         });
+        })/*.catch(err => {
+            console.log(err);
+            r.close(err);
+            w.close(err);
+            this.readers.shift();
+            this.writers.shift();
+        });*/
+    }
+};
+//** ThinThinFlowReader
+function ThinThinFlowReader(nmax, resolve, reject)
+{
+    this.nmax = nmax;
+    this.resolve = resolve;
+    this.reject = reject;
+}
+ThinThinFlowReader.prototype = Object.create(ThinThinReader.prototype);
+
+ThinThinFlowReader.prototype.kind = () => "flow-reader";
+
+ThinThinFlowReader.prototype.max = function ()
+{
+    return this.nmax;
+};
+
+ThinThinFlowReader.prototype.consume = function (s)
+{
+    this.resolve(s);
+
+    return s.length;
+};
+
+ThinThinFlowReader.prototype.done = function ()
+{
+    return true;
+};
+
+ThinThinFlowReader.prototype.close = function (err)
+{
+    this.reject(err);
+};
+//** ThinThinFlow
+ThinThinFlow.prototype.read = function (n)
+{
+    return new Promise((resolve, reject) => {
+        this.reader(new ThinThinFlowReader(n, resolve, reject));
+    });
+};
+//** ThinThinFlowWriter
+function ThinThinFlowWriter(s, resolve, reject)
+{
+    this.s = s;
+    this.resolve = resolve;
+    this.reject = reject;
+}
+ThinThinFlowWriter.prototype = Object.create(ThinThinWriter.prototype);
+
+ThinThinFlowWriter.prototype.kind = () => "flow-writer";
+
+ThinThinFlowWriter.prototype.provide = function (n)
+{
+    return this.s;
+};
+
+ThinThinFlowWriter.prototype.advance = function (n)
+{
+    console.log(n);
+    this.resolve(n);
+};
+
+ThinThinFlowWriter.prototype.done = function ()
+{
+    return true;
+};
+
+ThinThinFlowWriter.prototype.close = function (err)
+{
+    this.reject(err);
+};
+//** ThinThinFlow
+ThinThinFlow.prototype.write = function (s)
+{
+    return new Promise((resolve, reject) => {
+        this.writer(new ThinThinFlowWriter(s, resolve, reject));
+    });
+};
+
+ThinThinFlow.prototype.debug = function (name, f)
+{
+    var str = "";
+
+    str += `flow ${name}<br>`;
+    str += (this.readers.map(x => x.debug(f)).join(":")) + " <- " + (this.writers.map(x => x.debug(f))) + "["+this.state+"]";
+    str += "<br>";
+    str += (this.metareaders.map(x => x.debug(f)).join(":")) + " <= " + (this.metawriters.map(x => x.debug(f))) + "["+this.state+"]";
+    str += "<br>";
+
+    this.debugf = f;
+
+    return str;
+};
+//** ThinThinHalf
+function ThinThinHalf(flows, metas)
+{
+    Array.call(this);
+    this[0] = flows && flows[0] || new ThinThinFlow();
+    this[1] = flows && flows[1] || new ThinThinFlow();
+}
+ThinThinHalf.prototype = Object.create(Array.prototype);
+
+ThinThinHalf.prototype.reverse = function()
+{
+    return new ThinThinHalf([this[1], this[0]]);
+}
+
+ThinThinHalf.prototype.debug = function (name, f)
+{
+    var str = "";
+
+    str += `half ${name}<br>`;
+    str += this[0].debug(`${name}[0]`, f);
+    str += this[1].debug(`${name}[1]`, f);
+    if (this[2])
+        str += this[2].debug(`${name}[2]`, f);
+    if (this[3])
+        str += this[3].debug(`${name}[3]`, f);
+
+    this.debugf = f;
+
+    return str;
+};
+//*** sendflow (unused?)
+function sendflow(flow1, flow2, n, count)
+{
+    if (count === undefined)
+        count = 0;
+
+    if (n === undefined)
+        n = Infinity;
+
+    if (n === 0)
+        return Promise.resolve(count);
+
+    flow1.read(n).then(s => {
+        console.log("s: " + s);
+        return flow2.write(s);
+    }).then(k => {
+        count += k;
+        n -= k;
+
+        return sendflow(flow1, flow2, n, count);
+    })/*.catch(err => {
+        if (count > 0)
+            return Promise.resolve(count);
+        return Promise.reject(err);
+    });*/
+}
+//** ThinThinDD (kill)
 function ThinThinDD(process, fdno)
 {
     ThinThinFD.call(this, process, fdno);
@@ -366,7 +733,7 @@ ThinThinDD.prototype.openat = function (path)
 {
     return Promise.reject(-%{ENOENT});
 };
-
+//** ThinThinFetchDD (kill)
 function ThinThinFetchDD(process, parent, stem, cache, fdno)
 {
     ThinThinDD.call(this, process, fdno);
@@ -375,7 +742,7 @@ function ThinThinFetchDD(process, parent, stem, cache, fdno)
 }
 
 ThinThinFetchDD.prototype = Object.create(ThinThinDD.prototype);
-
+//** ThinThinDD
 ThinThinDD.prototype.walk = function (component, isdir)
 {
     if (component in this.entries)
@@ -388,7 +755,7 @@ ThinThinDD.prototype.walk = function (component, isdir)
             this.entries[component] = entry;
     });
 };
-
+//** ThinThinFetchDD
 ThinThinFetchDD.prototype.discover = function (component, isdir)
 {
     var url = this.stem + "/" + component;
@@ -416,7 +783,7 @@ ThinThinFetchDD.prototype.openat = function (path)
                                 this.cache))
         .open();
 };
-
+//** ThinThinFD
 function ThinThinFD(process, fdno)
 {
     if (fdno === undefined)
@@ -424,18 +791,25 @@ function ThinThinFD(process, fdno)
             ;
     this.fdno = fdno;
     this.readers = 0;
-    this.readData = [];
+    this.readData = "";
     this.readPosition = 0;
     this.readTo = 0;
-    this.forgetInputPromises = new Set();
     this.onstuff = new Set();
+
+    this.writers = 0;
+    this.writeData = "";
+    this.writePosition = 0;
+    this.writeTo = 0;
+    this.onprovide = new Set();
+    this.onadvance = new Set();
+
     process.fds[fdno] = this;
     this.process = process;
 }
 
 ThinThinFD.prototype.mode = function ()
 {
-    return %{__S_IFREG + 0777};
+    return %{__S_IFCHR + 0777};
 };
 
 ThinThinFD.prototype.size = function ()
@@ -458,20 +832,86 @@ ThinThinFD.prototype.close = function ()
     return Promise.resolve(0);
 };
 
+ThinThinFD.prototype.advance = function (i)
+{
+    this.writeData = this.writeData.substr(i);
+
+    var onadvance = this.onadvance;
+    this.onadvance = new Set();
+
+    for (var handler of onadvance)
+        handler();
+};
+
 ThinThinFD.prototype.consume = function (i)
 {
     this.readData = this.readData.substr(i);
 };
 
+ThinThinFD.prototype.provideString = function (data)
+{
+    this.writeData += data;
+
+    var onprovide = this.onprovide;
+    this.onprovide = new Set();
+
+    for (var handler of onprovide)
+        handler();
+};
+
+ThinThinFD.prototype.provideOpened = function ()
+{
+    this.writeOpened = true;
+
+    var onprovide = this.onprovide;
+    this.onprovide = new Set();
+
+    for (var handler of onprovide)
+        handler();
+};
+
+ThinThinFD.prototype.provideError = function (error)
+{
+    this.writeError = error;
+    this.writeEOF = true;
+
+    var onprovide = this.onprovide;
+    this.onprovide = new Set();
+
+    for (var handler of onprovide)
+        handler();
+
+    this.close();
+};
+
+ThinThinFD.prototype.provideEOF = function ()
+{
+    this.writeEOF = true;
+
+    var onprovide = this.onprovide;
+    this.onprovide = new Set();
+
+    for (var handler of onprovide)
+        handler();
+};
+
+ThinThinFD.prototype.startProviding = function ()
+{
+};
+
 ThinThinFD.prototype.stuffString = function (data)
 {
+    console.log("stuffstring " + data);
     this.readData += data;
 
     var onstuff = this.onstuff;
     this.onstuff = new Set();
 
-    for (var handler of onstuff)
+
+    for (var handler of onstuff) {
+        console.log("handler " + handler)
         handler();
+    }
 };
 
 ThinThinFD.prototype.stuffOpened = function ()
@@ -512,6 +952,13 @@ ThinThinFD.prototype.stuffEOF = function ()
 
 ThinThinFD.prototype.startStuffing = function ()
 {
+    this.stuffing = true;
+
+    if (this.startStuffingResolve) {
+        this.startStuffingResolve(Infinity);
+        delete this.startStuffingResolve;
+    }
+
     if (!this.activeInputPromise) {
         this.activeInputPromise = new DissectedPromise();
 
@@ -542,10 +989,10 @@ ThinThinFD.prototype.unpause = function (len)
             this.startStuffing().then(() => {
                 this.stuffOpened();
                 resolve();
-            }).catch(() => {
+            })/*.catch(() => {
                 this.readers--;
                 reject();
-            });
+            });*/
         });
     }
 
@@ -601,7 +1048,7 @@ ThinThinFD.prototype.read = function(heap, ptr, len)
         if (i == 0 || i == len)
             return i;
 
-        if (this.readUnbuffered)
+        if (true || this.readUnbuffered)
             return Promise.resolve(i);
 
         return Promise.resolve(this.read(heap, ptr+i, len-i)).then(j => i+j);
@@ -647,14 +1094,14 @@ ThinThinFD.prototype.available = function ()
     });
 };
 
-ThinThinFD.prototype.inputPromise = function ()
-{
+ThinThinFD.prototype.inputPromise = function () {
     this.stuffEOF();
     return Promise.resolve("");
 };
 
-ThinThinFD.prototype.write = function (heap, ptr, len)
-{
+ThinThinFD.prototype.write = function (heap, ptr, len) {
+    var initialPosition = this.writePosition;
+
     if (ptr === undefined)
         ptr = 0;
     if (len === undefined)
@@ -663,57 +1110,61 @@ ThinThinFD.prototype.write = function (heap, ptr, len)
     if (len == 0)
         return Promise.resolve(0);
 
-    if ("async hack") {
-        this.outputPromise(heap, ptr, len).then
-        (i =>
-         this.write(heap, ptr+i, len-i).then(j => i+j));
-
-        return len;
-    } else {
-        return this.outputPromise(heap, ptr, len).then
-        (i =>
-         this.write(heap, ptr+i, len-i).then(j => i+j));
-    }
-};
-
-ThinThinFD.prototype.outputPromise = function (heap, ptr, len)
-{
     var data = "";
 
     for (i=0; i<len; i++)
         data += String.fromCharCode(heap[ptr+i]);
 
-    putstr(data);
-
-    return Promise.resolve(len);
+    return this.half[0].write(data);
 };
 
-ThinThinFD.prototype.domPromise = function ()
-{
+ThinThinFD.prototype.providee = function () {
+    var handler; handler = () => {
+        var len = this.writeData.length;
+
+        putstr(this.writeData);
+
+        this.advance(len);
+
+        this.onprovide.add(handler);
+    };
+
+    this.onprovide.add(handler);
+};
+
+ThinThinFD.prototype.domPromise = function () {
     return document.getElementById("output");
 };
 
-ThinThinFD.prototype.connectPort = function (port)
-{
-    port.onmessage = event => {
-        var data = event.data;
-        var ab = new ArrayBuffer(data.length);
-        for (var i = 0; i < data.length; i++)
-            ab[i] = data.charCodeAt(i);
-        this.write(ab, 0, data.length);
-    };
+ThinThinFD.prototype.connectPort = function (port) {
+    var n = 0;
 
     var handler = () => {
         if (this.readData.length > this.readPosition ||
             this.readEOF) {
-            port.postMessage(this.readData.substr(this.readPosition));
-            this.consume(this.readData.length - this.readPosition);
+            if (n > this.readData.length - this.readPosition)
+                n = this.readData.length - this.readPosition;
+            port.postMessage(this.readData.substr(this.readPosition, n));
+            this.consume(n);
         }
 
         this.onstuff.add(handler);
     };
 
-    handler();
+    port.onmessage = event => {
+        var data = event.data;
+        var kind = data[0];
+
+        if (kind === "write") {
+            this.provideString(data[1]);
+        } else if (kind === "read") {
+            n = data[1];
+
+            handler();
+        }
+    };
+
+    port.postMessage(["read"]);
 };
 
 ThinThinFD.prototype.clone = function ()
@@ -725,92 +1176,853 @@ ThinThinFD.prototype.freeze = function ()
 {
     return new FrozenThinThinFD(this);
 };
+//** ThinThinFDReader
+function ThinThinFDReader(fd, len)
+{
+    this.fd = fd;
+    this.len = len;
+}
+ThinThinFDReader.prototype = Object.create(ThinThinReader.prototype);
 
-function HTMLFD(process, dom, fdno)
+ThinThinFDReader.prototype.kind = () => "fd-reader";
+
+ThinThinFDReader.prototype.max = function ()
+{
+    return this.len;
+};
+
+ThinThinFDReader.prototype.consume = function (s)
+{
+    return new Promise((resolve, reject) => {
+        this.fd.stuffString(s);
+        resolve(s.length);
+    });
+};
+
+ThinThinFDReader.prototype.done = function ()
+{
+    return true;
+};
+//** ThinThinFDWriter
+function ThinThinFDWriter(fd)
+{
+    this.fd = fd;
+}
+
+ThinThinFDWriter.prototype = Object.create(ThinThinWriter.prototype);
+
+ThinThinFDWriter.prototype.kind = () => "fd-writer";
+
+ThinThinFDWriter.prototype.provide = function (n)
+{
+    return this.fd.writeData;
+};
+
+ThinThinFDWriter.prototype.consume = function (s)
+{
+    return new Promise((resolve, reject) => {
+        console.log("s: " + s);
+        this.fd.stuffString(s);
+        resolve(s.length);
+    });
+};
+
+ThinThinFDWriter.prototype.advance = function (n)
+{
+    return this.fd.advance(n);
+};
+
+ThinThinFDWriter.prototype.done = function ()
+{
+    return true;
+};
+//** ThinThinHalfFD
+function ThinThinHalfFD(process, half, fdno)
 {
     ThinThinFD.call(this, process, fdno);
 
-    if (dom === undefined)
-        dom = document.getElementById("input");
+    this.half = half;
 
-    this.dom = dom;
+    this.providee();
 }
-HTMLFD.prototype = Object.create(ThinThinFD.prototype);
+ThinThinHalfFD.prototype = Object.create(ThinThinFD.prototype);
 
-HTMLFD.prototype.readUnbuffered = true;
-
-HTMLFD.prototype.stopStuffing = function ()
+ThinThinHalfFD.prototype.unpause = function (len)
 {
-    if (this.dom && this.node && this.node_ta) {
-        if (this.node_ta.value === "") {
-            this.dom.removeChild(this.node);
-            delete this.node;
-            delete this.node_ta;
-        }
-    }
-};
-
-HTMLFD.prototype.startStuffing = function ()
-{
-    if (this.node)
-        return Promise.resolve();
+    /*
+    console.log("unpause");
 
     return new Promise((resolve, reject) => {
+        this.half[1].metareader(new ThinThinMetaReader(["openat_dir", "x", 0],
+                                                       resolve, reject));
+    }).then(data => new Promise((resolve, reject) => {
+        var file = data[0];
+        console.log("name " + file.name);
+
+        var reader = new FileReader();
+
+        reader.onload = () => {
+            resolve(reader.result);
+        };
+        reader.readAsText(file);
+    })).then(text => console.log(text));
+    */
+    return new Promise((resolve, reject) => {
+        this.half[1].reader(new ThinThinFDReader(this, len));
+
+        resolve();
+    })/*.catch(err => console.log(err));*/
+};
+
+ThinThinHalfFD.prototype.providee = function () {
+    var handler; handler = () => {
+        if (this.writeData.length > 0) {
+            console.log(this.half + " " + this.half.flow1.writer);
+            this.half[1].writer(new ThinThinFDWriter(this));
+        }
+
+        this.onprovide.add(handler);
+    };
+
+    this.onprovide.add(handler);
+};
+
+ThinThinHalfFD.prototype.mode = function ()
+{
+    return new Promise((resolve, reject) => {
+        this.half[1].metareader(new ThinThinMetaReader(["mode"], x => { console.log(x); resolve(x); }, reject));
+    });
+};
+
+ThinThinHalfFD.prototype.openat = function (path, flags)
+{
+    return new Promise((resolve, reject) => {
+        this.half[1].metareader(new ThinThinMetaReader(["openat", path, flags], resolve, reject));
+    }).then(response => {
+        console.log(response[0])
+        var obj = response[0];
+
+        if ((obj instanceof Array) && obj.length && (obj[0] instanceof File)) {
+            var pipe = new ThinThinHalf();
+            new FileListHalf(pipe, obj);
+            return new ThinThinHalfFD(this.process, pipe);
+        } else if (obj instanceof File) {
+            console.log("file");
+            var pipe = new ThinThinHalf();
+            new FileHalf(pipe, obj);
+            return new ThinThinHalfFD(this.process, pipe);
+        }
+            console.log("something else");
+    }).catch(err => console.log(err))
+};
+//** HTMLReader
+function HTMLReader()
+{
+}
+HTMLReader.prototype = Object.create(ThinThinReader.prototype);
+
+HTMLReader.prototype.kind = () => "html-reader";
+
+HTMLReader.prototype.max = function ()
+{
+    return Infinity;
+};
+
+HTMLReader.prototype.consume = function (s)
+{
+    putstr(s);
+
+    return s.length;
+};
+
+HTMLReader.prototype.done = function ()
+{
+    return false;
+};
+//** BufferedWriter
+function BufferedWriter(writer)
+{
+    this.writer = writer;
+}
+BufferedWriter.prototype = Object.create(ThinThinWriter.prototype);
+
+BufferedWriter.prototype.kind = function ()
+{
+    return "buffered(" + this.writer.kind() + ")";
+};
+
+BufferedWriter.prototype.provide = function (n)
+{
+    if (this.buffer === undefined) {
+        return this.writer.provide(n).then(s => {
+            this.buffer = s;
+        }).then(() => {
+            this.writer.advance(this.buffer.length);
+        }).then(() => {
+            return this.buffer;
+        });
+    }
+
+    return this.buffer;
+};
+
+BufferedWriter.prototype.advance = function (n)
+{
+    this.buffer = this.buffer.substr(n);
+    if (this.buffer === "")
+        delete this.buffer;
+};
+
+BufferedWriter.prototype.done = function ()
+{
+    if (this.buffer)
+        return false;
+
+    return this.writer.done();
+};
+//** HTMLWriter
+function HTMLWriter(dom)
+{
+    this.dom = dom;
+}
+HTMLWriter.prototype = Object.create(ThinThinWriter.prototype);
+
+HTMLWriter.prototype.kind = () => "html-writer";
+
+HTMLWriter.prototype.activate = function ()
+{
+    if (!this.active) {
+        this.active = true;
+
         this.node = document.createElement("div");
-        var node_ta = document.createElement("textarea");
-        this.node_ta = node_ta;
-        var node_b = document.createElement("button");
-        node_b.innerHTML = "EOF";
+        this.node_ta = document.createElement("textarea");
+        this.node_eof = document.createElement("button");
+        this.node_eof.innerHTML = "EOF";
 
-        var node_send = document.createElement("button");
-        node_send.innerHTML = "Send";
+        this.node_send = document.createElement("button");
+        this.node_send.innerHTML = "Send";
 
-        this.node.appendChild(node_ta);
-        this.node.appendChild(node_send);
-        this.node.appendChild(node_b);
-
-        if (0) node_ta.onchange = function (e) {
-            var value = node_ta.value;
-            if (value == "")
-                fd.readEOF = true;
-            resolve(value == "" ? "" : (value + "\n"));
-
-            if (node.parentNode)
-                node.parentNode.removeChild(node);
-
-            e.stopPropagation();
-            e.preventDefault();
-        };
-
-        node_b.onclick = e => {
-            var value = node_ta.value;
-            this.stuffString(value == "" ? "" : (value + "\n"));
-            this.stuffEOF();
-
-            e.stopPropagation();
-            e.preventDefault();
-        };
-
-        node_send.onclick = e => {
-            var value = node_ta.value;
-            this.stuffString(value == "" ? "" : (value + "\n"));
-
-            e.stopPropagation();
-            e.preventDefault();
-        };
+        this.node.appendChild(this.node_ta);
+        this.node.appendChild(this.node_send);
+        this.node.appendChild(this.node_eof);
 
         this.dom.appendChild(this.node);
 
-        this.node.focus();
+        this.node_eof.onclick = e => {
+            this.resolve(this.node_ta.value);
+            this.deactivate();
+            this.node_ta.value = "";
+
+            e.stopPropagation();
+            e.preventDefault();
+        };
+
+        this.node_send.onclick = e => {
+            console.log("click");
+            this.resolve(this.node_ta.value);
+            console.log("click");
+            this.node_ta.value = "";
+
+            e.stopPropagation();
+            e.preventDefault();
+        };
+    }
+
+    this.node.focus();
+};
+
+HTMLWriter.prototype.deactivate = function ()
+{
+    if (this.active) {
+        delete this.active;
+
+        this.dom.removeChild(this.node);
+    }
+}
+
+HTMLWriter.prototype.provide = function (n)
+{
+    return new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+
+        this.activate();
+    });
+};
+
+HTMLWriter.prototype.advance = function (n)
+{
+};
+
+HTMLWriter.prototype.done = function ()
+{
+    return !this.active;
+};
+//** HTMLReader
+function HTMLReader()
+{
+}
+HTMLReader.prototype = Object.create(ThinThinReader.prototype);
+
+HTMLReader.prototype.kind = () => "html-reader";
+
+HTMLReader.prototype.max = function ()
+{
+    return Infinity;
+};
+
+HTMLReader.prototype.consume = function (s)
+{
+        console.log("s: " + s);
+    putstr(s);
+
+    return s.length;
+};
+
+HTMLReader.prototype.done = function ()
+{
+    return false;
+};
+//** BufferedWriter
+function BufferedWriter(writer)
+{
+    this.writer = writer;
+}
+BufferedWriter.prototype = Object.create(ThinThinWriter.prototype);
+
+BufferedWriter.prototype.kind = function ()
+{
+    return "buffered(" + this.writer.kind() + ")";
+};
+
+BufferedWriter.prototype.provide = function (n)
+{
+    if (this.buffer === undefined) {
+        return this.writer.provide(n).then(s => {
+            this.buffer = s;
+        }).then(() => {
+            this.writer.advance(this.buffer.length);
+        }).then(() => {
+            return this.buffer;
+        });
+    }
+
+    return this.buffer;
+};
+
+BufferedWriter.prototype.advance = function (n)
+{
+    this.buffer = this.buffer.substr(n);
+    if (this.buffer === "")
+        delete this.buffer;
+};
+
+BufferedWriter.prototype.done = function ()
+{
+    if (this.buffer)
+        return false;
+
+    return this.writer.done();
+};
+//** HTMLWriter
+function HTMLWriter(dom)
+{
+    this.dom = dom;
+}
+HTMLWriter.prototype = Object.create(ThinThinWriter.prototype);
+
+HTMLWriter.prototype.kind = () => "html-writer";
+
+HTMLWriter.prototype.activate = function ()
+{
+    if (!this.active) {
+        this.active = true;
+
+        this.node = document.createElement("div");
+        this.node_ta = document.createElement("textarea");
+        this.node_eof = document.createElement("button");
+        this.node_eof.innerHTML = "EOF";
+
+        this.node_send = document.createElement("button");
+        this.node_send.innerHTML = "Send";
+
+        this.node.appendChild(this.node_ta);
+        this.node.appendChild(this.node_send);
+        this.node.appendChild(this.node_eof);
+
+        this.dom.appendChild(this.node);
+
+        this.node_eof.onclick = e => {
+            this.resolve(this.node_ta.value);
+            this.deactivate();
+            this.node_ta.value = "";
+
+            e.stopPropagation();
+            e.preventDefault();
+        };
+
+        this.node_send.onclick = e => {
+            console.log("click");
+            this.resolve(this.node_ta.value);
+            console.log("click");
+            this.node_ta.value = "";
+
+            e.stopPropagation();
+            e.preventDefault();
+        };
+    }
+
+    this.node.focus();
+};
+
+HTMLWriter.prototype.deactivate = function ()
+{
+    if (this.active) {
+        delete this.active;
+
+        this.dom.removeChild(this.node);
+    }
+}
+
+HTMLWriter.prototype.provide = function (n)
+{
+    return new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+
+        this.activate();
+    });
+};
+
+HTMLWriter.prototype.advance = function (n)
+{
+};
+
+HTMLWriter.prototype.done = function ()
+{
+    return !this.active;
+};
+//** HTMLMetaWriter
+function HTMLMetaWriter(half)
+{
+    this.half = half;
+}
+HTMLMetaWriter.prototype = Object.create(ThinThinMetaWriter.prototype);
+
+HTMLMetaWriter.prototype.kind = () => "html-metawriter";
+
+HTMLMetaWriter.prototype.provide = function (request)
+{
+    console.log("HMW req " + request);
+
+    if (request[0] === "AYT")
+        return [["yes", "HTML"]];
+    else if (request[0] === "mode")
+        return [%{__S_IFCHR + 0777}];
+    else if (request[0] === "readdir")
+        return [[-1]];
+    else if (request[0] === "openat")
+        return this.half.openat(request[1], request[2]);
+    else if (request[0] === "openat_dir")
+        return this.half.openat_dir(request[1], request[2]);
+
+    return [[]];
+};
+//** HTMLHalf
+function HTMLHalf(flows, dom)
+{
+    ThinThinHalf.call(this, flows);
+
+    this.dom = dom;
+    this[0].reader(new HTMLReader());
+    this[1].writer(new BufferedWriter(new HTMLWriter(this.dom)));
+    this.meta = new HTMLMetaWriter(this);
+    this[0].metawriter(this.meta);
+    this[1].metawriter(this.meta);
+}
+HTMLHalf.prototype = Object.create(ThinThinHalf.prototype);
+
+HTMLHalf.prototype.openat = function (path, flags)
+{
+    return new Promise((resolve, reject) => {
+        console.log("html openat");
+        this.input_f = document.createElement("input");
+        this.input_f.type = "file";
+        this.dom.appendChild(this.input_f);
+
+        this.input_f.addEventListener("change", () => {
+            var flist = this.input_f.files;
+
+            if (flist.length !== 1)
+                resolve([["no such file"]]);
+
+            resolve([[flist[0]]]);
+
+            this.dom.removeChild(this.input_f);
+        });
+    });
+};
+
+HTMLHalf.prototype.openat_dir = function (path, flags)
+{
+    return new Promise((resolve, reject) => {
+        console.log("html openat");
+        this.input_f = document.createElement("input");
+        this.input_f.type = "file";
+        this.input_f.multiple = true;
+        this.dom.appendChild(this.input_f);
+
+        this.input_f.addEventListener("change", () => {
+            var flist = this.input_f.files;
+            var array = [...flist];
+
+            resolve([[array]]);
+
+            this.dom.removeChild(this.input_f);
+        });
+    });
+};
+//** MessagePortReader1
+function MessagePortReader1(port)
+{
+    this.port = port;
+    this.port.addEventListener("close", () => {
+        delete this.port;
+    });
+}
+MessagePortReader1.prototype = Object.create(ThinThinReader.prototype);
+
+MessagePortReader1.prototype.kind = () => "messageport-reader";
+
+MessagePortReader1.prototype.max = function ()
+{
+    return Infinity;
+};
+
+MessagePortReader1.prototype.consume = function (s)
+{
+    console.log("mpr1 consume " + s);
+
+    if (!this.port)
+        return 0;
+        console.log("s: " + s);
+
+    this.port.postMessage(s);
+
+    return s.length;
+};
+
+MessagePortReader1.prototype.done = function ()
+{
+    return !this.port;
+};
+//** MessagePortWriter1
+function MessagePortWriter1(port)
+{
+    this.port = port;
+    this.port.addEventListener("close", () => {
+        delete this.port;
+    });
+}
+MessagePortWriter1.prototype = Object.create(ThinThinWriter.prototype);
+
+MessagePortWriter1.prototype.kind = () => "messageport-writer";
+
+MessagePortWriter1.prototype.provide = function (n)
+{
+    return new Promise((resolve, reject) => {
+        if (!this.port)
+            reject("EOF");
+
+        this.oldonmessage = this.port.onmessage;
+        this.port.onmessage = event => {
+            resolve(event.data);
+            this.port.onmessage = this.oldonmessage;
+        };
+    });
+};
+
+MessagePortWriter1.prototype.advance = function (n)
+{
+};
+
+MessagePortWriter1.prototype.done = function ()
+{
+    return !this.port;
+};
+//** MessagePortHalf1
+function MessagePortHalf1(flows, port)
+{
+    ThinThinHalf.call(this, flows);
+
+    this[0].reader(new MessagePortReader1(port));
+    this[1].writer(new MessagePortWriter1(port));
+}
+MessagePortHalf1.prototype = Object.create(ThinThinHalf.prototype);
+//** RRPort
+function RRPort(port)
+{
+    this.port = port;
+    this.seq = 1;
+
+    this.requesters = {};
+    this.responders = {};
+    this.rejecters = {};
+
+    this.port.addEventListener("message", event => {
+        var [kind, seq, data] = event.data;
+
+        console.log(event.data);
+
+        if (kind === "response") {
+            var requester = this.requesters[seq];
+            delete this.requesters[seq];
+            delete this.rejecters[seq];
+
+            requester(data);
+        } else if (kind in this.responders) {
+            var responder = this.responders[kind];
+
+            console.log(responder);
+            Promise.resolve(responder(data)).then(([resp, transfer]) => {
+                var msg = ["response", seq];
+                msg.push(resp);
+                console.log(msg);
+                this.port.postMessage(msg, transfer);
+            });
+        } else {
+            console.log("couldn't deal with it");
+        }
+    }, false);
+
+    this.port.onclose = event => {
+        for (var seq in this.rejecters)
+            this.rejecters[seq](event);
+    };
+}
+
+RRPort.prototype.open = function ()
+{
+    return Promise.resolve();
+};
+
+RRPort.prototype.req = function (kind, ...data)
+{
+    return new Promise((resolve, reject) => {
+        var seq = this.seq++;
+        var msg = [kind, seq];
+        msg.push(...data);
+
+        this.requesters[seq] = data => {
+            resolve(data);
+        };
+        this.rejecters[seq] = err => {
+            reject(err);
+        };
+        console.log("requesting " + msg);
+        this.port.postMessage(msg);
+    });
+};
+
+RRPort.prototype.resp = function (kind, f)
+{
+    this.responders[kind] = f;
+};
+//** RRPortReader
+function RRPortReader(rr) {
+    this.rr = rr;
+}
+RRPortReader.prototype = Object.create(ThinThinReader.prototype);
+
+RRPortReader.prototype.kind = () => "rrport-reader";
+
+RRPortReader.prototype.max = function ()
+{
+    return this.rr.req("max");
+};
+
+RRPortReader.prototype.consume = function (s)
+{
+    return this.rr.req("consume", s);
+};
+
+RRPortReader.prototype.done = function ()
+{
+    return this.rr.req("done");
+};
+//** RRPortWriter
+function RRPortWriter(rr) {
+    this.rr = rr;
+    this.max = {};
+
+    this.rr.resp("max", () => new Promise((resolve, reject) => {
+        if (this.max.n !== undefined) {
+            console.log("n' = " + this.max.n);
+            resolve([[this.max.n]]);
+        } else {
+            this.max.resolve = resolve;
+            this.max.reject = reject;
+        }
+    }));
+
+    this.consume = {};
+    this.consume1 = {};
+    this.consume2 = {};
+
+    this.rr.resp("consume", s => new Promise((resolve, reject) => {
+        this.consume1.resolve(s);
+        if (this.consume1.n !== undefined)
+            resolve([[this.consume1.n]]);
+        else {
+            this.consume2.resolve = resolve;
+            this.consume2.reject = reject;
+        }
+    }));
+
+    this.rr.resp("done", () => new Promise((resolve, reject) => {
+        resolve([[false]]);
+    }));
+    this.rr.open();
+}
+RRPortWriter.prototype = Object.create(ThinThinWriter.prototype);
+
+RRPortWriter.prototype.kind = () => "rrport-writer";
+
+RRPortWriter.prototype.provide = function (n)
+{
+    return new Promise((resolve, reject) => {
+        console.log("n = " + n);
+        if (this.max.resolve !== undefined) {
+            this.max.resolve([[n]]);
+        } else {
+            this.max.n = n;
+        }
+
+        this.consume1.resolve = resolve;
+        this.consume1.reject = reject;
+    });
+};
+
+RRPortWriter.prototype.advance = function (n)
+{
+    return new Promise((resolve, reject) => {
+        this.consume2.resolve([[n]]);
         resolve();
     });
 };
 
+RRPortWriter.prototype.done = function ()
+{
+    return false;
+};
+//** RRPortMetaWriter
+function RRPortMetaWriter(rr)
+{
+    this.rr = rr;
+}
+RRPortMetaWriter.prototype = Object.create(ThinThinMetaWriter.prototype);
+
+RRPortMetaWriter.prototype.kind = () => "rrport-metawriter";
+
+RRPortMetaWriter.prototype.provide = function (request)
+{
+    return this.rr.req("meta", request);
+};
+//** RRPortHalf
+function RRPortHalf(flows, rr, metawriter)
+{
+    ThinThinHalf.call(this, flows);
+
+    this[0].reader(new RRPortReader(rr));
+    this[1].writer(new RRPortWriter(rr));
+    if (metawriter) {
+        this.meta = new RRPortMetaWriter(rr);
+        this[0].metawriter(this.meta);
+        this[1].metawriter(this.meta);
+    } else {
+        rr.resp("meta", (request) => new Promise((resolve, reject) => {
+            this[0].metareader(new ThinThinMetaReader(request, resolve, reject));
+        }));
+    }
+}
+RRPortHalf.prototype = Object.create(ThinThinHalf.prototype);
+//** FileListMetaWriter
+function FileListMetaWriter(filelist)
+{
+    this.filelist =  filelist;
+};
+FileListMetaWriter.prototype = Object.create(ThinThinMetaWriter.prototype);
+
+FileListMetaWriter.prototype.kind = () => "filelist-metawriter";
+
+FileListMetaWriter.prototype.provide = function (request)
+{
+    if (request[0] === "openat") {
+        for (var i = 0; i < this.filelist.length; i++)
+            if (this.filelist[i].name === request[1])
+                return Promise.resolve([[this.filelist[i]]]);
+        return Promise.reject();
+    } else if (request[0] === "readdir") {
+        var names = [];
+
+        for (var i = 0; i < this.filelist.length; i++)
+            names.push(this.filelist[i].name);
+
+        return Promise.resolve([[names]]);
+    }
+};
+//** FileListHalf
+function FileListHalf(flows, filelist)
+{
+    ThinThinHalf.call(this, flows);
+
+    this.meta = new FileListMetaWriter(filelist);
+    this[0].metawriter(this.meta);
+    this[1].metawriter(this.meta);
+}
+FileListHalf.prototype = Object.create(ThinThinHalf.prototype);
+//** FileWriter
+function FileWriter(file)
+{
+    this.file = file;
+}
+FileWriter.prototype = Object.create(ThinThinWriter.prototype);
+
+FileWriter.prototype.kind = () => "file-writer";
+
+FileWriter.prototype.provide = function (n)
+{
+    return new Promise((resolve, reject) => {
+        var reader = new FileReader();
+
+        reader.onload = () => {
+            resolve(reader.result);
+        };
+        reader.readAsText(this.file);
+    });
+};
+
+FileWriter.prototype.advance = function (n)
+{
+};
+
+FileWriter.prototype.done = function ()
+{
+    return true;
+};
+//** FileHalf
+function FileHalf(flows, file)
+{
+    ThinThinHalf.call(this, flows);
+    this[1].writer(new BufferedWriter(new FileWriter(file)));
+}
+FileHalf.prototype = Object.create(ThinThinHalf.prototype);
+//* globals
 var gLimboFD;
 var gLimboPath;
 
 var gRemoteFDs = {};
-
+//** FrozenThinThinFD
 function FrozenThinThinFD(fd)
 {
     var rfdno;
@@ -831,7 +2043,7 @@ FrozenThinThinFD.prototype.thaw = function (process, target)
 
     return fd;
 };
-
+//** ThinThinFetchFD (kill)
 function ThinThinFetchFD(process, url, cache, fdno)
 {
     ThinThinFD.call(this, process, fdno);
@@ -922,6 +2134,7 @@ ThinThinFetchFD.prototype.startStuffing = function ()
         this.stuffString(text);
         this.stuffEOF();
     }).catch((e) => {
+        console.log(e + url);
         return Promise.reject(e);
     });
 };
@@ -937,7 +2150,7 @@ ThinThinFetchFD.prototype.inputPromise = function ()
     }
 
 };
-
+//** SparseDD (kill)
 function SparseDD(base, fdno)
 {
     ThinThinDD.call(this, base.process, fdno);
@@ -1011,7 +2224,7 @@ SparseDD.prototype.openat = function (path)
             });
     }
 };
-
+//** ReadableFD
 function ReadableFD(process, readable, fdno)
 {
     ThinThinFD.call(this, process, fdno);
@@ -1055,7 +2268,7 @@ ReadableFD.prototype.stopStuffing = function ()
     readable.removeListener("data", this.ondata);
     delete this.ondata;
 };
-
+//** WritableFD
 function WritableFD(process, writable, fdno)
 {
     ThinThinFD.call(this, process, fdno);
@@ -1078,7 +2291,7 @@ WritableFD.prototype.outputPromise = function (heap, ptr, len)
 
     return Promise.resolve(len);
 };
-
+//** ArrayBufferFD
 function ArrayBufferFD(process, abufPromise, fdno)
 {
     ThinThinFD.call(this, process, fdno);
@@ -1086,7 +2299,7 @@ function ArrayBufferFD(process, abufPromise, fdno)
     this.abufPromise = abufPromise;
 }
 ArrayBufferFD.prototype = Object.create(ThinThinFD.prototype);
-
+//**  MessagePortDD
 function MessagePortDD(process, port, fdno)
 {
     ThinThinDD.call(this, process, fdno);
@@ -1138,47 +2351,7 @@ MessagePortDD.prototype.openat_dir = function (path)
         this.port.postMessage([seq, "openat_dir", path]);
     });
 };
-
-function MessagePortFD(process, port, fdno)
-{
-    ThinThinFD.call(this, process, fdno);
-    this.port = port;
-}
-MessagePortFD.prototype = Object.create(ThinThinFD.prototype);
-
-MessagePortFD.prototype.startStuffing = function ()
-{
-    if (!this.onmessage) {
-        this.onmessage = (event) => {
-            var data = event.data;
-
-            this.stuffString(data);
-        };
-
-        this.port.onmessage = this.onmessage;
-    }
-};
-
-MessagePortFD.prototype.stopStuffing = function ()
-{
-};
-
-MessagePortFD.prototype.outputPromise = function (heap, ptr, len)
-{
-    var data = "";
-
-    if (len == 0)
-        return 0;
-
-    for (i=0; i<len; i++)
-        data += String.fromCharCode(heap[ptr+i]);
-
-    console.log("postMessage " + data);
-    this.port.postMessage(data);
-
-    return Promise.resolve(len);
-};
-
+//** PipeFD
 function PipeFD(process, fdno)
 {
     ThinThinFD.call(this, process, fdno);
@@ -1188,19 +2361,19 @@ PipeFD.prototype.connect = function (other)
 {
     this.other = other;
 };
-
+//** PipeConnection
 function PipeConnection(ipipe, opipe)
 {
     this.i = ipipe;
     this.o = opipe;
 }
-
+//** IPipeFD
 function IPipeFD(process, fdno)
 {
     PipeFD.call(this, process, fdno);
 }
 IPipeFD.prototype = Object.create(PipeFD.prototype);
-
+//** OPipeFD
 function OPipeFD(process, fdno)
 {
     PipeFD.call(this, process, fdno);
@@ -1223,7 +2396,7 @@ OPipeFD.prototype.outputPromise = function (heap, ptr, len)
 
     }
 };
-
+//** RemoteFD
 function RemoteFD(process, target, rfdno, fdno)
 {
     ThinThinFD.call(this, process, fdno);
@@ -1259,7 +2432,7 @@ RemoteFD.prototype.outputPromise = function (heap, ptr, len)
 
     return Promise.resolve(len);
 };
-
+//** FSDD
 var fs;
 
 //if (typeof global !== "undefined")
@@ -1298,7 +2471,7 @@ FSDD.prototype.openat = function (path, flags, mode)
         });
     });
 };
-
+//** syscalls
 if (typeof(os) !== "undefined" &&
     typeof(os.sys) !== "undefined") {
     for (var syscall in Syscalls)
@@ -1412,6 +2585,8 @@ if (typeof(os) !== "undefined" &&
         if (!dd)
             dd = this.process.ddroot;
 
+        if (path.length === 0)
+            return dd.then(fd => fd.fdno);
 
         return dd.openat(path, flags, mode)
             .then((fd) => fd.fdno).catch((error) => -%{ENOENT});
@@ -1436,6 +2611,27 @@ if (typeof(os) !== "undefined" &&
 
         if (!dd)
             return -%{EBADF};
+
+        if (path.length === 0)
+            return Promise.resolve(dd).then(fd => {
+                var off;
+                for (off = 0; off < %{sizeof(struct stat)}; off += 4)
+                    this.HEAP32[statbufptr+off>>2] = 0;
+
+                %{statbufptr[&stat::st_nlink] = 1LL}
+                %{statbufptr[&stat::st_mode] = "fd.mode()"}
+                %{statbufptr[&stat::st_size] = "fd.size()"}
+                %{statbufptr[&stat::st_blksize] = "fd.size()"}
+                %{statbufptr[&stat::st_blocks] = "1"}
+
+                if (gLimboFD)
+                    gLimboFD.close();
+                gLimboFD = fd;
+                console.log("path " + path);
+                gLimboPath = path;
+
+                return 0;
+            }).catch(err => -%{ENOENT});
 
         if ("openat" in dd)
             return dd.openat(path).then(fd => {

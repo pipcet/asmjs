@@ -5,7 +5,7 @@ var system = new Wasm32System();
 
 onmessage = event => {
     console.log("message " + event.data);
-    var [arraybuffer, rootdd_port, cwd_port, stdin_port, stdout_port, stderr_port] = event.data;
+    var [arraybuffer, rootdd_port, cwd_port, stdin_port, stdout_port, stderr_port, debug_port] = event.data;
 
     var vm = new Wasm32VM();
     var module = new Wasm32Module(arraybuffer);
@@ -58,15 +58,37 @@ onmessage = event => {
 
         %{tp1[&threadpage::pc] = "process.entry"}
 
-        new MessagePortFD(process, stdin_port, 0);
-        new MessagePortFD(process, stdout_port, 1);
-        new MessagePortFD(process, stderr_port, 2);
+        var rr0 = new RRPort(stdin_port);
+        var rr1 = new RRPort(stdout_port);
+        var rr2 = new RRPort(stderr_port);
 
+        var pipe0 = new ThinThinHalf();
+        var pipe1 = new ThinThinHalf();
+        var pipe2 = new ThinThinHalf();
+
+        new RRPortHalf(pipe0, rr0, true);
+        new RRPortHalf(pipe1, rr1, true);
+        new RRPortHalf(pipe2, rr2, true);
+
+        new ThinThinHalfFD(process, pipe0, 0);
+        new ThinThinHalfFD(process, pipe1, 1);
+        new ThinThinHalfFD(process, pipe2, 2);
+
+        rr0.port.start();
+        rr1.port.start();
+        rr2.port.start();
+        var f;
+        f = () => {
+            debug_port.postMessage(`${pipe0.debug("pipe0", f)}<br>${pipe1.debug("pipe1", f)}<br>${pipe2.debug("pipe2", f)}`);
+        };
+        f();
         system.runqueue.push(thread);
     }).then(() => {
         console.log("started");
+        postMessage(undefined);
         try {
             run = () => {
+                console.log("running");
                 try {
                     system.threads[0].step();
                     if (!system.threads[0].stopped())

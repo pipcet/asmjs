@@ -2,6 +2,7 @@ var vm = new Wasm32VM();
 var system = new Wasm32System();
 var module;
 
+
 if (remote) {
     caches.open("v3").then((cache) => {
         var req = new Request(path);
@@ -20,17 +21,39 @@ if (remote) {
             return Promise.reject(response);
         });
     }).then((ab) => {
-        console.log("launching");
-        var [root, cwd, stdin, stdout, stderr] = remote_process(ab);
+        return remote_process(ab);
+    }).then(([root, cwd, stdin, stdout, stderr]) => {
+        console.log("got ports");
         var process = new Wasm32Process(system);
+        var dom = document.getElementById("output");
 
-        (new ThinThinFD(process, 0)).connectPort(stdin);
-        (new ThinThinFD(process, 1)).connectPort(stdout);
-        (new ThinThinFD(process, 2)).connectPort(stderr);
-        console.log("launched");
+        var pipe0 = new ThinThinHalf();
+        var pipe1 = new ThinThinHalf();
+        var pipe2 = new ThinThinHalf();
+
+        new HTMLHalf(pipe0.reverse(), dom);
+        new HTMLHalf(pipe1.reverse(), dom);
+        new HTMLHalf(pipe2.reverse(), dom);
+
+        var rr0 = new RRPort(stdin);
+        var rr1 = new RRPort(stdout);
+        var rr2 = new RRPort(stderr);
+
+        new RRPortHalf(pipe0, rr0, false);
+        new RRPortHalf(pipe1, rr1, false);
+        new RRPortHalf(pipe2, rr2, false);
+
+        rr0.port.start();
+        rr1.port.start();
+        rr2.port.start();
+
+        var f;
+        f = () => document.getElementById("debug2").innerHTML =
+            `${pipe0.debug("pipe0", f)}<br>${pipe1.debug("pipe1", f)}<br>${pipe2.debug("pipe2", f)}`;
+        f();
     }).catch(e => {
         console.log("e2:" + e);
-    })
+    });
 } else if (typeof os !== "undefined") {
     module = new Wasm32Module(os.file.readFile(path, "binary"));
 

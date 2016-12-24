@@ -528,6 +528,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
+    console.log("extcall "+ fun)
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
@@ -587,7 +588,9 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         this.extcallRet[sp] = retv;
         this.stop(1);
 
+        console.log("promise");
         retv.then((r) => {
+        console.log("promise resolved to " + r);
             this.extcallRet[sp] = r;
             this.stop(0);
         });
@@ -595,6 +598,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         return sp|1;
     }
 
+    console.log("retv " + retv);
     if (retv !== undefined && retv == retv) {
         this.set_rv(retv);
     } else if (retv != retv) {
@@ -946,15 +950,20 @@ Wasm32System.prototype.init_sp = function (vm, off, args, env)
 
 function remote_process(arraybuffer)
 {
-    var mchs = [new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel()];
+    var mchs = [new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel()];
     var lports = mchs.map(x => x.port1);
     var rports = mchs.map(x => x.port2);
 
     var worker = new Worker("wasm32-worker.js");
 
-    worker.postMessage([arraybuffer].concat(rports), [arraybuffer].concat(rports));
+    lports[5].onmessage = function (event) {
+        document.getElementById("debug").innerHTML = event.data;
+    };
 
-    return lports;
+    return new Promise((resolve, reject) => {
+        worker.onmessage = () => resolve(lports);
+        worker.postMessage([arraybuffer].concat(rports), [arraybuffer].concat(rports));
+    })
 }
 
 function abtoascii(ab)
@@ -976,6 +985,8 @@ function abtoascii(ab)
 
 Wasm32System.prototype.instantiate = function (module, vm, args, env)
 {
+    return;
+    
     var process;
     var thread;
     if (!this.threads.length) {
