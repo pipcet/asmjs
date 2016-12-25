@@ -807,6 +807,13 @@ function ThinThinFD(process, fdno)
     this.process = process;
 }
 
+ThinThinFD.prototype.clonedesc = function ()
+{
+    return {
+        fdno: this.fdno,
+    };
+};
+
 ThinThinFD.prototype.mode = function ()
 {
     return %{__S_IFCHR + 0777};
@@ -2872,9 +2879,58 @@ if (typeof(os) !== "undefined" &&
 
         return 0;
     };
-    ThinThin.clone = function (flags, child_stack, ptid, ctid, regs)
+    ThinThin.fork = function ()
     {
-        var new_process = this.process.clone();
+        var okay = false;
+        return new Promise((resolve, reject) => {
+            var test; test = () => {
+                var sp = this.syscall_sp;
+
+                if (this.extcallRet[sp] instanceof Promise ||
+                    okay) {
+                    okay = true;
+                    resolve();
+                } else
+                    Promise.resolve().then(test);
+            };
+
+            test();
+        }).then(() => new Promise((resolve, reject) => {
+            var worker = new Worker("wasm32-forkedworker.js");
+            var ports = [new MessageChannel(), new MessageChannel(), new MessageChannel()];
+            var lports = ports.map(x => x.port1);
+            var rports = ports.map(x => x.port2);
+
+            worker.postMessage([this.process.clonedesc(), this.vm.clonedesc(), this.syscall_sp, ...rports], rports);
+
+            var pipe0 = new ThinThinHalf();
+            var pipe1 = new ThinThinHalf();
+            var pipe2 = new ThinThinHalf();
+
+            new CLogHalf(pipe0.reverse());
+            new CLogHalf(pipe1.reverse());
+            new CLogHalf(pipe2.reverse());
+
+            var rr0 = new RRPort(lports[0]);
+            var rr1 = new RRPort(lports[1]);
+            var rr2 = new RRPort(lports[2]);
+
+            new RRPortHalf(pipe0, rr0, false);
+            new RRPortHalf(pipe1, rr1, false);
+            new RRPortHalf(pipe2, rr2, false);
+
+            rr0.port.start();
+            rr1.port.start();
+            rr2.port.start();
+
+            worker.onmessage = success => {
+                console.log(success);
+
+                resolve(success ? 0 : -1);
+            };
+        })).catch(e => {
+            console.log(e);
+        });
     };
     ThinThin.restart = function (dst, src, len, entry)
     {

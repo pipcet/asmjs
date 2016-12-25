@@ -16,6 +16,16 @@ function RangeAllocator(grow)
     this.grow = grow;
 }
 
+RangeAllocator.prototype.clonedesc = function ()
+{
+    return {
+        start: this.start,
+        end: this.end,
+        ranges_by_start: this.ranges_by_start,
+        ranges_by_end: this.ranges_by_end,
+    };
+};
+
 RangeAllocator.prototype.split_range = function (range, new_start)
 {
     let new_range = new AllocatorRange(range.free, new_start, range.end);

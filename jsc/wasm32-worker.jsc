@@ -8,9 +8,9 @@ onmessage = event => {
     var [arraybuffer, rootdd_port, cwd_port, stdin_port, stdout_port, stderr_port, debug_port] = event.data;
 
     var vm = new Wasm32VM();
-    var module = new Wasm32Module(arraybuffer);
-
     var process = new Wasm32Process(system);
+    var module = new Wasm32Module(process, arraybuffer);
+
     var thread = new Wasm32Thread(process, module, 8192);
     thread.module.load(thread, vm).then(() => {
         var ret = thread.module.instantiate(thread, vm, 0x4000, true);

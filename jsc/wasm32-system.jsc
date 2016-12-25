@@ -112,7 +112,7 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
 
             for (let [addr2, module] of ref) {
                 //console.log("setting " + addr2 + " to " + vm.table.get(addr));
-                vm.table.set(addr2, vm.table.get(addr));
+                vm.tableset(addr2, addr);
                 module.symtab[symbol] = addr;
             }
         }
@@ -135,7 +135,7 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
         symbol = symbol.replace(/@.*/, "");
         if (symbol in this.defun) {
             //console.log("setting " + (index + imports.sys.plt) + " to " + vm.table.get(this.defun[symbol]));
-            vm.table.set(index + imports.sys.plt, vm.table.get(this.defun[symbol]));
+            vm.tableset(index + imports.sys.plt, this.defun[symbol]);
         } else {
             if (!this.refun[symbol])
                 this.refun[symbol] = [];
@@ -163,7 +163,7 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
             if (version === undefined)
                 continue;
             console.log("forwarding " + (addr + imports.sys.plt - 1) + " to " + vm.table.get(addr + imports.sys.plt) + " version " + version);
-            vm.table.set(addr + imports.sys.plt - 1, vm.table.get(addr + imports.sys.plt));
+            vm.tableset(addr + imports.sys.plt - 1, addr + imports.sys.plt);
             version = version.replace(/\.so$/, ".wasm");
             this.lazy[addr+imports.sys.plt] = version;
             delete this.dep[version];
@@ -176,6 +176,7 @@ function Wasm32VM()
 {
     this.table = new WebAssembly.Table({element:"anyfunc",initial:65536,maximum:65536});
     this.table_length = 0;
+    this.shadowtable = {};
     this.memory = new WebAssembly.Memory({initial: 16384, maximum: 16384});
 
     this.heap = this.memory.buffer;
@@ -195,6 +196,28 @@ function Wasm32VM()
     this.space_pcs = new RangeAllocator(this.grow_pcs.bind(this));
 }
 
+Wasm32VM.prototype.clonedesc = function ()
+{
+    return {
+        table: this.shadowtable,
+        table_length: this.table_length,
+        memory: this.memory.buffer,
+
+        //space_functions: this.space_functions,
+        //space_pcs: this.space_pcs
+    };
+};
+
+Wasm32VM.prototype.tableset = function (x, y)
+{
+    if (!(y in this.shadowtable))
+        this.shadowtable[y] = y;
+
+    this.shadowtable[x] = this.shadowtable[y];
+
+    this.table.set(x, this.table.get(y));
+};
+
 Wasm32VM.prototype.grow_functions = function (limit)
 {
 };
@@ -206,14 +229,61 @@ Wasm32VM.prototype.grow_pcs = function (limit)
 var Wasm32ModuleIndex = 1;
 var Wasm32Modules = {};
 
-function Wasm32Module(bytes)
+function Wasm32Module(process, bytes)
 {
     this.bytes = bytes;
     this.ctime = Date.now();
     this.index = Wasm32ModuleIndex++;
     this.symtab = {};
     Wasm32Modules[this.index] = this;
+
+    process.modules.push(this);
 }
+
+Wasm32Module.prototype.clonedesc = function ()
+{
+    return {
+        bytes: this.bytes,
+        got: this.imports.sys.got,
+        gpo: this.imports.sys.gpo,
+        plt: this.imports.sys.plt,
+        dyninfo: this.dyninfo,
+    };
+};
+
+Wasm32Module.prototype.reload_at = function (thread, vm, clonedesc)
+{
+    this.imports = {};
+    this.imports.sys = {};
+
+    this.imports.sys.call = thread.extcall.bind(thread);
+    this.imports.sys.eh_return = thread.eh_return.bind(thread);
+    this.imports.sys.indcall = thread.indcall.bind(thread);
+    this.imports.sys.trace = thread.trace.bind(thread);
+    this.imports.sys.got = clonedesc.got;
+    this.imports.sys.gpo = clonedesc.gpo;
+    this.imports.sys.plt = clonedesc.plt;
+    this.imports.sys.table = vm.table;
+    this.imports.sys.memory = vm.memory;
+
+    return WebAssembly.compile(this.bytes).then(module => {
+        this.module = module;
+    }).then(() => WebAssembly.instantiate(this.module, this.imports))
+        .then((instance) => {
+            this.instance = instance;
+            this.instime = Date.now();
+            thread.exports = this.instance.exports;
+            thread.memory = vm.memory;
+            thread.table = vm.table;
+            if (this.instance.exports.entry !== undefined) {
+                thread.entry = this.imports.sys.plt + this.instance.exports.entry;
+            }
+            console.log("instantiated at plt " + clonedesc.plt + " got " + clonedesc.got);
+            return true;
+    }).catch((e) => {
+        console.log("died instantiating: " + e + "\n" + e.stack);
+    });
+};
 
 Wasm32Module.prototype.fill_table = function (thread, vm, got, plt)
 {
@@ -226,7 +296,7 @@ Wasm32Module.prototype.fill_table = function (thread, vm, got, plt)
             str = str + " ";
         var f = thread.exports["f_" + str];
         if (f) {
-            thread.table.set(pc+plt, f);
+            thread.vm.tableset(pc+plt, f);
             seen++;
         } else if (seen || count++ == 128) {
             break;
@@ -248,7 +318,7 @@ Wasm32Module.prototype.check_libs = function (thread)
                 }
 
                 if (typeof os !== "undefined") {
-                    var module = new Wasm32Module(os.file.readFile(os.getenv("ASMJSDIR") + "/" + lib, "binary"));
+                    var module = new Wasm32Module(thread.process, os.file.readFile(os.getenv("ASMJSDIR") + "/" + lib, "binary"));
                     return module.load(thread, this.vm).then(() => {
                         var mem = this.vm.%{zp[&zeropage::top_of_sbrk]};
                         var tom = (mem + module.dyninfo.data_end - 0x4000 + 4095)&-4096;
@@ -277,7 +347,7 @@ Wasm32Module.prototype.check_libs = function (thread)
                             return Promise.reject(response);
                         });
                     }).then((buffer) => {
-                        module = new Wasm32Module(buffer);
+                        module = new Wasm32Module(thread.process, buffer);
 
                         return module.load(thread, this.vm);
                     }).then(() => {
@@ -372,6 +442,7 @@ function Wasm32Thread(process, module, threadpage)
 
     let vm = new Wasm32VM();
 
+    this.vm = vm;
     this.HEAP8 = vm.HEAP8;
     this.HEAP16 = vm.HEAP16;
     this.HEAP32 = vm.HEAP32;
@@ -515,12 +586,6 @@ Wasm32Thread.prototype.set_initsp = function (initsp)
 
 Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
 {
-    //console.log(a + " " + b + " " + c + " " + d + " " + pc + " " + sp1);
-    //console.log("sp1 " + sp1);
-    //for (var diff = -48; diff < 48; diff += 4)
-    //    console.log("@" + diff + ": " + this.HEAPU32[sp1+diff>>2]);
-    //for (var diff = 0; diff < 256; diff += 4)
-    //    console.log("@" + diff.toString(16) + ": " + this.HEAPU32[0x4000+diff>>2].toString(16));
     var sp = sp1 - 56 - 16 + 16;
     this.syscall_sp = sp;
     var modstr = b;
@@ -642,44 +707,38 @@ Wasm32Thread.prototype.step = function ()
     var first = this.first;
     if (first === undefined)
         first = true;
-    var dpc = this.$dpc;
-    var pc0 = this.$pc0;
+    var dpc = this.%{tp1[&threadpage::initsp]};
+    var pc0 = this.%{tp1[&threadpage::pc]};
     var sp = this.%{tp1[&threadpage::sp]};
     var rpc = 0;
     var ret;
 
+    console.log("dpc " + dpc + " pc0 " + pc0 + " sp " + sp);
+
     while (true) {
-        //console.log("calling pc0 " + pc0 + " dpc " + dpc + " rpc " + rpc + " sp " + sp + " entry " + this.module.dyninfo.entry);
         if (first) {
             ret = system.threads[0].indcall(-1, sp+16, 0, 0, rpc, this.entry);
             first = this.first = false;
         } else {
             ret = system.threads[0].indcall(dpc, sp+16, 0, 0, rpc, pc0);
         }
-        //console.log("called: " + ret);
 
         if (ret & 3) {
             sp = ret;
             sp &= -4;
-            //for (var off = -48; off < 48; off += 4)
-            //console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
             pc0 = system.threads[0].HEAPU32[sp+8>>2];
             dpc = 0;
-            //console.log("pc0 " + pc0 + " dpc " + dpc);
             break;
         } else {
             sp = ret; //system.threads[0].HEAPU32[ret+16>>2];
             sp = system.threads[0].HEAPU32[ret>>2];
-            //for (var off = -48; off < 48; off += 4)
-            //console.log("off " + off + " v " + system.threads[0].HEAPU32[sp+off>>2]);
             pc0 = system.threads[0].HEAPU32[sp+8>>2];
             dpc = 0; //system.threads[0].HEAPU32[sp+28>>2];
-            //console.log("pc0 " + pc0 + " dpc " + dpc);
         }
     }
 
-    this.$pc0 = pc0;
-    this.$dpc = dpc;
+    this.%{tp1[&threadpage::pc]} = pc0;
+    this.%{tp1[&threadpage::initsp]} = dpc;
     this.%{tp1[&threadpage::sp]} = sp;
 
     return ret&-4;
@@ -797,7 +856,16 @@ function Wasm32Process(system)
 
     this.functions = {};
     this.threads = [];
+    this.modules = [];
 }
+
+Wasm32Process.prototype.clonedesc = function ()
+{
+    return {
+        modules: this.modules.map(x => x.clonedesc()),
+        fds: this.fds.map(x => x.clonedesc()),
+    };
+};
 
 Wasm32Process.prototype.deffun = function(page, fo)
 {
