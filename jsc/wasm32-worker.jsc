@@ -5,16 +5,16 @@ var system = new Wasm32System();
 
 onmessage = event => {
     console.log("message " + event.data);
-    var [arraybuffer, rootdd_port, cwd_port, stdin_port, stdout_port, stderr_port, debug_port] = event.data;
+    var [kport, arraybuffer, rootdd_port, cwd_port, stdin_port, stdout_port, stderr_port, debug_port] = event.data;
 
     var vm = new Wasm32VM();
     var process = new Wasm32Process(system);
     var module = new Wasm32Module(process, arraybuffer);
 
-    var thread = new Wasm32Thread(process, module, 8192);
-    thread.module.load(thread, vm).then(() => {
-        var ret = thread.module.instantiate(thread, vm, 0x4000, true);
-        var tos = (thread.module.dyninfo.data_end + 4095) & -4096;
+    var thread = new Wasm32Thread(kport, process, 8192);
+    module.load(thread, vm).then(() => {
+        var ret = module.instantiate(thread, vm, 0x4000, true);
+        var tos = (module.dyninfo.data_end + 4095) & -4096;
 
         vm.%{zp[&zeropage::top_of_sbrk] = "tos"}
 

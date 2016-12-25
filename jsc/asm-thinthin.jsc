@@ -93,9 +93,6 @@ function Syscall(number, argspec0, argspec1, argspec2, argspec3, argspec4)
             var spec = argspecs[i];
             if (spec == "ptr") {
                 rargs.push(this.HEAPU8);
-                //console.log('string arg ' + CStringAt(this.HEAPU8, args[i]));
-            } else {
-                //console.log('integer arg ' + args[i].toString(16));
             }
             rargs.push(args[i]);
         }
@@ -134,7 +131,6 @@ function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
             case "path":
                 rargs.push(this.HEAPU8);
                 rargs.push(args[i]);
-                //console.log('str arg ' + CStringAt(this.HEAPU8, args[i]));
                 break;
 
             case "ptrs":
@@ -145,18 +141,13 @@ function Syscall64(number, argspec0, argspec1, argspec2, argspec3,
                 for (j = 0; this.HEAP32[args[i]+4*j>>2]; j++) {
                     arg.push(this.HEAPU8);
                     arg.push(this.HEAP32[args[i]+4*j>>2]);
-                    //console.log('strs arg ' + CStringAt(this.HEAPU8, this.HEAP32[args[i]+4*j>>2]));
                 }
                 arg.push(0);
                 arg.push(0);
 
-                //console.log(arg);
                 rargs.push(arg);
             }
         }
-        //console.log(argspecs);
-        //console.log(args);
-        //console.log(rargs);
         ret = os.sys.call64.call(undefined, rargs);
 
         return ret;
@@ -494,14 +485,13 @@ ThinThinFlow.prototype.metawriter = function (writer)
 ThinThinFlow.prototype.connect = function ()
 {
     if (this.readers.length && this.writers.length) {
-        var r = this.readers[0];
-        var w = this.writers[0];
+        var r = this.readers.shift();
+        var w = this.writers.shift();
         var nmax;
 
         this.state = 0;
 
         Promise.resolve(r.max()).then(n => {
-            console.log("nmax " + n);
             nmax = n;
             return w.provide(n);
         }).then(s => {
@@ -514,12 +504,12 @@ ThinThinFlow.prototype.connect = function ()
             return w.advance(n);
         }).then(() => {
             Promise.all([Promise.resolve(r.done()).then(done => {
-                            if (done)
-                                this.readers.shift();
+                            if (!done)
+                                this.readers.push(r);
                          }),
                          Promise.resolve(w.done()).then(done => {
-                             if (done)
-                                 this.writers.shift();
+                             if (!done)
+                                 this.writers.push(w);
                          })]).then(() => {
                              this.connect();
                          });
@@ -540,10 +530,8 @@ ThinThinFlow.prototype.metaconnect = function ()
         var w = this.metawriters[0];
 
         Promise.resolve(r.request()).then(request => {
-            console.log(request);
             return w.provide(request);
         }).then(data => {
-            console.log(data);
             return r.consume(data);
         }).then(() => {
             Promise.all([Promise.resolve(r.done()).then(done => {
@@ -622,7 +610,6 @@ ThinThinFlowWriter.prototype.provide = function (n)
 
 ThinThinFlowWriter.prototype.advance = function (n)
 {
-    console.log(n);
     this.resolve(n);
 };
 
@@ -640,6 +627,13 @@ ThinThinFlow.prototype.write = function (s)
 {
     return new Promise((resolve, reject) => {
         this.writer(new ThinThinFlowWriter(s, resolve, reject));
+    });
+};
+
+ThinThinFlow.prototype.meta = function (request)
+{
+    return new Promise((resolve, reject) => {
+        this.metareader(new ThinThinMetaReader(request, resolve, reject));
     });
 };
 
@@ -687,6 +681,11 @@ ThinThinHalf.prototype.debug = function (name, f)
 
     return str;
 };
+
+ThinThinHalf.prototype.meta = function (request)
+{
+    return this[0].meta(request);
+};
 //*** sendflow (unused?)
 function sendflow(flow1, flow2, n, count)
 {
@@ -700,7 +699,6 @@ function sendflow(flow1, flow2, n, count)
         return Promise.resolve(count);
 
     flow1.read(n).then(s => {
-        console.log("s: " + s);
         return flow2.write(s);
     }).then(k => {
         count += k;
@@ -908,7 +906,6 @@ ThinThinFD.prototype.startProviding = function ()
 
 ThinThinFD.prototype.stuffString = function (data)
 {
-    console.log("stuffstring " + data);
     this.readData += data;
 
     var onstuff = this.onstuff;
@@ -916,7 +913,6 @@ ThinThinFD.prototype.stuffString = function (data)
 
 
     for (var handler of onstuff) {
-        console.log("handler " + handler)
         handler();
     }
 };
@@ -1228,7 +1224,6 @@ ThinThinFDWriter.prototype.provide = function (n)
 ThinThinFDWriter.prototype.consume = function (s)
 {
     return new Promise((resolve, reject) => {
-        console.log("s: " + s);
         this.fd.stuffString(s);
         resolve(s.length);
     });
@@ -1256,24 +1251,6 @@ ThinThinHalfFD.prototype = Object.create(ThinThinFD.prototype);
 
 ThinThinHalfFD.prototype.unpause = function (len)
 {
-    /*
-    console.log("unpause");
-
-    return new Promise((resolve, reject) => {
-        this.half[1].metareader(new ThinThinMetaReader(["openat_dir", "x", 0],
-                                                       resolve, reject));
-    }).then(data => new Promise((resolve, reject) => {
-        var file = data[0];
-        console.log("name " + file.name);
-
-        var reader = new FileReader();
-
-        reader.onload = () => {
-            resolve(reader.result);
-        };
-        reader.readAsText(file);
-    })).then(text => console.log(text));
-    */
     return new Promise((resolve, reject) => {
         this.half[1].reader(new ThinThinFDReader(this, len));
 
@@ -1284,7 +1261,6 @@ ThinThinHalfFD.prototype.unpause = function (len)
 ThinThinHalfFD.prototype.providee = function () {
     var handler; handler = () => {
         if (this.writeData.length > 0) {
-            console.log(this.half + " " + this.half.flow1.writer);
             this.half[1].writer(new ThinThinFDWriter(this));
         }
 
@@ -1297,7 +1273,8 @@ ThinThinHalfFD.prototype.providee = function () {
 ThinThinHalfFD.prototype.mode = function ()
 {
     return new Promise((resolve, reject) => {
-        this.half[1].metareader(new ThinThinMetaReader(["mode"], x => { console.log(x); resolve(x); }, reject));
+        this.half[1].metareader(new ThinThinMetaReader(["mode"], resolve,
+                                                       reject));
     });
 };
 
@@ -1306,7 +1283,6 @@ ThinThinHalfFD.prototype.openat = function (path, flags)
     return new Promise((resolve, reject) => {
         this.half[1].metareader(new ThinThinMetaReader(["openat", path, flags], resolve, reject));
     }).then(response => {
-        console.log(response[0])
         var obj = response[0];
 
         if ((obj instanceof Array) && obj.length && (obj[0] instanceof File)) {
@@ -1314,12 +1290,10 @@ ThinThinHalfFD.prototype.openat = function (path, flags)
             new FileListHalf(pipe, obj);
             return new ThinThinHalfFD(this.process, pipe);
         } else if (obj instanceof File) {
-            console.log("file");
             var pipe = new ThinThinHalf();
             new FileHalf(pipe, obj);
             return new ThinThinHalfFD(this.process, pipe);
         }
-            console.log("something else");
     }).catch(err => console.log(err))
 };
 //** SparseMetaWriter
@@ -1488,9 +1462,7 @@ HTMLWriter.prototype.activate = function ()
         };
 
         this.node_send.onclick = e => {
-            console.log("click");
             this.resolve(this.node_ta.value);
-            console.log("click");
             this.node_ta.value = "";
 
             e.stopPropagation();
@@ -1543,7 +1515,6 @@ HTMLReader.prototype.max = function ()
 
 HTMLReader.prototype.consume = function (s)
 {
-        console.log("s: " + s);
     putstr(s);
 
     return s.length;
@@ -1632,9 +1603,7 @@ HTMLWriter.prototype.activate = function ()
         };
 
         this.node_send.onclick = e => {
-            console.log("click");
             this.resolve(this.node_ta.value);
-            console.log("click");
             this.node_ta.value = "";
 
             e.stopPropagation();
@@ -1683,8 +1652,6 @@ HTMLMetaWriter.prototype.kind = () => "html-metawriter";
 
 HTMLMetaWriter.prototype.provide = function (request)
 {
-    console.log("HMW req " + request);
-
     if (request[0] === "AYT")
         return [["yes", "HTML"]];
     else if (request[0] === "mode")
@@ -1715,7 +1682,6 @@ HTMLHalf.prototype = Object.create(ThinThinHalf.prototype);
 HTMLHalf.prototype.openat = function (path, flags)
 {
     return new Promise((resolve, reject) => {
-        console.log("html openat");
         this.input_f = document.createElement("input");
         this.input_f.type = "file";
         this.dom.appendChild(this.input_f);
@@ -1736,7 +1702,6 @@ HTMLHalf.prototype.openat = function (path, flags)
 HTMLHalf.prototype.openat_dir = function (path, flags)
 {
     return new Promise((resolve, reject) => {
-        console.log("html openat");
         this.input_f = document.createElement("input");
         this.input_f.type = "file";
         this.input_f.multiple = true;
@@ -1784,6 +1749,40 @@ function CLogHalf(flows)
     this[0].reader(new CLogReader());
 }
 CLogHalf.prototype = Object.create(ThinThinHalf.prototype);
+//** ForwardReader
+function ForwardReader(half)
+{
+    this.half = half;
+}
+ForwardReader.prototype = Object.create(ThinThinReader.prototype);
+
+ForwardReader.prototype.kind = () => "forward-reader";
+
+ForwardReader.prototype.max = function ()
+{
+    return Infinity;
+};
+
+ForwardReader.prototype.consume = function (s)
+{
+    return this.half[0].write(s).then(() => {
+        return s.length;
+    });
+};
+
+ForwardReader.prototype.done = function ()
+{
+    return false;
+};
+//** ForwardHalf
+function ForwardHalf(flows, half)
+{
+    ThinThinHalf.call(this, flows);
+
+    this[0].reader(new ForwardReader(half));
+    //this[0].reader(new ForwardWriter());
+}
+CLogHalf.prototype = Object.create(ThinThinHalf.prototype);
 //** MessagePortReader1
 function MessagePortReader1(port)
 {
@@ -1803,11 +1802,8 @@ MessagePortReader1.prototype.max = function ()
 
 MessagePortReader1.prototype.consume = function (s)
 {
-    console.log("mpr1 consume " + s);
-
     if (!this.port)
         return 0;
-        console.log("s: " + s);
 
     this.port.postMessage(s);
 
@@ -1874,8 +1870,6 @@ function RRPort(port)
     this.port.addEventListener("message", event => {
         var [kind, seq, data] = event.data;
 
-        console.log(event.data);
-
         if (kind === "response") {
             var requester = this.requesters[seq];
             delete this.requesters[seq];
@@ -1885,11 +1879,9 @@ function RRPort(port)
         } else if (kind in this.responders) {
             var responder = this.responders[kind];
 
-            console.log(responder);
             Promise.resolve(responder(data)).then(([resp, transfer]) => {
                 var msg = ["response", seq];
                 msg.push(resp);
-                console.log(msg);
                 this.port.postMessage(msg, transfer);
             });
         } else {
@@ -1921,7 +1913,6 @@ RRPort.prototype.req = function (kind, ...data)
         this.rejecters[seq] = err => {
             reject(err);
         };
-        console.log("requesting " + msg);
         this.port.postMessage(msg);
     });
 };
@@ -1959,7 +1950,6 @@ function RRPortWriter(rr) {
 
     this.rr.resp("max", () => new Promise((resolve, reject) => {
         if (this.max.n !== undefined) {
-            console.log("n' = " + this.max.n);
             resolve([[this.max.n]]);
         } else {
             this.max.resolve = resolve;
@@ -1982,7 +1972,7 @@ function RRPortWriter(rr) {
     }));
 
     this.rr.resp("done", () => new Promise((resolve, reject) => {
-        resolve([[false]]);
+        resolve([false]);
     }));
     this.rr.open();
 }
@@ -1993,7 +1983,6 @@ RRPortWriter.prototype.kind = () => "rrport-writer";
 RRPortWriter.prototype.provide = function (n)
 {
     return new Promise((resolve, reject) => {
-        console.log("n = " + n);
         if (this.max.resolve !== undefined) {
             this.max.resolve([[n]]);
         } else {
@@ -2630,11 +2619,11 @@ if (typeof(os) !== "undefined" &&
 
             return 0;
         };
-    ThinThin.getcwd = function (addr, len) {
-        this.HEAP8[addr] = 0;
+        ThinThin.getcwd = function (addr, len) {
+            this.HEAP8[addr] = 0;
 
-        return 0;
-    };
+            return 0;
+        };
     } else {
     }
     ThinThin.isatty = function (fdno) {
@@ -2943,6 +2932,8 @@ if (typeof(os) !== "undefined" &&
         return ThinThin.stat.call(this, ptr, 0);
     };
     ThinThin.exit = function (code) {
+        return new Promise((resolve, reject) => {
+        });
         console.log("runtime: " + (Date.now() - lastdonetime));
         if (typeof quit !== "undefined")
             quit(code);
@@ -2956,10 +2947,10 @@ if (typeof(os) !== "undefined" &&
             document.getElementById("output").textContent += "Exit Status " + code;
             this.stop(0xffffffff);
         }
-        if (code != 0 && code !== undefined)
-            throw "Exit Status " + code;
-        else
-            throw new SuccessException();
+        //if (code != 0 && code !== undefined)
+        //    throw "Exit Status " + code;
+        //else
+        //    throw new SuccessException();
     };
     //ThinThin.unlink =       Module._unlink;
     //ThinThin.rename =       Module._rename;
@@ -2990,38 +2981,37 @@ if (typeof(os) !== "undefined" &&
             };
 
             test();
-        }).then(() => new Promise((resolve, reject) => {
+        }).then(() => {
+            return this.kport.req("fork");
+        }).then(data => new Promise((resolve, reject) => {
+            var pid = data[0];
+            var kport = data[1];
             var worker = new Worker("wasm32-forkedworker.js");
-            var ports = [new MessageChannel(), new MessageChannel(), new MessageChannel()];
-            var lports = ports.map(x => x.port1);
-            var rports = ports.map(x => x.port2);
+            var fdchannels = {};
+            var lfdports = {};
+            var rfdports = {};
+            var rports = [];
+            for (var fdno in this.process.fds) {
+                fdchannels[fdno] = new MessageChannel();
+                lfdports[fdno] = fdchannels[fdno].port1;
+                rfdports[fdno] = fdchannels[fdno].port2;
+                rports.push(rfdports[fdno]);
+            }
+            worker.postMessage([kport, this.process.clonedesc(), this.vm.clonedesc(), this.syscall_sp, rfdports], [kport, ...rports]);
 
-            worker.postMessage([this.process.clonedesc(), this.vm.clonedesc(), this.syscall_sp, ...rports], rports);
+            var pipes = {};
+            for (var fdno in lfdports) {
+                pipes[fdno] = new ThinThinHalf();
+                new ForwardHalf(pipes[fdno].reverse(), this.process.fds[fdno].half);
+                var rr = new RRPort(lfdports[fdno]);
+                new RRPortHalf(pipes[fdno], rr, false);
 
-            var pipe0 = new ThinThinHalf();
-            var pipe1 = new ThinThinHalf();
-            var pipe2 = new ThinThinHalf();
-
-            new CLogHalf(pipe0.reverse());
-            new CLogHalf(pipe1.reverse());
-            new CLogHalf(pipe2.reverse());
-
-            var rr0 = new RRPort(lports[0]);
-            var rr1 = new RRPort(lports[1]);
-            var rr2 = new RRPort(lports[2]);
-
-            new RRPortHalf(pipe0, rr0, false);
-            new RRPortHalf(pipe1, rr1, false);
-            new RRPortHalf(pipe2, rr2, false);
-
-            rr0.port.start();
-            rr1.port.start();
-            rr2.port.start();
-
+                rr.port.start();
+            }
             worker.onmessage = success => {
                 console.log(success);
 
-                resolve(success ? 0 : -1);
+                resolve(success ? pid : -1);
             };
         })).catch(e => {
             console.log(e);

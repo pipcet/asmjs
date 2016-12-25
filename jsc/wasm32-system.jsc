@@ -203,9 +203,22 @@ Wasm32VM.prototype.clonedesc = function ()
         table_length: this.table_length,
         memory: this.memory.buffer,
 
-        //space_functions: this.space_functions,
-        //space_pcs: this.space_pcs
+        space_functions: this.space_functions.clonedesc(),
+        space_pcs: this.space_pcs.clonedesc()
     };
+};
+
+Wasm32VM.prototype.alive = function (clonedesc)
+{
+    var heapu32 = new Uint32Array(clonedesc.memory);
+    for (var i = 0; i < 1024 * 1024 * 256; i++)
+        this.HEAPU32[i] = heapu32[i];
+
+    this.table_length = clonedesc.table_length;
+    this.shadowtable = clonedesc.table;
+
+    for (var x in clonedesc.table)
+        this.table.set(x, this.table.get(clonedesc.table[x]));
 };
 
 Wasm32VM.prototype.tableset = function (x, y)
@@ -429,8 +442,9 @@ Wasm32Module.prototype.instantiate = function (thread, vm, mem, recurse)
     });
 };
 
-function Wasm32Thread(process, module, threadpage)
+function Wasm32Thread(kport, process, threadpage)
 {
+    this.kport = new RRPort(kport);
     this.process = process;
     process.threads.push(this);
     var system = process.system;
@@ -453,9 +467,6 @@ function Wasm32Thread(process, module, threadpage)
     this.HEAPF64 = vm.HEAPF64;
 
     this.threadpage = threadpage;
-
-    this.module = module;
-    this.rmodule = module;
 
     this.extcallRet = {};
     this.exports = {};
@@ -494,6 +505,8 @@ function Wasm32Thread(process, module, threadpage)
             return new this.constructor(thread, ptr);
         },
     };
+
+    this.kport.port.start();
 }
 
 Wasm32Thread.prototype.find_type = function (typeid)
@@ -593,7 +606,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
-    console.log("extcall "+ fun)
+    console.log("mod " + mod + " fun " + fun + "("+modstr+"/"+funstr+")");
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
@@ -653,9 +666,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         this.extcallRet[sp] = retv;
         this.stop(1);
 
-        console.log("promise");
         retv.then((r) => {
-        console.log("promise resolved to " + r);
             this.extcallRet[sp] = r;
             this.stop(0);
         });
@@ -663,7 +674,6 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         return sp|1;
     }
 
-    console.log("retv " + retv);
     if (retv !== undefined && retv == retv) {
         this.set_rv(retv);
     } else if (retv != retv) {
@@ -757,6 +767,7 @@ Wasm32Thread.prototype.trace = function (off, pc0, dpc, a0, a1, a2)
 
 Wasm32Thread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 {
+    console.log("indcall " + pc + this.vm.table.get(pc));
     return this.vm.table.get(pc)(mbz, sp, r0, r1, rpc, pc);
 };
 
@@ -825,18 +836,6 @@ Wasm32Thread.prototype.from_address = function (type, addr)
 Wasm32Thread.prototype.freeze = function ()
 {
     return new FrozenWasm32Thread(this);
-};
-
-function FrozenWasm32Thread(thread)
-{
-    this.threadpage = thread.threadpage;
-}
-
-FrozenWasm32Thread.prototype.thaw = function (process, module)
-{
-    var n = new Wasm32Thread(process, module, this.threadpage);
-
-    return n;
 };
 
 function Wasm32Process(system)
@@ -951,11 +950,61 @@ FrozenWasm32Process.prototype.thaw = function (system)
     return n;
 };
 
-function Wasm32System()
+/* The kernel: code that must run once only, even from workers. */
+function Wasm32Kernel()
+{
+    this.space_pids = new RangeAllocator(() => {});
+    this.space_pids.alloc(2);
+    this.ports_by_pid = {};
+    this.pids_by_port = new WeakMap();
+}
+
+Wasm32Kernel.prototype.get_port = function ()
+{
+    var channel = new MessageChannel();
+
+    channel.port1.onmessage = event => {
+        this.message(channel.port1, event.data);
+    };
+
+    return channel.port2;
+};
+
+Wasm32Kernel.prototype.message = function (port, data)
+{
+    console.log("kmsg: " + data);
+
+    var req = data[0];
+    var seq = data[1];
+
+    if (data[0] === "kill") {
+        var pid = data[1];
+        var signal = data[2];
+
+        this.ports_by_pid[pid].postMessage(["kill", signal]);
+    } else if (data[0] === "fork") {
+        var pid = this.space_pids.alloc(1);
+        var nport = this.get_port();
+
+        this.ports_by_pid[pid] = nport;
+        this.pids_by_port.set(nport, pid);
+
+        console.log("assigned pid " + pid + " " + nport);
+        port.postMessage(["response", seq, [pid, nport]], [nport]);
+    } else {
+        console.log(data);
+        throw "unknown message!";
+    }
+};
+
+function Wasm32System(port)
 {
     this.processes = [];
     this.threads = [];
     this.runqueue = [];
+    if (port)
+        this.port = port;
+    
 }
 
 Wasm32System.prototype.init_sp = function (vm, off, args, env)
@@ -1016,8 +1065,9 @@ Wasm32System.prototype.init_sp = function (vm, off, args, env)
     return off;
 };
 
-function remote_process(arraybuffer)
+function remote_process(kernel, arraybuffer)
 {
+    var kport = kernel.get_port();
     var mchs = [new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel()];
     var lports = mchs.map(x => x.port1);
     var rports = mchs.map(x => x.port2);
@@ -1030,7 +1080,7 @@ function remote_process(arraybuffer)
 
     return new Promise((resolve, reject) => {
         worker.onmessage = () => resolve(lports);
-        worker.postMessage([arraybuffer].concat(rports), [arraybuffer].concat(rports));
+        worker.postMessage([kport, arraybuffer].concat(rports), [kport, arraybuffer].concat(rports));
     })
 }
 
@@ -1054,7 +1104,7 @@ function abtoascii(ab)
 Wasm32System.prototype.instantiate = function (module, vm, args, env)
 {
     return;
-    
+
     var process;
     var thread;
     if (!this.threads.length) {

@@ -5,11 +5,11 @@ var system = new Wasm32System();
 
 onmessage = event => {
     console.log("message " + event.data);
-    var [frozen_process, frozen_vm, frozen_sp,
-         stdin_port, stdout_port, stderr_port] = event.data;
+    var [kport, frozen_process, frozen_vm, frozen_sp,
+         fdports] = event.data;
 
     var process = new Wasm32Process(system);
-    var thread = new Wasm32Thread(process, undefined, 8192);
+    var thread = new Wasm32Thread(kport, process, 8192);
 
     thread.extcallRet[frozen_sp] = 0;
 
@@ -29,61 +29,38 @@ onmessage = event => {
     console.log("restored vm");
 
     p.then(() => {
-    console.log("restoring memory")
-    try {
-    for (var i = 0; i < 1024 * 1024 * 1024; i++)
-        vm.HEAPU8[i] = heap[i];
-    } catch (e) {
-        console.log(e);
-    }
-    console.log("restoring memory")
-    vm.table_length = frozen_vm.table_length;
-        for (var y in frozen_vm.table) {
-        vm.table.set(y, vm.table.get(frozen_vm.table[y]));
-    }
-    thread.vm = vm;
-    thread.first = false;
-    thread.entry = 9;
-    system.runqueue.push(thread);
-    console.log("started");
-    postMessage(undefined);
-    try {
-        var rr0 = new RRPort(stdin_port);
-        var rr1 = new RRPort(stdout_port);
-        var rr2 = new RRPort(stderr_port);
-
-        var pipe0 = new ThinThinHalf();
-        var pipe1 = new ThinThinHalf();
-        var pipe2 = new ThinThinHalf();
-
-        new RRPortHalf(pipe0, rr0, true);
-        new RRPortHalf(pipe1, rr1, true);
-        new RRPortHalf(pipe2, rr2, true);
-
-        new ThinThinHalfFD(process, pipe0, 0);
-        new ThinThinHalfFD(process, pipe1, 1);
-        new ThinThinHalfFD(process, pipe2, 2);
-
-        rr0.port.start();
-        rr1.port.start();
-        rr2.port.start();
-        run = () => {
-            console.log("running");
-            try {
-                system.threads[0].step();
-                if (!system.threads[0].stopped())
-                    Promise.resolve().then(run);
-            } catch (e) {
-                console.log("another exception");
-                console.log(e);
-                console.log(e.stack);
+        vm.alive(frozen_vm);
+        thread.vm = vm;
+        thread.first = false;
+        thread.entry = 9;
+        system.runqueue.push(thread);
+        console.log("started");
+        postMessage(undefined);
+        try {
+            for (var fdno in fdports) {
+                var rr = new RRPort(fdports[fdno]);
+                var pipe = new ThinThinHalf();
+                new RRPortHalf(pipe, rr, true);
+                new ThinThinHalfFD(process, pipe, fdno);
+                rr.port.start();
             }
-        };
-        run();
-    } catch (e) {
-        console.log("exception");
-        console.log(e);
-        console.log(e.stack);
-    }
+            run = () => {
+                console.log("running");
+                try {
+                    system.threads[0].step();
+                    if (!system.threads[0].stopped())
+                        Promise.resolve().then(run);
+                } catch (e) {
+                    console.log("another exception");
+                    console.log(e);
+                    console.log(e.stack);
+                }
+            };
+            run();
+        } catch (e) {
+            console.log("exception");
+            console.log(e);
+            console.log(e.stack);
+        }
     });
 };

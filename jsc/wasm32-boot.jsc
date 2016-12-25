@@ -21,7 +21,7 @@ if (remote) {
             return Promise.reject(response);
         });
     }).then((ab) => {
-        return remote_process(ab);
+        return remote_process(new Wasm32Kernel(), ab);
     }).then(([root, cwd, stdin, stdout, stderr]) => {
         console.log("got ports");
         var process = new Wasm32Process(system);
