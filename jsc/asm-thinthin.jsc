@@ -1689,6 +1689,38 @@ HTMLHalf.prototype.openat_dir = function (path, flags)
         });
     });
 };
+//** CLogReader
+function CLogReader()
+{
+}
+CLogReader.prototype = Object.create(ThinThinReader.prototype);
+
+CLogReader.prototype.kind = () => "clog-reader";
+
+CLogReader.prototype.max = function ()
+{
+    return Infinity;
+};
+
+CLogReader.prototype.consume = function (s)
+{
+    console.log("clog: " + s);
+
+    return s.length;
+};
+
+CLogReader.prototype.done = function ()
+{
+    return false;
+};
+//** CLogHalf
+function CLogHalf(flows)
+{
+    ThinThinHalf.call(this, flows);
+
+    this[0].reader(new CLogReader());
+}
+CLogHalf.prototype = Object.create(ThinThinHalf.prototype);
 //** MessagePortReader1
 function MessagePortReader1(port)
 {
