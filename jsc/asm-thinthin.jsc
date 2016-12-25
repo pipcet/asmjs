@@ -1322,6 +1322,69 @@ ThinThinHalfFD.prototype.openat = function (path, flags)
             console.log("something else");
     }).catch(err => console.log(err))
 };
+//** SparseMetaWriter
+function SparseMetaWriter(half)
+{
+    this.half = half;
+}
+SparseMetaWriter.prototype = Object.create(ThinThinMetaWriter.prototype);
+
+SparseMetaWriter.prototype.kind = () => "sparse-metawriter";
+
+SparseMetaWriter.prototype.provide = function (request)
+{
+    if (request[0] === "readdir")
+        return this.half.readdir();
+    else if (request[0] === "openat")
+        return this.half.openat(request[1], request[2], request[3]);
+    else if (request[0] === "openat_dir")
+        return this.half.openat_dir(request[1], request[2], request[3]);
+    else
+        return this.half.base.meta(request);
+};
+
+//** SparseHalf
+function SparseHalf(flows, base)
+{
+    ThinThinHalf.call(this, flows);
+    this.base = base;
+
+    this.entries = {};
+}
+SparseHalf.prototype = Object.create(ThinThinHalf.prototype);
+
+SparseHalf.prototype.readdir = function ()
+{
+    var ret = [];
+
+    for (var name in this.entries)
+        ret.push(name);
+
+    return ret;
+};
+
+SparseHalf.prototype.openat = function (path, flags, mode)
+{
+    var ret = this.base.openat(path, flags, mode);
+
+    return ret.then(obj => {
+        this.entries[path] = true;
+    }).then(() => {
+        return ret;
+    });
+};
+
+SparseHalf.prototype.openat_dir = function (path, flags, mode)
+{
+    var ret = this.base.openat_dir(path, flags, mode);
+
+    return ret.then(obj => {
+        this.entries[path] = true;
+    }).then(() => {
+        return ret;
+    });
+};
+
 //** HTMLReader
 function HTMLReader()
 {
