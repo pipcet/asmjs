@@ -564,8 +564,6 @@ uses .dpc
 *** TODO officialize ld script
 *** DONE shorten uleb128s
 *** DONE sleb128 vs uleb128
-**** TODO test .rept hack for multi-page functions
-*** TODO use br_if for throw1
 *** TODO use i32.store offset
 *** TODO use tee_local
 *** TODO peephole patterns
@@ -579,7 +577,7 @@ wasm, unlike asm.js, allows the default label of a br_table to be the first case
 *** DONE remove $trace code
 *** TODO dynamic memory limit
 *** TODO test "name" section
-*** TODO drop pc0 argument for direct calls
+*** DONE drop pc0 argument for direct calls
 It's highly desirable to keep things limited to six integer arguments since those can be passed in registers on x86-64, but we need two arguments for the return pc0 and the return dpc. Alternatively, we could pass a pointer to a 64-bit PC in the data section, or on the stack for PIC code.
 
 In fact it's only setjmp that really needs to know our dpc.
