@@ -1786,6 +1786,24 @@ ForwardReader.prototype.done = function ()
 {
     return false;
 };
+//** ForwardMetaWriter
+function ForwardMetaWriter(half)
+{
+    this.half = half;
+}
+ForwardMetaWriter.prototype = Object.create(ThinThinMetaWriter.prototype);
+
+ForwardMetaWriter.prototype.kind = () => "forward-metawriter";
+
+ForwardMetaWriter.prototype.provide = function (request)
+{
+    return this.half[0].meta(request);
+};
+
+ForwardMetaWriter.prototype.done = function ()
+{
+    return false;
+};
 //** ForwardHalf
 function ForwardHalf(flows, half)
 {
@@ -1793,6 +1811,8 @@ function ForwardHalf(flows, half)
 
     this[0].reader(new ForwardReader(half));
     //this[0].reader(new ForwardWriter());
+    this[0].metawriter(new ForwardMetaWriter(half));
+    this[1].metawriter(new ForwardMetaWriter(half));
 }
 CLogHalf.prototype = Object.create(ThinThinHalf.prototype);
 //** MessagePortReader1
