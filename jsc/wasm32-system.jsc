@@ -257,6 +257,7 @@ Wasm32Module.prototype.clonedesc = function ()
 {
     return {
         bytes: this.bytes,
+        module: this.module,
         got: this.imports.sys.got,
         gpo: this.imports.sys.gpo,
         plt: this.imports.sys.plt,
@@ -1100,16 +1101,14 @@ function abtoascii(ab)
 
 Wasm32System.prototype.instantiate = function (module, vm, args, env)
 {
-    return;
-
     var process;
     var thread;
     if (!this.threads.length) {
         process = new Wasm32Process(this);
-        thread = new Wasm32Thread(process, module, 8192);
-        return thread.module.load(thread, vm).then(() => {
-            var ret = thread.module.instantiate(thread, vm, 0x4000, true);
-            var tos = (thread.module.dyninfo.data_end + 4095) & -4096;
+        thread = new Wasm32Thread(undefined, process, 8192);
+        return module.load(thread, vm).then(() => {
+            var ret = module.instantiate(thread, vm, 0x4000, true);
+            var tos = (module.dyninfo.data_end + 4095) & -4096;
 
             vm.%{zp[&zeropage::top_of_sbrk] = "tos"}
 

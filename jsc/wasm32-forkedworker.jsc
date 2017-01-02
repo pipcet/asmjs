@@ -18,6 +18,7 @@ onmessage = event => {
     for (var frozen_module1 of frozen_process.modules) {
         let frozen_module = frozen_module1;
         let module = new Wasm32Module(process, frozen_module.bytes);
+        module.module = frozen_module.module;
         p = p.then(() => {
             return module.reload_at(thread, vm, frozen_module);
         });
@@ -31,6 +32,7 @@ onmessage = event => {
         thread.vm = vm;
         thread.first = false;
         thread.entry = 9;
+        thread.heap = vm.heap;
         system.runqueue.push(thread);
         console.log("started");
         postMessage(undefined);

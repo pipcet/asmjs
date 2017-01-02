@@ -1,3 +1,4 @@
+var kernel = new Wasm32Kernel();
 var vm = new Wasm32VM();
 var system = new Wasm32System();
 var module;
@@ -21,7 +22,7 @@ if (remote) {
             return Promise.reject(response);
         });
     }).then((ab) => {
-        return remote_process(new Wasm32Kernel(), ab);
+        return remote_process(kernel, ab);
     }).then(([root, cwd, stdin, stdout, stderr]) => {
         console.log("got ports");
         var process = new Wasm32Process(system);
@@ -55,7 +56,7 @@ if (remote) {
         console.log("e2:" + e);
     });
 } else if (typeof os !== "undefined") {
-    module = new Wasm32Module(os.file.readFile(path, "binary"));
+    module = new Wasm32Module(new Wasm32Process(system), os.file.readFile(path, "binary"));
 
     system.instantiate(module, vm, args, environment_variables()).then(() => {
         try {

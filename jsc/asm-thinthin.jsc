@@ -1144,7 +1144,13 @@ ThinThinFD.prototype.write = function (heap, ptr, len) {
     for (i=0; i<len; i++)
         data += String.fromCharCode(heap[ptr+i]);
 
-    return this.half[0].write(data);
+    if (this.half)
+        return this.half[0].write(data);
+    else {
+        console.log(data);
+
+        return data.length;
+    }
 };
 
 ThinThinFD.prototype.providee = function () {
@@ -1217,7 +1223,7 @@ ThinThinFDReader.prototype.kind = () => "fd-reader";
 
 ThinThinFDReader.prototype.max = function ()
 {
-    return this.len;
+    return Infinity;
 };
 
 ThinThinFDReader.prototype.consume = function (s)
@@ -1296,7 +1302,7 @@ ThinThinHalfFD.prototype.providee = function () {
     this.onprovide.add(handler);
 };
 
-ThinThinHalfFD.prototype.mode = function ()
+ThinThinHalfFD.prototype.modeXXX = function ()
 {
     return new Promise((resolve, reject) => {
         this.half[1].metareader(new ThinThinMetaReader(["mode"], resolve,
@@ -1309,7 +1315,7 @@ ThinThinHalfFD.prototype.openat = function (path, flags)
     return new Promise((resolve, reject) => {
         this.half[1].metareader(new ThinThinMetaReader(["openat", path, flags], resolve, reject));
     }).then(response => {
-        var obj = response[0];
+        var obj = response[0][0];
 
         if ((obj instanceof Array) && obj.length && (obj[0] instanceof File)) {
             var pipe = new ThinThinHalf();
@@ -1685,13 +1691,17 @@ HTMLHalf.prototype.openat = function (path, flags)
 {
     return new Promise((resolve, reject) => {
         this.input_f = document.createElement("input");
+        //this.input_f.allowdirs = true;
+        //this.input_f.webkitdirectory = "true";
+        //this.input_f.multiple = true;
         this.input_f.type = "file";
         this.dom.appendChild(this.input_f);
 
+        if (false)
         this.input_f.addEventListener("change", () => {
             var flist = this.input_f.files;
 
-            if (flist.length !== 1)
+            if (!flist || flist.length !== 1)
                 resolve([["no such file"]]);
 
             resolve([[flist[0]]]);
@@ -2033,8 +2043,8 @@ function RRPortHalf(flows, rr, metawriter)
         this[0].metawriter(this.meta);
         this[1].metawriter(this.meta);
     } else {
-        rr.resp("meta", (request) => new Promise((resolve, reject) => {
-            this[0].metareader(new ThinThinMetaReader(request, resolve, reject));
+        rr.resp("meta", request => new Promise((resolve, reject) => {
+            this[0].metareader(new ThinThinMetaReader(request, data => { console.log(data); resolve([data]); }, reject));
         }));
     }
 }
@@ -2091,7 +2101,14 @@ FileWriter.prototype.provide = function (n)
         reader.onload = () => {
             resolve(reader.result);
         };
-        reader.readAsText(this.file);
+        reader.readAsArrayBuffer(this.file);
+    }).then(abuf => {
+        var view = new Uint8Array(abuf);
+        var s = "";
+        for (var i = 0; i < abuf.byteLength; i++)
+            s += String.fromCharCode(view[i]);
+
+        return s;
     });
 };
 
@@ -2176,6 +2193,8 @@ ThinThinFetchFD.prototype.startStuffing = function ()
     if (url === undefined) {
         return Promise.reject("EOF");
     }
+
+    delete this.cache;
 
     if (this.cache) {
         var req = new Request(url);
@@ -2872,7 +2891,9 @@ if (typeof(os) !== "undefined" &&
             var events = %{fdsptr[i+&pollfd::events]};
             %{fdsptr[i+&pollfd::revents] = 0}
             if (events & %{POLLIN}) {
-                all.push(fd.available().then((avail) => {
+                all.push(Promise.resolve(fd.read()).then(() => {
+                    return fd.available();
+                }).then(avail => {
                     if (incall) {
                         if (avail > 0) {
                             if (%{fdsptr[i+&pollfd::revents]} == 0)
@@ -2881,7 +2902,7 @@ if (typeof(os) !== "undefined" &&
                         }
                     }
                 }));
-                any.push(() => fd.read());
+                any.push(() => Promise.resolve(fd.read()));
             }
         }
 
@@ -2897,7 +2918,9 @@ if (typeof(os) !== "undefined" &&
 
                 var ms = 1000 * s + 1e-6 * ns;
 
-                a.push(TimeoutPromise(ms).then(() => 0));
+                a.push(TimeoutPromise(ms).then(() => {
+                    return 0;
+                }));
             }
 
             return Promise.race(a).then(rval => {
