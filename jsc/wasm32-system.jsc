@@ -198,10 +198,12 @@ function Wasm32VM()
 
 Wasm32VM.prototype.clonedesc = function ()
 {
+    this.%{zp[&zeropage::top_of_sbrk]} += 64 * 1024 * 1024;
     return {
         table: this.shadowtable,
         table_length: this.table_length,
-        memory: this.memory.buffer,
+        memory: this.memory.buffer.slice(0, this.%{zp[&zeropage::top_of_sbrk]}),
+        stack: this.memory.buffer.slice(1022 * 1024 * 1024),
 
         space_functions: this.space_functions.clonedesc(),
         space_pcs: this.space_pcs.clonedesc()
@@ -210,9 +212,14 @@ Wasm32VM.prototype.clonedesc = function ()
 
 Wasm32VM.prototype.alive = function (clonedesc)
 {
-    var heapu32 = new Uint32Array(clonedesc.memory);
-    for (var i = 0; i < 1024 * 1024 * 256; i++)
-        this.HEAPU32[i] = heapu32[i];
+    var HEAPU32 = new Uint32Array(clonedesc.memory);
+    var HEAP32 = new Int32Array(clonedesc.memory);
+    var end = %{zp[&zeropage::top_of_sbrk]}/4;
+    for (var i = 0; i < end; i++)
+        this.HEAPU32[i] = HEAPU32[i];
+    HEAPU32 = new Uint32Array(clonedesc.stack);
+    for (var i = 0; i < 2 * 1024 * 256; i++)
+        this.HEAPU32[1024 * 256 * 1022 + i] = HEAPU32[i];
 
     this.table_length = clonedesc.table_length;
     this.shadowtable = clonedesc.table;
@@ -280,9 +287,7 @@ Wasm32Module.prototype.reload_at = function (thread, vm, clonedesc)
     this.imports.sys.table = vm.table;
     this.imports.sys.memory = vm.memory;
 
-    return WebAssembly.compile(this.bytes).then(module => {
-        this.module = module;
-    }).then(() => WebAssembly.instantiate(this.module, this.imports))
+    return Promise.resolve().then(() => WebAssembly.instantiate(this.module, this.imports))
         .then((instance) => {
             this.instance = instance;
             this.instime = Date.now();
@@ -966,6 +971,13 @@ Wasm32Kernel.prototype.get_port = function ()
         this.message(channel.port1, event.data);
     };
 
+    if (this.ports_by_pid[1] === undefined) {
+        console.log("initing")
+        this.ports_by_pid[1] = channel.port1;
+        this.pids_by_port.set(channel.port1, 1);
+        this.ppids[1] = 1;
+    }
+
     return [channel.port2, channel.port1];
 };
 
@@ -985,11 +997,25 @@ Wasm32Kernel.prototype.message = function (port, data)
         var pid = this.space_pids.alloc(1);
         var [nport, tport] = this.get_port();
 
-        this.ports_by_pid[pid] = nport;
-        this.pids_by_port.set(nport, pid);
+        this.ports_by_pid[pid] = tport;
+        this.pids_by_port.set(tport, pid);
+        this.ppids[pid] = this.pids_by_port.get(port);
 
         //console.log("assigned pid " + pid + " " + nport);
         port.postMessage(["response", seq, [pid, nport]], [nport]);
+    } else if (data[0] === "exit") {
+        console.log("responding ");
+        var pid = this.pids_by_port.get(port);
+        var ppid = this.ppids[pid];
+        var pport = this.ports_by_pid[ppid];
+
+        console.log("pids " + pid + " " + ppid);
+
+        console.log("responding " + ppid);
+        this.ports_by_pid[ppid].postMessage(["response", this.wait4[ppid], [pid]]);
+    } else if (data[0] === "wait4") {
+        var pid = this.pids_by_port.get(port);
+        this.wait4[pid] = seq;
     } else {
         console.log(data);
         throw "unknown message!";
@@ -1066,6 +1092,10 @@ Wasm32System.prototype.init_sp = function (vm, off, args, env)
 function remote_process(kernel, arraybuffer)
 {
     var [kport, _] = kernel.get_port();
+    kernel.ports_by_pid[1] = kport;
+    kernel.ppids[1] = 1;
+    kernel.pids_by_port.set(kport, 1);
+
     var mchs = [new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel()];
     var lports = mchs.map(x => x.port1);
     var rports = mchs.map(x => x.port2);
