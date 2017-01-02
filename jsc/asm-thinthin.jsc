@@ -285,7 +285,7 @@ var SyscallSignatures = {
 function TimeoutPromise(timeout)
 {
     return new Promise((resolve, reject) => {
-        window.setTimeout(resolve, timeout);
+        setTimeout(resolve, timeout);
     });
 }
 //** SplitPromise
@@ -1500,30 +1500,6 @@ HTMLWriter.prototype.done = function ()
 {
     return !this.active;
 };
-//** HTMLReader
-function HTMLReader()
-{
-}
-HTMLReader.prototype = Object.create(ThinThinReader.prototype);
-
-HTMLReader.prototype.kind = () => "html-reader";
-
-HTMLReader.prototype.max = function ()
-{
-    return Infinity;
-};
-
-HTMLReader.prototype.consume = function (s)
-{
-    putstr(s);
-
-    return s.length;
-};
-
-HTMLReader.prototype.done = function ()
-{
-    return false;
-};
 //** BufferedWriter
 function BufferedWriter(writer)
 {
@@ -2715,12 +2691,6 @@ if (typeof(os) !== "undefined" &&
                 %{statbufptr[&stat::st_blksize] = "fd.size()"}
                 %{statbufptr[&stat::st_blocks] = "1"}
 
-                if (gLimboFD)
-                    gLimboFD.close();
-                gLimboFD = fd;
-                console.log("path " + path);
-                gLimboPath = path;
-
                 return 0;
             }).catch(err => -%{ENOENT});
 
@@ -2735,12 +2705,6 @@ if (typeof(os) !== "undefined" &&
                 %{statbufptr[&stat::st_size] = "fd.size()"}
                 %{statbufptr[&stat::st_blksize] = "fd.size()"}
                 %{statbufptr[&stat::st_blocks] = "1"}
-
-                if (gLimboFD)
-                    gLimboFD.close();
-                gLimboFD = fd;
-                console.log("path " + path);
-                gLimboPath = path;
 
                 return 0;
             }).catch(err => -%{ENOENT});

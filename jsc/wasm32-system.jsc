@@ -444,7 +444,8 @@ Wasm32Module.prototype.instantiate = function (thread, vm, mem, recurse)
 
 function Wasm32Thread(kport, process, threadpage)
 {
-    this.kport = new RRPort(kport);
+    if (kport)
+        this.kport = new RRPort(kport);
     this.process = process;
     process.threads.push(this);
     var system = process.system;
@@ -506,7 +507,8 @@ function Wasm32Thread(kport, process, threadpage)
         },
     };
 
-    this.kport.port.start();
+    if (this.kport)
+        this.kport.port.start();
 }
 
 Wasm32Thread.prototype.find_type = function (typeid)
@@ -838,12 +840,12 @@ Wasm32Thread.prototype.freeze = function ()
     return new FrozenWasm32Thread(this);
 };
 
-function Wasm32Process(system)
+function Wasm32Process(system, fds)
 {
     this.system = system;
     system.processes.push(this);
 
-    this.fds = [];
+    this.fds = fds ? fds : [];
     this.ddroot = system.ddroot = new SparseDD(new ThinThinFetchDD(this, undefined, ".", undefined, undefined));
     if (typeof caches !== "undefined")
         caches.open("v3").then((cache) => {
@@ -957,6 +959,8 @@ function Wasm32Kernel()
     this.space_pids.alloc(2);
     this.ports_by_pid = {};
     this.pids_by_port = new WeakMap();
+    this.ppids = { 1: 1 };
+    this.wait4 = {};
 }
 
 Wasm32Kernel.prototype.get_port = function ()
@@ -1004,7 +1008,6 @@ function Wasm32System(port)
     this.runqueue = [];
     if (port)
         this.port = port;
-    
 }
 
 Wasm32System.prototype.init_sp = function (vm, off, args, env)

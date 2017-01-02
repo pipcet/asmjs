@@ -1,3 +1,5 @@
+var remote;
+
 function CStringAt(heap, offset)
 {
     var ret = '';
@@ -16,7 +18,7 @@ function CStringsAt(heap, ptr)
     var res = [];
 
     while (HEAP32[ptr>>2]) {
-        res.push(HEAP8, HEAP32[ptr>>2]);
+        res.push(CStringAt(HEAP8, HEAP32[ptr>>2]));
         ptr += 4;
     }
 
