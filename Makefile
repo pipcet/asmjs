@@ -146,6 +146,10 @@ build/asmjs/bash.dir: build/asmjs/.dir
 	test -d build/asmjs/bash || $(MKDIR) build/asmjs/bash
 	touch $@
 
+build/wasm32/bash.dir: build/wasm32/.dir
+	test -d build/wasm32/bash || $(MKDIR) build/wasm32/bash
+	touch $@
+
 build/asmjs/perl.dir: build/asmjs/.dir src/perl.dir
 	test -d build/asmjs/perl || mkdir build/asmjs/perl
 	(cd src/perl; tar c --exclude .git .) | (cd build/asmjs/perl; tar x)
@@ -402,6 +406,15 @@ build/asmjs/bash.configure: src/bash.dir build/asmjs/bash.dir | build/asmjs/gcc-
 build/asmjs/bash.make: build/asmjs/bash.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/bash
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/bash install
+	touch $@
+
+build/wasm32/bash.configure: src/bash.dir build/wasm32/bash.dir | build/wasm32/gcc-final.make
+	(cd build/wasm32/bash; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/bash/configure --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32 --disable-net-redirections --without-bash-malloc)
+	touch $@
+
+build/wasm32/bash.make: build/wasm32/bash.configure
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/bash
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/bash install
 	touch $@
 
 build/asmjs/perl.configure: src/perl.dir build/asmjs/perl.dir | build/asmjs/gcc-final.make
