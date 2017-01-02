@@ -291,7 +291,6 @@ Wasm32Module.prototype.reload_at = function (thread, vm, clonedesc)
             if (this.instance.exports.entry !== undefined) {
                 thread.entry = this.imports.sys.plt + this.instance.exports.entry;
             }
-            console.log("instantiated at plt " + clonedesc.plt + " got " + clonedesc.got);
             return true;
     }).catch((e) => {
         console.log("died instantiating: " + e + "\n" + e.stack);
@@ -608,7 +607,7 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     var mod = CStringAt(this.HEAPU8, modstr);
     var fun = CStringAt(this.HEAPU8, funstr);
 
-    console.log("mod " + mod + " fun " + fun + "("+modstr+"/"+funstr+")");
+    //console.log("mod " + mod + " fun " + fun + "("+modstr+"/"+funstr+")");
 
     if (sp in this.extcallRet) {
         var ret = this.extcallRet[sp];
@@ -629,7 +628,6 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     }
 
     var nargs = this.HEAP32[sp1+8>>2];
-    //console.log("nargs " + nargs);
     if (nargs == -1)
         nargs = 7;
     var is_void = ((nargs & 0x40000000) != 0) !=
@@ -643,7 +641,6 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
     if (nargs >= 0) {
         for (var ai = 0; ai < nargs; ai++) {
             args[ai] = this.HEAP32[sp1+16+4*ai>>2];
-            //console.log("arg " + ai + " " + args[ai] + " " + CStringAt(this.HEAP8, args[ai]));
         }
     }
 
@@ -725,8 +722,6 @@ Wasm32Thread.prototype.step = function ()
     var rpc = 0;
     var ret;
 
-    console.log("dpc " + dpc + " pc0 " + pc0 + " sp " + sp);
-
     while (true) {
         if (first) {
             ret = system.threads[0].indcall(-1, sp+16, 0, 0, rpc, this.entry);
@@ -769,7 +764,6 @@ Wasm32Thread.prototype.trace = function (off, pc0, dpc, a0, a1, a2)
 
 Wasm32Thread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 {
-    console.log("indcall " + pc + this.vm.table.get(pc));
     return this.vm.table.get(pc)(mbz, sp, r0, r1, rpc, pc);
 };
 
@@ -993,7 +987,7 @@ Wasm32Kernel.prototype.message = function (port, data)
         this.ports_by_pid[pid] = nport;
         this.pids_by_port.set(nport, pid);
 
-        console.log("assigned pid " + pid + " " + nport);
+        //console.log("assigned pid " + pid + " " + nport);
         port.postMessage(["response", seq, [pid, nport]], [nport]);
     } else {
         console.log(data);
