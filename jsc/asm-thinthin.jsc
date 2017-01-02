@@ -29,6 +29,8 @@
 #{JSV<size_t> i("i");}
 #{JSV<iovec*> iov("iov");}
 
+#{JSV<threadpage*> tp1("8192", "HEAP");}
+
 //* globals
 var ThinThin = {};
 //** ThinThin.sbrk (unused)
@@ -2996,24 +2998,109 @@ if (typeof(os) !== "undefined" &&
     {
         return this.restart(dst, src, len, entry);
     };
+    ThinThin.execve = function (pathptr, argvptr, envpptr)
+    {
+        return ThinThin.execveat.call(this, 0, pathptr, argvptr, envpptr, 0);
+    };
     ThinThin.execveat = function (dirfdno, pathptr, argvptr, envpptr, flags)
     {
         if (this.HEAP8[pathptr] == "/".charCodeAt(0))
             dirfdno = %{AT_FDROOTD};
 
-        var fd;
-        if (this.HEAP8[pathptr] == 0 &&
-            flags & %{AT_EMPTY_PATH})
-            fd = this.fds[dirfdno];
-        else
-            fd = this.fds[ThinThin.openat.call(this, dirfdno, pathptr, 0)];
+        //var fd;
+        //if (this.HEAP8[pathptr] == 0 &&
+        //    flags & %{AT_EMPTY_PATH})
+        //    fd = this.fds[dirfdno];
+        //else
+        var process;
+        var thread;
+        var module;
+        var vm;
+        var args;
+        var env;
 
-        if (!fd)
-            return -%{EBADF};
+        return Promise.resolve(ThinThin.openat.call(this, dirfdno, pathptr, 0))
+            .then(fdno => this.fds[fdno])
 
-        var argv = CStringsAt(argvptr);
-        var envp = CStringsAt(envpptr);
-        var blob = fd.blob();
+            .then(fd => {
+                var ret;
+                try {
+                    args = CStringsAt(this.heap, argvptr);
+                    env = CStringsAt(this.heap, envpptr);
+
+                    process = new Wasm32Process(this.process.system, this.fds);
+                    ret = fd.readAsArrayBuffer();
+                } catch (e) {
+                    console.log(e);
+                    console.log(e.stack);
+                }
+
+                return ret;
+            }).then(ab => {
+                module = new Wasm32Module(process, ab);
+                thread = new Wasm32Thread(this.kport.port, process, 8192);
+                return module.load(thread, thread.vm);
+            }).then(() => {
+                vm = thread.vm;
+                var ret = module.instantiate(thread, vm, 0x4000, true);
+                var tos = (module.dyninfo.data_end + 4095) & -4096;
+
+                vm.%{zp[&zeropage::top_of_sbrk] = "tos"}
+
+                return ret;
+            }).then(() => {
+                process.HEAP8 = vm.HEAP8;
+                process.HEAP16 = vm.HEAP16;
+                process.HEAP32 = vm.HEAP32;
+                process.HEAPU8 = vm.HEAPU8;
+                process.HEAPU16 = vm.HEAPU16;
+                process.HEAPU32 = vm.HEAPU32;
+                process.HEAPF32 = vm.HEAPF32;
+                process.HEAPF64 = vm.HEAPF64;
+
+                thread.heap = vm.heap;
+                var HEAP32 = vm.HEAP32;
+
+                %{zp[&zeropage::top_of_memory] = "module.top_of_memory"}
+                %{zp[&zeropage::thread_list]} = %{tp1};
+                %{zp[&zeropage::bottom_of_sbrk] = "module.start_of_sbrk"}
+
+                %{tp1[&threadpage::next]} = %{tp1};
+                %{tp1[&threadpage::prev]} = %{tp1};
+                %{tp1[&threadpage::id] = "1"}
+                %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
+                %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
+
+                module.top_of_stack = 1023 * 1024 * 1024;
+                var sp = this.process.system.init_sp(vm, module.top_of_stack, args, env);
+                %{tp1[&threadpage::sp] = "sp"}
+                %{tp1[&threadpage::initsp] = -1}
+
+                %{tp1[&threadpage::pc] = "process.entry"}
+                thread.first = true;
+            }).then(() => {
+                this.process.system.threads[0] = thread;
+                thread.stop(0);
+                run();
+            }).then(() => new Promise((resolve, reject) => {
+            })).catch(e => {
+                console.log(e);
+                console.log(e.stack);
+            });
+    };
+    ThinThin.wait4 = function(pid, wstatus, options, rusage)
+    {
+        var ret = this.kport.req("wait4");
+
+        console.log(ret);
+        console.log(pid);
+        console.log(options);
+
+
+        if (options & 1)
+            return Promise.resolve(0);
+
+        return ret;
     };
 }
 
