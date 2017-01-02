@@ -2768,17 +2768,17 @@ if (typeof(os) !== "undefined" &&
 
         return 0;
     };
-    var first = 3;
+    var first = 1;
     ThinThin.getdents = function (fdno, direntp, count)
     {
         if (first) {
-            %{direntp[&dirent::d_ino] = "0"}
+            %{direntp[&dirent::d_ino] = 1}
             %{direntp[&dirent::d_off] = "0"}
             %{direntp[&dirent::d_reclen] = 9}
 
-            CStringTo(this.HEAP8, %{direntp+&dirent::d_name}, "words.eng");
+            CStringTo("words.eng", this.HEAP8, %{direntp+&dirent::d_name});
             first--;
-            return 26;
+            return 28;
         }
         return 0;
     };
