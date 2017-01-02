@@ -966,7 +966,7 @@ Wasm32Kernel.prototype.get_port = function ()
         this.message(channel.port1, event.data);
     };
 
-    return channel.port2;
+    return [channel.port2, channel.port1];
 };
 
 Wasm32Kernel.prototype.message = function (port, data)
@@ -983,7 +983,7 @@ Wasm32Kernel.prototype.message = function (port, data)
         this.ports_by_pid[pid].postMessage(["kill", signal]);
     } else if (data[0] === "fork") {
         var pid = this.space_pids.alloc(1);
-        var nport = this.get_port();
+        var [nport, tport] = this.get_port();
 
         this.ports_by_pid[pid] = nport;
         this.pids_by_port.set(nport, pid);
@@ -1065,7 +1065,7 @@ Wasm32System.prototype.init_sp = function (vm, off, args, env)
 
 function remote_process(kernel, arraybuffer)
 {
-    var kport = kernel.get_port();
+    var [kport, _] = kernel.get_port();
     var mchs = [new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel()];
     var lports = mchs.map(x => x.port1);
     var rports = mchs.map(x => x.port2);
