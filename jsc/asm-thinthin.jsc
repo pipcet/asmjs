@@ -1026,14 +1026,31 @@ ThinThinFD.prototype.makeSeekable = function ()
 
 ThinThinFD.prototype.readAsString = function ()
 {
-    if (!this.readEOF) {
-        return this.unpause(Infinity).then(() => {
-            return this.readAsString();
-        });
-    }
+    return new Promise((resolve, reject) => {
+        if (!this.readEOF) {
+            this.onstuff.add(() => {
+                resolve(this.readData);
+            });
+            this.unpause(Infinity);
+            return;
+        }
 
-    return Promise.resolve(this.readData);
-}
+        resolve(this.readData);
+    });
+};
+
+ThinThinFD.prototype.readAsArrayBuffer = function ()
+{
+    return Promise.resolve(this.readAsString()).then(str => {
+        var ab = new ArrayBuffer(str.length);
+        var av = new Uint8Array(ab);
+
+        for (var i = 0; i < str.length; i++)
+            av[i] = str.charCodeAt(i)&0xff;
+
+        return ab;
+    });
+};
 
 /* .read(undefined, 0, 0) returns a promise that resolves to 0 when
  * data is available to read. */
