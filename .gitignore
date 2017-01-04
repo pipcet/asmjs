@@ -19,3 +19,6 @@ debug0/
 /lib/wasm-headers.o
 wasm32-virtual-wasm32/
 /bin/wasmrewrite
+/wasmrewrite/wasmsect
+/full-examples/
+/common3x/
