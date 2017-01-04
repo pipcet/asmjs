@@ -1852,6 +1852,28 @@ ForwardReader.prototype.done = function ()
 {
     return false;
 };
+//** ForwardWriter
+function ForwardWriter(half)
+{
+    this.half = half;
+}
+ForwardWriter.prototype = Object.create(ThinThinWriter.prototype);
+
+ForwardWriter.prototype.kind = () => "forward-writer";
+
+ForwardWriter.prototype.provide = function (n)
+{
+    return this.half[1].read(n);
+};
+
+ForwardWriter.prototype.advance = function (n)
+{
+};
+
+ForwardWriter.prototype.done = function ()
+{
+    return false;
+};
 //** ForwardMetaWriter
 function ForwardMetaWriter(half)
 {
@@ -1876,7 +1898,7 @@ function ForwardHalf(flows, half)
     ThinThinHalf.call(this, flows);
 
     this[0].reader(new ForwardReader(half));
-    //this[0].reader(new ForwardWriter());
+    this[1].writer(new ForwardWriter(half));
     this[0].metawriter(new ForwardMetaWriter(half));
     this[1].metawriter(new ForwardMetaWriter(half));
 }
