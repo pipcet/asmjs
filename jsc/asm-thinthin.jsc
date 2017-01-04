@@ -1202,6 +1202,11 @@ ThinThinFD.prototype.connectPort = function (port) {
     port.postMessage(["read"]);
 };
 
+ThinThinFD.prototype.readdir = function ()
+{
+    return [];
+};
+
 ThinThinFD.prototype.clone = function ()
 {
     return this;
@@ -1327,6 +1332,13 @@ ThinThinHalfFD.prototype.openat = function (path, flags)
             return new ThinThinHalfFD(this.process, pipe);
         }
     }).catch(err => console.log(err + "\n" + err.stack))
+};
+
+ThinThinHalfFD.prototype.readdir = function ()
+{
+    return new Promise((resolve, reject) => {
+        this.half[1].metareader(new ThinThinMetaReader(["readdir"], resolve, reject));
+    });
 };
 //** SparseMetaWriter
 function SparseMetaWriter(half)
@@ -1665,7 +1677,7 @@ HTMLMetaWriter.prototype.provide = function (request)
     else if (request[0] === "mode")
         return [%{__S_IFCHR + 0777}];
     else if (request[0] === "readdir")
-        return [[-1]];
+        return this.half.readdir();
     else if (request[0] === "openat")
         return this.half.openat(request[1], request[2]);
     else if (request[0] === "openat_dir")
@@ -1726,6 +1738,47 @@ HTMLHalf.prototype.openat_dir = function (path, flags)
             resolve([[array]]);
 
             this.dom.removeChild(this.input_f);
+        });
+    });
+};
+
+HTMLHalf.prototype.pickdir = function ()
+{
+    if (this.directory)
+        return this.directory;
+
+    return new Promise((resolve, reject) => {
+        this.input_d = document.createElement("input");
+        this.input_d.type = "file";
+        this.input_d.allowdirs = true;
+        this.dom.appendChild(this.input_d);
+
+        this.input_d.addEventListener("change", () => {
+            this.input_d.getFilesAndDirectories().then(ds => {
+                var promises = [];
+
+                for (var d of ds) {
+                    this.directory = d;
+                    resolve(d);
+                    this.dom.removeChild(this.input_d);
+
+                    return;
+                }
+            });
+        });
+    });
+};
+
+HTMLHalf.prototype.readdir = function ()
+{
+    var names = [];
+
+    return Promise.resolve(this.pickdir()).then(d => {
+        return d.getFilesAndDirectories().then(fs => {
+            for (var f of fs)
+                names.push(f.name);
+
+            return names;
         });
     });
 };
@@ -2824,19 +2877,45 @@ if (typeof(os) !== "undefined" &&
 
         return 0;
     };
-    var first = 1;
     ThinThin.getdents = function (fdno, direntp, count)
     {
-        if (first) {
-            %{direntp[&dirent::d_ino] = 1}
-            %{direntp[&dirent::d_off] = "0"}
-            %{direntp[&dirent::d_reclen] = 9}
+        var fd = this.fds[fdno];
 
-            CStringTo("words.eng", this.HEAP8, %{direntp+&dirent::d_name});
-            first--;
-            return 28;
-        }
-        return 0;
+        if (!fd)
+            return -%{EBADF};
+
+        return new Promise((resolve, reject) => {
+            if (!fd.readdir_entries) {
+                resolve(Promise.resolve(fd.readdir()).then(entries => {
+                    fd.readdir_entries = entries;
+                }).then(() => ThinThin.getdents.call(this, fdno, direntp,
+                                                     count)));
+                return;
+            }
+
+            var es = fd.readdir_entries;
+            var ret = 0;
+
+            if (es.length === 0) {
+                delete fd.readdir_entries;
+                resolve(0);
+                return;
+            }
+
+            var s = %{sizeof(dirent)};
+            while (es.length && ret === 0 &&
+                   ret + 4 * es[0].length + s < count) {
+                %{direntp[&dirent::d_ino] = 1}
+                %{direntp[&dirent::d_off] = "0"}
+                var l = CStringTo(es[0], this.HEAP8, %{direntp + &dirent::d_name});
+                %{direntp[&dirent::d_reclen] = "s + l"}
+                ret += s + l;
+                direntp += s + l;
+                es.shift();
+            }
+
+            resolve(ret);
+        });
     };
     ThinThin.fstat = function (fdno, bufptr) {
         var fd = this.fds[fdno];
