@@ -352,22 +352,11 @@ Wasm32Module.prototype.check_libs = function (thread)
                     });
                 } else if (typeof fetch !== "undefined") {
                     var module;
-                    return caches.open("v3").then(cache => {
-                        var req = new Request(lib);
+                    return fetch(lib).then(response => {
+                        if (response.ok)
+                            return response.arrayBuffer();
 
-                        return cache.match(req).then((response) => {
-                            if (response === undefined)
-                                return fetch(lib);
-
-                            return response;
-                        }).then(response => {
-                            cache.put(lib, response.clone());
-
-                            if (response.ok)
-                                return response.arrayBuffer();
-
-                            return Promise.reject(response);
-                        });
+                        return Promise.reject(response);
                     }).then((buffer) => {
                         module = new Wasm32Module(thread.process, buffer);
 
@@ -857,10 +846,6 @@ function Wasm32Process(system, fds)
 
     this.fds = fds ? fds : [];
     this.ddroot = system.ddroot = new SparseDD(new ThinThinFetchDD(this, undefined, ".", undefined, undefined));
-    if (typeof caches !== "undefined")
-        caches.open("v3").then((cache) => {
-            this.ddroot.base.cache = cache;
-        });
     this.ddcwd = system.ddroot;
 
     system.ddroot.open();
