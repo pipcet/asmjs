@@ -47,49 +47,6 @@ __wasm_chars_\name\():
         rleb128_32 65536
         .popsection
 
-        .if 0
-        .pushsection .wasm.chars.memory
-        .byte 0x00
-        .popsection
-        .pushsection .wasm.payload.memory
-        .byte 0x1               ; maximum field present
-        rleb128_32 1024*16            ; 1 GiB
-        rleb128_32 1024*16            ; 1 GiB
-        .popsection
-        .endif
-
-        .if 0
-        .pushsection .wasm.chars.export
-        .byte 0x00
-        .popsection
-        .pushsection .wasm.payload.export
-        lstring "_start"
-        .byte 0x00              ; external kind function
-                                ;rleb128 _start
-        .byte 0x02
-        .popsection
-        .endif
-
-        .if 0
-        .pushsection .wasm.chars.export
-        .byte 0x00
-        .popsection
-        .pushsection .wasm.payload.export
-        lstring "_memory"
-        .byte 0x02              ; external kind memory
-        .byte 0x00
-        .popsection
-
-        .pushsection .wasm.chars.export
-        .byte 0x00
-        .popsection
-        .pushsection .wasm.payload.export
-        lstring "_table"
-        .byte 0x01              ; external kind table
-        .byte 0x00
-        .popsection
-        .endif
-
         .pushsection .wasm.chars.import
         .byte 0x00
         .popsection
