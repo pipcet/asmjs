@@ -674,10 +674,6 @@ ThinThinHalf.prototype.debug = function (name, f)
     str += `half ${name}<br>`;
     str += this[0].debug(`${name}[0]`, f);
     str += this[1].debug(`${name}[1]`, f);
-    if (this[2])
-        str += this[2].debug(`${name}[2]`, f);
-    if (this[3])
-        str += this[3].debug(`${name}[3]`, f);
 
     this.debugf = f;
 
@@ -1484,6 +1480,8 @@ HTMLWriter.prototype.activate = function ()
 
         this.node = document.createElement("div");
         this.node_ta = document.createElement("textarea");
+        this.node_ta.spellcheck = false;
+        this.node_ta.inputmode = "verbatim";
         this.node_eof = document.createElement("button");
         this.node_eof.innerHTML = "EOF";
 
@@ -1703,13 +1701,13 @@ HTMLHalf.prototype.openat = function (path, flags)
 {
     return new Promise((resolve, reject) => {
         this.input_f = document.createElement("input");
-        //this.input_f.allowdirs = true;
+        this.input_f.accept = "*/*";
+        this.input_f.allowdirs = true;
         //this.input_f.webkitdirectory = "true";
         //this.input_f.multiple = true;
         this.input_f.type = "file";
         this.dom.appendChild(this.input_f);
 
-        if (false)
         this.input_f.addEventListener("change", () => {
             var flist = this.input_f.files;
 
@@ -1973,6 +1971,7 @@ function RRPort(port)
             console.log("couldn't deal with it");
         }
     }, false);
+    this.port.start();
 
     this.port.onclose = event => {
         for (var seq in this.rejecters)
@@ -3047,8 +3046,8 @@ if (typeof(os) !== "undefined" &&
         return ThinThin.stat.call(this, ptr, 0);
     };
     ThinThin.exit = function (code) {
-        console.log("exiting");
-        return this.kport.req("exit").then(() => new Promise(() => {}))
+        console.log("exiting: " + code);
+        return this.kport.req("exit", [code]).then(() => new Promise(() => {}))
 
         console.log("runtime: " + (Date.now() - lastdonetime));
         if (typeof quit !== "undefined")
@@ -3233,25 +3232,28 @@ if (typeof(os) !== "undefined" &&
                 console.log(e.stack);
             });
     };
-    ThinThin.wait4 = function(pid, wstatus, options, rusage)
+    ThinThin.wait4 = function(pid, wstatusp, options, rusage)
     {
         var ret = this.kport.req("wait4");
 
-        console.log(ret);
-        console.log(pid);
-        console.log(options);
-
+        if (wstatusp)
+            this.HEAP32[wstatusp>>2] = 0;
 
         if (options & 1)
             return Promise.resolve(0);
 
-        return ret;
+        return ret.then(([pid, wstatus]) => {
+            if (wstatusp)
+                this.HEAP32[wstatusp>>2] = wstatus;
+
+            return pid;
+        });
     };
 }
 
 ThinThin.getuid = ThinThin.geteuid = ThinThin.getgid = ThinThin.getegid = function ()
 {
-    return 0;
+    return 1;
 };
 
 ThinThin.getpid = ThinThin.getppid = function ()

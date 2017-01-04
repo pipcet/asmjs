@@ -444,6 +444,8 @@ function Wasm32Thread(kport, process, threadpage)
 {
     if (kport)
         this.kport = new RRPort(kport);
+    if (this.kport)
+        this.kport.port.start();
     this.process = process;
     process.threads.push(this);
     var system = process.system;
@@ -996,11 +998,12 @@ Wasm32Kernel.prototype.message = function (port, data)
         //console.log("assigned pid " + pid + " " + nport);
         port.postMessage(["response", seq, [pid, nport]], [nport]);
     } else if (data[0] === "exit") {
+        var exitcode = data[2];
         var pid = this.pids_by_port.get(port);
         var ppid = this.ppids[pid];
         var pport = this.ports_by_pid[ppid];
 
-        this.ports_by_pid[ppid].postMessage(["response", this.wait4[ppid], [pid]]);
+        this.ports_by_pid[ppid].postMessage(["response", this.wait4[ppid], [pid, exitcode]]);
     } else if (data[0] === "wait4") {
         var pid = this.pids_by_port.get(port);
         this.wait4[pid] = seq;
@@ -1079,10 +1082,9 @@ Wasm32System.prototype.init_sp = function (vm, off, args, env)
 
 function remote_process(kernel, arraybuffer)
 {
-    var [kport, _] = kernel.get_port();
-    kernel.ports_by_pid[1] = kport;
-    kernel.ppids[1] = 1;
-    kernel.pids_by_port.set(kport, 1);
+    var [kport, kport2] = kernel.get_port();
+    kport.start();
+    kport2.start();
 
     var mchs = [new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel(), new MessageChannel()];
     var lports = mchs.map(x => x.port1);

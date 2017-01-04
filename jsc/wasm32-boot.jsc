@@ -48,7 +48,7 @@ if (remote) {
             `${pipe0.debug("pipe0", f)}<br>${pipe1.debug("pipe1", f)}<br>${pipe2.debug("pipe2", f)}`;
         f();
     }).catch(e => {
-        console.log("e2:" + e);
+        console.log("e2:" + e + "\n" + e.stack);
     });
 } else if (typeof os !== "undefined") {
     module = new Wasm32Module(new Wasm32Process(system), os.file.readFile(path, "binary"));
