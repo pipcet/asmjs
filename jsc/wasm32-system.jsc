@@ -972,7 +972,6 @@ Wasm32Kernel.prototype.get_port = function ()
     };
 
     if (this.ports_by_pid[1] === undefined) {
-        console.log("initing")
         this.ports_by_pid[1] = channel.port1;
         this.pids_by_port.set(channel.port1, 1);
         this.ppids[1] = 1;
@@ -983,8 +982,6 @@ Wasm32Kernel.prototype.get_port = function ()
 
 Wasm32Kernel.prototype.message = function (port, data)
 {
-    console.log("kmsg: " + data);
-
     var req = data[0];
     var seq = data[1];
 
@@ -1004,14 +1001,10 @@ Wasm32Kernel.prototype.message = function (port, data)
         //console.log("assigned pid " + pid + " " + nport);
         port.postMessage(["response", seq, [pid, nport]], [nport]);
     } else if (data[0] === "exit") {
-        console.log("responding ");
         var pid = this.pids_by_port.get(port);
         var ppid = this.ppids[pid];
         var pport = this.ports_by_pid[ppid];
 
-        console.log("pids " + pid + " " + ppid);
-
-        console.log("responding " + ppid);
         this.ports_by_pid[ppid].postMessage(["response", this.wait4[ppid], [pid]]);
     } else if (data[0] === "wait4") {
         var pid = this.pids_by_port.get(port);
