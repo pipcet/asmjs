@@ -7,7 +7,15 @@ onmessage = event => {
     console.log("message " + event.data);
     var [kport, arraybuffer, rootdd_port, cwd_port, stdin_port, stdout_port, stderr_port, debug_port] = event.data;
 
-    var vm = new Wasm32VM();
+    kport.start();
+
+    var sizes = {
+        tablesize: 65536,
+        memsize: 64 * 1024 * 1024,
+        stacksize: 1 * 1024 * 1024,
+        stackbottom: 63 * 1024 * 1024,
+    };
+    var vm = new Wasm32VM(sizes);
     var process = new Wasm32Process(system);
     var module = new Wasm32Module(process, arraybuffer);
 
@@ -51,7 +59,7 @@ onmessage = event => {
         %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
         %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
 
-        module.top_of_stack = 1023 * 1024 * 1024;
+        module.top_of_stack = sizes.stackbottom + sizes.stacksize;
         var sp = system.init_sp(vm, module.top_of_stack, args, env);
         %{tp1[&threadpage::sp] = "sp"}
         %{tp1[&threadpage::initsp] = "sp"}

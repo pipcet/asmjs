@@ -101,6 +101,6 @@ __wasm_chars_\name\():
         lstring "memory"
         .byte 2                 ; memory
         .byte 1                 ; maximum present
-        rleb128_32 16384       ; initial size
-        rleb128_32 16384       ; maximum size
+        rleb128_32 1       ; initial size
+        rleb128_32 64 * 1024 - 1
         .popsection

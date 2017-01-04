@@ -3078,6 +3078,12 @@ if (typeof(os) !== "undefined" &&
         var vm;
         var args;
         var env;
+        var sizes = {
+            tablesize: 65536,
+            memsize: 128 * 1024 * 1024,
+            stacksize: 1 * 1024 * 1024,
+            stackbottom: 127 * 1024 * 1024,
+        };
 
         return Promise.resolve(ThinThin.openat.call(this, dirfdno, pathptr, 0))
             .then(fdno => this.fds[fdno])
@@ -3129,9 +3135,9 @@ if (typeof(os) !== "undefined" &&
                 %{tp1[&threadpage::prev]} = %{tp1};
                 %{tp1[&threadpage::id] = "1"}
                 %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
+                module.top_of_stack = sizes.stackbottom + sizes.stacksize;
                 %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
 
-                module.top_of_stack = 1023 * 1024 * 1024;
                 var sp = this.process.system.init_sp(vm, module.top_of_stack, args, env);
                 %{tp1[&threadpage::sp] = "sp"}
                 %{tp1[&threadpage::initsp] = -1}

@@ -172,12 +172,15 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
 };
 
 /* A virtual memory object. */
-function Wasm32VM()
+function Wasm32VM(sizes)
 {
-    this.table = new WebAssembly.Table({element:"anyfunc",initial:65536,maximum:65536});
+    this.table = new WebAssembly.Table({element:"anyfunc",initial:sizes.tablesize,maximum:sizes.tablesize});
     this.table_length = 0;
     this.shadowtable = {};
-    this.memory = new WebAssembly.Memory({initial: 16384, maximum: 16384});
+    this.sizes = sizes;
+    this.memory = new WebAssembly.Memory({initial: 1, maximum: 65535});
+
+    this.memory.grow(this.sizes.memsize / 65536 - 1);
 
     this.heap = this.memory.buffer;
     this.HEAP8 = new Int8Array(this.memory.buffer);
@@ -191,7 +194,6 @@ function Wasm32VM()
 
     this.base_lm = new Wasm32LM(this);
 
-    this.off = 512 * 1024 * 1024;
     this.space_functions = new RangeAllocator(this.grow_functions.bind(this));
     this.space_pcs = new RangeAllocator(this.grow_pcs.bind(this));
 }
@@ -200,10 +202,11 @@ Wasm32VM.prototype.clonedesc = function ()
 {
     this.%{zp[&zeropage::top_of_sbrk]} += 64 * 1024 * 1024;
     return {
+        sizes: this.sizes,
         table: this.shadowtable,
         table_length: this.table_length,
         memory: this.memory.buffer.slice(0, this.%{zp[&zeropage::top_of_sbrk]}),
-        stack: this.memory.buffer.slice(1022 * 1024 * 1024),
+        stack: this.memory.buffer.slice(this.sizes.stackbottom, this.sizes.stacksize),
 
         space_functions: this.space_functions.clonedesc(),
         space_pcs: this.space_pcs.clonedesc()
@@ -218,8 +221,9 @@ Wasm32VM.prototype.alive = function (clonedesc)
     for (var i = 0; i < end; i++)
         this.HEAPU32[i] = HEAPU32[i];
     HEAPU32 = new Uint32Array(clonedesc.stack);
-    for (var i = 0; i < 2 * 1024 * 256; i++)
-        this.HEAPU32[1024 * 256 * 1022 + i] = HEAPU32[i];
+    var size = clonedesc.sizes.stacksize / 4;
+    for (var i = 0; i < size; i++)
+        this.HEAPU32[clonedesc.sizes.stackbottom + i] = HEAPU32[i];
 
     this.table_length = clonedesc.table_length;
     this.shadowtable = clonedesc.table;
@@ -460,7 +464,13 @@ function Wasm32Thread(kport, process, threadpage)
     this.system = system;
     system.threads.push(this);
 
-    let vm = new Wasm32VM();
+    var sizes = {
+        tablesize: 65536,
+        memsize: 64 * 1024 * 1024,
+        stacksize: 1 * 1024 * 1024,
+        stackbottom: 63 * 1024 * 1024,
+    };
+    let vm = new Wasm32VM(sizes);
 
     this.vm = vm;
     this.HEAP8 = vm.HEAP8;
@@ -1168,7 +1178,7 @@ Wasm32System.prototype.instantiate = function (module, vm, args, env)
             %{tp1[&threadpage::bottom_of_stack] = "module.bottom_of_stack"}
             %{tp1[&threadpage::top_of_stack] = "module.top_of_stack"}
 
-            module.top_of_stack = 1023 * 1024 * 1024;
+            module.top_of_stack = module.sizes.stackbottom + module.sizes.stacksize;
             var sp = this.init_sp(vm, module.top_of_stack, args, env);
             %{tp1[&threadpage::sp] = "sp"}
             %{tp1[&threadpage::initsp] = "sp"}
