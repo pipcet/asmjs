@@ -22,7 +22,7 @@ wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32.cpp-lds.lds $ASMJSDIR/lib/wasm3
 wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32-wasmify.lds $TMP5 -o $TMP6 2> /dev/null || exit 1
 $ASMJSDIR/bin/wasmrewrite $TMP6 > $TMP8
 # ls -l $TMP8 > /dev/stderr
-perl $ASMJSDIR/wasm-13/ldso.pl "$1" > $TMPD/dyninfo.js
+perl $ASMJSDIR/dyninfo/dyninfo.pl "$1" > $TMPD/dyninfo.js
 $ASMJSDIR/wasmrewrite/wasmsect $TMPD/dyninfo.js > $TMPD/dyninfo.wass
 cat $TMPD/dyninfo.wass >> $TMP8
 (echo "var path = \"$TMP8\";"; cat $ASMJSDIR/js/wasm32.js) > $TMP7
