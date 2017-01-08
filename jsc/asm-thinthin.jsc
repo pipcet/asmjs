@@ -966,7 +966,7 @@ ThinThinFD.prototype.startStuffing = function ()
     if (!this.activeInputPromise) {
         this.activeInputPromise = new DissectedPromise();
 
-        this.inputPromise().then((data) => {
+        this.inputPromise().then(data => {
             this.stuffString(data);
         });
     }
@@ -2299,7 +2299,7 @@ ThinThinFetchFD.prototype.startStuffing = function ()
     if (this.cache) {
         var req = new Request(url);
 
-        return this.cache.match(req).then((response) => {
+        return this.cache.match(req).then(response => {
             if (response === undefined) {
                 console.log("have to fetch " + url);
                 return fetch(url);
@@ -2311,7 +2311,7 @@ ThinThinFetchFD.prototype.startStuffing = function ()
                 return response.arrayBuffer();
 
             return Promise.reject(response);
-        }).then((abuf) => {
+        }).then(abuf => {
             var view = new Uint8Array(abuf);
             var text = "";
 
@@ -2331,7 +2331,7 @@ ThinThinFetchFD.prototype.startStuffing = function ()
             return response.arrayBuffer();
 
         return Promise.reject(response);
-    }).then((abuf) => {
+    }).then(abuf => {
         var view = new Uint8Array(abuf);
         var text = "";
 
@@ -2377,7 +2377,7 @@ SparseDD.prototype.open = function ()
     if (this.readOpened)
         return Promise.resolve(this);
 
-    return this.base.open().then((fd) => {
+    return this.base.open().then(fd => {
         return this.readMeta();
     }).then(() => {
         this.stuffOpened();
@@ -2388,9 +2388,9 @@ SparseDD.prototype.open = function ()
 
 SparseDD.prototype.readMeta = function ()
 {
-    return this.base.openat(".dirs").then((fd) => {
+    return this.base.openat(".dirs").then(fd => {
         return fd.readAsString();
-    }).then((str) => {
+    }).then(str => {
         var dirs = str.split(/\0/);
 
         for (var dir of dirs) {
@@ -2406,11 +2406,11 @@ SparseDD.prototype.openat = function (path)
 {
     var m;
     if (m = path.match(/^([^/]+)\/(.+)$/)) {
-        return this.openat(m[1]).then((fd) => {
+        return this.openat(m[1]).then(fd => {
             return fd.open().then(() => {
                 return fd;
             });
-        }).then((fd) => {
+        }).then(fd => {
             return fd.openat(m[2]);
         });
     } else {
@@ -2418,13 +2418,13 @@ SparseDD.prototype.openat = function (path)
             return Promise.resolve(this);
         }
         if (path in this.entries)
-            return this.base.openat_dir(path).then((fd) => {
+            return this.base.openat_dir(path).then(fd => {
                 return fd.open().then(() => {
                     return new SparseDD(fd);
                 });
             });
         else
-            return this.base.openat(path).then((fd) => {
+            return this.base.openat(path).then(fd => {
                 return fd.open().then(() => {
                     return fd;
                 });
@@ -2795,7 +2795,7 @@ if (typeof(os) !== "undefined" &&
             return dd.then(fd => fd.fdno);
 
         return dd.openat(path, flags, mode)
-            .then((fd) => fd.fdno).catch((error) => -%{ENOENT});
+            .then(fd => fd.fdno);
     };
     ThinThin.close = function (fdno) {
         var fd = this.fds[fdno];
@@ -3289,7 +3289,7 @@ ThinThin.dlload = function (addr, len, memp)
         av[i] = sav[i];
     var module = new Wasm32Module(ab);
 
-    return module.load(this, this.vm).then((ret) => {
+    return module.load(this, this.vm).then(ret => {
         this.HEAP32[memp>>2] = module.dyninfo.data_end - module.dyninfo.data;
         if (module.dyninfo.libs.length)
             module.depstring = module.dyninfo.libs.join(String.fromCharCode(0)) + String.fromCharCode(0);
