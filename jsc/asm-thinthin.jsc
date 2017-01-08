@@ -723,7 +723,7 @@ ThinThinDD.prototype.mode = function ()
 
 ThinThinDD.prototype.openat = function (path)
 {
-    return Promise.reject(-%{ENOENT});
+    return -%{ENOENT};
 };
 //** ThinThinFetchDD (kill)
 function ThinThinFetchDD(process, parent, stem, cache, fdno)

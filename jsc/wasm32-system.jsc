@@ -605,6 +605,14 @@ Wasm32Thread.prototype.set_initsp = function (initsp)
     %{tp[&threadpage::initsp]} = initsp;
 };
 
+Wasm32Thread.prototype.errorToCode = function (e)
+{
+    if (typeof e === "number" && e <= 0)
+        return e;
+
+    return -%{EIO};
+};
+
 Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
 {
     var sp = sp1 - 56 - 16 + 16;
@@ -658,7 +666,8 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
                 retv = ThinThin[fun].apply(this, args);
                 break;
             } catch (e) {
-                throw "died while executing " + fun + ' arg0 ' + args[0] + " e " + e + "\n" + e.stack;
+                retv = this.errorToCode(e);
+                break;
             }
         }
         throw "couldn't find " + fun;
@@ -672,17 +681,20 @@ Wasm32Thread.prototype.extcall = function (a, pc, sp1, b, c, d)
         this.extcallRet[sp] = retv;
         this.stop(1);
 
-        retv.then((r) => {
+        retv.then(r => {
             this.extcallRet[sp] = r;
+            this.stop(0);
+        }).catch(e => {
+            this.extcallRet[sp] = this.errorToCode(e);
             this.stop(0);
         });
 
         return sp|1;
     }
 
-    if (retv !== undefined && retv == retv) {
+    if (retv !== undefined && retv === retv) {
         this.set_rv(retv);
-    } else if (retv != retv) {
+    } else if (retv !== retv) {
         this.stop(1);
         return sp|1;
     } else {
