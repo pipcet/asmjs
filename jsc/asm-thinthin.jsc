@@ -703,11 +703,7 @@ function sendflow(flow1, flow2, n, count)
         n -= k;
 
         return sendflow(flow1, flow2, n, count);
-    })/*.catch(err => {
-        if (count > 0)
-            return Promise.resolve(count);
-        return Promise.reject(err);
-    });*/
+    });
 }
 //** ThinThinDD (kill)
 function ThinThinDD(process, fdno)
@@ -997,10 +993,7 @@ ThinThinFD.prototype.unpause = function (len)
             this.startStuffing().then(() => {
                 this.stuffOpened();
                 resolve();
-            })/*.catch(() => {
-                this.readers--;
-                reject();
-            });*/
+            });
         });
     }
 
@@ -1288,7 +1281,7 @@ ThinThinHalfFD.prototype.unpause = function (len)
         this.half[1].reader(new ThinThinFDReader(this, len));
 
         resolve();
-    })/*.catch(err => console.log(err));*/
+    });
 };
 
 ThinThinHalfFD.prototype.providee = function () {
@@ -1327,7 +1320,7 @@ ThinThinHalfFD.prototype.openat = function (path, flags)
             new FileHalf(pipe, obj);
             return new ThinThinHalfFD(this.process, pipe);
         }
-    }).catch(err => console.log(err + "\n" + err.stack))
+    });
 };
 
 ThinThinHalfFD.prototype.readdir = function ()
@@ -2287,8 +2280,6 @@ ThinThinFetchFD.prototype.open = function ()
                 }
             };
             handler();
-        }).catch((e) => {
-            reject(e);
         });
     });
 };
@@ -2332,8 +2323,6 @@ ThinThinFetchFD.prototype.startStuffing = function ()
 
             this.stuffString(text);
             this.stuffEOF();
-        }).catch((e) => {
-            return Promise.reject(e);
         });
     }
 
@@ -2354,9 +2343,6 @@ ThinThinFetchFD.prototype.startStuffing = function ()
 
         this.stuffString(text);
         this.stuffEOF();
-    }).catch((e) => {
-        console.log(e + url);
-        return Promise.reject(e);
     });
 };
 
@@ -2849,7 +2835,7 @@ if (typeof(os) !== "undefined" &&
                 %{statbufptr[&stat::st_blocks] = "1"}
 
                 return 0;
-            }).catch(err => -%{ENOENT});
+            });
 
         if ("openat" in dd)
             return dd.openat(path).then(fd => {
@@ -2864,7 +2850,7 @@ if (typeof(os) !== "undefined" &&
                 %{statbufptr[&stat::st_blocks] = "1"}
 
                 return 0;
-            }).catch(err => -%{ENOENT});
+            });
         else {
             var fd = dd;
             var off;
@@ -3165,9 +3151,7 @@ if (typeof(os) !== "undefined" &&
 
                 resolve(success ? pid : -1);
             };
-        })).catch(e => {
-            console.log(e + "\n" + e.stack);
-        });
+        }));
     };
     ThinThin.restart = function (dst, src, len, entry)
     {
@@ -3264,10 +3248,7 @@ if (typeof(os) !== "undefined" &&
                 thread.stop(0);
                 run();
             }).then(() => new Promise((resolve, reject) => {
-            })).catch(e => {
-                console.log(e);
-                console.log(e.stack);
-            });
+            }));
     };
     ThinThin.wait4 = function(pid, wstatusp, options, rusage)
     {
@@ -3316,11 +3297,6 @@ ThinThin.dlload = function (addr, len, memp)
             module.depstring = "";
 
         return ret;
-    }).catch((e) => {
-        console.log(e);
-        console.log(e.stack);
-
-        return 0;
     });
 };
 
@@ -3344,8 +3320,6 @@ ThinThin.dlinstantiate = function (modi, mem)
 
     return module.instantiate(this, this.vm, mem).then(() => {
         return 0;
-    }).catch((e) => {
-        return -%{ENOMEM};
     });
 };
 
@@ -3367,7 +3341,7 @@ ThinThin.dlopen = function (cpath)
     return module.instantiate(this, this.vm).then(() => {
         console.log("success");
         return 0;
-    }).catch((e) => { console.log(e); console.log(e.stack); return -%{ENOMEM}; });
+    });
 };
 
 ThinThin.dlsym = function (modi, csym)
@@ -3380,12 +3354,7 @@ ThinThin.dlsym = function (modi, csym)
         let ret = module.symtab[symbol] || 0;
 
         resolve(ret);
-    }).catch((e) => {
-        console.log(e);
-        console.log(e.stack);
-
-        return -%{ENOMEM};
-    })
+    });
 };
 
 ThinThin[20] = ThinThin.writev = function (fd, iov, iovcnt)
