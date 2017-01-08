@@ -2610,51 +2610,6 @@ MessagePortDD.prototype.openat_dir = function (path)
         this.port.postMessage([seq, "openat_dir", path]);
     });
 };
-//** PipeFD
-function PipeFD(process, fdno)
-{
-    ThinThinFD.call(this, process, fdno);
-}
-
-PipeFD.prototype.connect = function (other)
-{
-    this.other = other;
-};
-//** PipeConnection
-function PipeConnection(ipipe, opipe)
-{
-    this.i = ipipe;
-    this.o = opipe;
-}
-//** IPipeFD
-function IPipeFD(process, fdno)
-{
-    PipeFD.call(this, process, fdno);
-}
-IPipeFD.prototype = Object.create(PipeFD.prototype);
-//** OPipeFD
-function OPipeFD(process, fdno)
-{
-    PipeFD.call(this, process, fdno);
-}
-OPipeFD.prototype = Object.create(PipeFD.prototype);
-
-OPipeFD.prototype.outputPromise = function (heap, ptr, len)
-{
-    if (len == 0)
-        return 0;
-
-    if (this.other.ready) {
-        var l = Math.min(len, this.other.len);
-
-        for (var i = 0; i < l; i++)
-            this.other.heap[this.other.ptr + i] = heap[ptr + i];
-
-        this.other.resolve(l);
-    } else {
-
-    }
-};
 //** RemoteFD
 function RemoteFD(process, target, rfdno, fdno)
 {
@@ -2762,15 +2717,6 @@ if (typeof(os) !== "undefined" &&
             return 0;
         };
         ThinThin.fcntl_v = function () {
-            return 0;
-        };
-        ThinThin.pipe2 = function (intptr) {
-            var ifd = new IPipeFD(this.process).fdno;
-            var ofd = new OPipeFD(this.process).fdno;
-
-            %{*intptr = "ifd"}
-            %{*(intptr+1) = "ofd"}
-
             return 0;
         };
         ThinThin.clock_gettime = function (clk_id, timespec)
