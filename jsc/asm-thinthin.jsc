@@ -1895,7 +1895,7 @@ function ForwardHalf(flows, half)
     this[0].metawriter(new ForwardMetaWriter(half));
     this[1].metawriter(new ForwardMetaWriter(half));
 }
-CLogHalf.prototype = Object.create(ThinThinHalf.prototype);
+ForwardHalf.prototype = Object.create(ThinThinHalf.prototype);
 //** MessagePortReader1
 function MessagePortReader1(port)
 {
