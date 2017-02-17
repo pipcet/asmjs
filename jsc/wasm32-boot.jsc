@@ -52,6 +52,7 @@ if (remote) {
     });
 } else if (typeof os !== "undefined") {
     module = new Wasm32Module(new Wasm32Process(system), os.file.readFile(path, "binary"));
+    module.sizes = sizes;
 
     system.instantiate(module, vm, args, environment_variables()).then(() => {
         try {
