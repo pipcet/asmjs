@@ -11,7 +11,7 @@ env:
 	@echo "export LANG=C"
 	@echo "export JSFLAGS=\"--wasm-always-baseline --no-threads\""
 
-# asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a: asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a
+# asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/libgcc_eh.a: asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/libgcc.a
 #	cp $< $@
 
 build/.dir:
@@ -220,15 +220,15 @@ build/wasm32/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm32/gcc
 build/asmjs/gcc-preliminary.make: build/asmjs/gcc-preliminary.dir build/asmjs/gcc-preliminary.configure
 	$(MAKE) -C build/asmjs/gcc-preliminary
 	$(MAKE) -C build/asmjs/gcc-preliminary install
-	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_eh.a
-	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/libgcc_s.a
+	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/libgcc_eh.a
+	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/libgcc_s.a
 	touch $@
 
 build/wasm32/gcc-preliminary.make: build/wasm32/gcc-preliminary.dir build/wasm32/gcc-preliminary.configure
 	$(MAKE) -C build/wasm32/gcc-preliminary
 	$(MAKE) -C build/wasm32/gcc-preliminary install
-	cp wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc.a wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc_eh.a
-	cp wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc.a wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc_s.a
+	cp wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc.a wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc_eh.a
+	cp wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc.a wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc_s.a
 	touch $@
 
 build/gcc-preliminary.clean: FORCE
@@ -274,7 +274,7 @@ build/wasm32/glibc-static.make: build/wasm32/glibc-static.dir build/wasm32/glibc
 	touch $@
 
 build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
-	$(PWD)/wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld -shared --whole-archive $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.a --no-whole-archive $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/libgcc.a -o $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so
+	$(PWD)/wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld -shared --whole-archive $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.a --no-whole-archive $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc.a -o $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so
 	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so > $(PWD)/libc.wasm
 	touch $@
 
@@ -420,7 +420,7 @@ build/wasm32/bash.make: build/wasm32/bash.configure
 build/asmjs/perl.configure: src/perl.dir build/asmjs/perl.dir | build/asmjs/gcc-final.make
 	test -f build/asmjs/perl/config.sh && mv build/asmjs/perl/config.sh build/asmjs/perl/config.sh.old || true
 	touch build/asmjs/perl/config.sh
-	(cd build/asmjs/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs')
+	(cd build/asmjs/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs')
 	touch $@
 
 build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
@@ -431,7 +431,7 @@ build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
 build/asmjs-cross/perl.configure: src/perl.dir build/asmjs-cross/perl.dir | build/asmjs/gcc-final.make
 	test -f build/asmjs-cross/perl/config.sh && mv build/asmjs-cross/perl/config.sh build/asmjs-cross/perl/config.sh.old || true
 	touch build/asmjs-cross/perl/config.sh
-	(cd build/asmjs-cross/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.0.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/asmjs-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs')
+	(cd build/asmjs-cross/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/asmjs-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs')
 	touch $@
 
 build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.configure
@@ -442,7 +442,7 @@ build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.c
 build/wasm32/perl.configure: src/perl.dir build/wasm32/perl.dir | build/wasm32/gcc-final.make build/wasm32/libs.make
 	test -f build/wasm32/perl/config.sh && mv build/wasm32/perl/config.sh build/wasm32/perl/config.sh.old || true
 	touch build/wasm32/perl/config.sh
-	(cd build/wasm32/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Uversiononly -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/lib' -Dcccdlflags='-fPIC -Wl,--shared -shared' -Dlddlflags='-Wl,--shared -shared' -Dccdlflags='-Wl,-E'  -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
+	(cd build/wasm32/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Uversiononly -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/../../../../wasm32-virtual-wasm32/lib' -Dcccdlflags='-fPIC -Wl,--shared -shared' -Dlddlflags='-Wl,--shared -shared' -Dccdlflags='-Wl,-E'  -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
 	touch $@
 
 build/wasm32/perl.make: build/wasm32/perl.dir build/wasm32/perl.configure
@@ -453,7 +453,7 @@ build/wasm32/perl.make: build/wasm32/perl.dir build/wasm32/perl.configure
 build/wasm32-cross/perl.configure: src/perl.dir build/wasm32-cross/perl.dir | build/wasm32/gcc-final.make
 	test -f build/wasm32-cross/perl/config.sh && mv build/wasm32-cross/perl/config.sh build/wasm32-cross/perl/config.sh.old || true
 	touch build/wasm32-cross/perl/config.sh
-	(cd build/wasm32-cross/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.0.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/wasm32-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.0/../../../../wasm32-virtual-wasm32/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
+	(cd build/wasm32-cross/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/wasm32-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/../../../../wasm32-virtual-wasm32/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
 	touch $@
 
 build/wasm32-cross/perl.make: build/wasm32-cross/perl.dir build/wasm32-cross/perl.configure
@@ -786,8 +786,8 @@ bin/wasmsect: wasmrewrite/wasmsect.c
 # build/wasm64/gcc-preliminary.make: build/wasm64/gcc-preliminary.dir build/wasm64/gcc-preliminary.configure
 # 	$(MAKE) -C build/wasm64/gcc-preliminary
 # 	$(MAKE) -C build/wasm64/gcc-preliminary install
-# 	cp wasm64-virtual-wasm64/lib/gcc/wasm64-virtual-wasm64/7.0.0/libgcc.a wasm64-virtual-wasm64/lib/gcc/wasm64-virtual-wasm64/7.0.0/libgcc_eh.a
-# 	cp wasm64-virtual-wasm64/lib/gcc/wasm64-virtual-wasm64/7.0.0/libgcc.a wasm64-virtual-wasm64/lib/gcc/wasm64-virtual-wasm64/7.0.0/libgcc_s.a
+# 	cp wasm64-virtual-wasm64/lib/gcc/wasm64-virtual-wasm64/7.0.1/libgcc.a wasm64-virtual-wasm64/lib/gcc/wasm64-virtual-wasm64/7.0.1/libgcc_eh.a
+# 	cp wasm64-virtual-wasm64/lib/gcc/wasm64-virtual-wasm64/7.0.1/libgcc.a wasm64-virtual-wasm64/lib/gcc/wasm64-virtual-wasm64/7.0.1/libgcc_s.a
 # 	touch $@
 
 # build/wasm64/glibc.configure: src/glibc.dir build/wasm64/glibc.dir | build/wasm64/gcc-preliminary.make
