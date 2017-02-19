@@ -178,6 +178,10 @@ build/asmjs/graphviz.dir: build/asmjs/.dir
 	test -d build/asmjs/graphviz || $(MKDIR) build/asmjs/graphviz
 	touch $@
 
+build/wasm32/graphviz.dir: build/wasm32/.dir
+	test -d build/wasm32/graphviz || $(MKDIR) build/wasm32/graphviz
+	touch $@
+
 build/wasm32/coreutils.dir: build/wasm32/.dir
 	test -d build/wasm32/coreutils || $(MKDIR) build/wasm32/coreutils
 	touch $@
@@ -546,12 +550,23 @@ build/wasm32/coreutils.make: build/wasm32/coreutils.configure
 build/asmjs/graphviz.configure: src/graphviz.dir build/asmjs/graphviz.dir | build/asmjs/gcc-final.make
 	(cd src/graphviz; sh autogen.sh NOCONFIG)
 	cp config/config.sub src/graphviz/config/config.sub
-	(cd build/asmjs/graphviz; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/graphviz/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --enable-static --disable-shared)
+	(cd build/asmjs/graphviz; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/graphviz/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --enable-static --disable-shared --disable-ltdl)
 	touch $@
 
 build/asmjs/graphviz.make: build/asmjs/graphviz.configure
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/graphviz
 	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/graphviz install
+	touch $@
+
+build/wasm32/graphviz.configure: src/graphviz.dir build/wasm32/graphviz.dir | build/wasm32/gcc-final.make
+	(cd src/graphviz; sh autogen.sh NOCONFIG)
+	cp config/config.sub src/graphviz/config/config.sub
+	(cd build/wasm32/graphviz; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/graphviz/configure --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32 --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --enable-static --disable-shared --disable-ltdl)
+	touch $@
+
+build/wasm32/graphviz.make: build/wasm32/graphviz.configure
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/graphviz
+	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/graphviz install
 	touch $@
 
 build/binfmt_misc.install: /proc/sys/fs/binfmt_misc
