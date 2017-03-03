@@ -27,6 +27,7 @@
   __wasm_##name##_payload = .;                                       \
   */wasm32-headers.o(.wasm.header.name);                                 \
   LONGLEB128(__wasm_chars_##name##_end - __wasm_chars_##name);       \
+  *(.wasm.payload.name.ab);                                          \
   *(.wasm.payload.name*);                                            \
   __wasm_##name##_payload_end = .;
 
@@ -74,6 +75,9 @@
   */wasm32-headers.o(.wasm.header.name);                                 \
   __wasm_##name##_payload = .;                                       \
   contents;                                                          \
+  *(.wasm.payload.name.ab);                                            \
+  *(.wasm.payload.name.a);                                            \
+  *(.wasm.payload.name.b);                                            \
   *(.wasm.payload.name*);                                            \
   __wasm_##name##_payload_end = .;
 
@@ -81,6 +85,7 @@
   .discard.chars.name :                \
   {                                             \
        __wasm_chars_##name = .;                 \
+       *(.wasm.chars.name.ab);                  \
        *(.wasm.chars.name.a);                   \
        *(.wasm.chars.name.b);                   \
        *(.wasm.chars.name*);                    \
@@ -95,6 +100,7 @@ SECTIONS
     LONG(0x6d736100)
     LONG(13) /* as of 20161121 */
     SECTION_SIZED(type)
+    SECTION_SIZED(stdlib)
     SECTION_SIZED(import)
     SECTION_SIZED(function)
     //SECTION_SIZED(table)
@@ -204,6 +210,7 @@ SECTIONS
   }
   SECTION_CHARS(function_index)
   SECTION_CHARS(type)
+  SECTION_CHARS(stdlib)
   SECTION_CHARS(import)
   SECTION_CHARS(function)
   //SECTION_CHARS(table)

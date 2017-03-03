@@ -543,6 +543,7 @@ long import_entry(void)
   mputuleb128(kind = mgetuleb128());
   switch (kind) {
   case 0:
+  case 4:
     mputuleb128(mgetuleb128());
     break;
   case 1:
@@ -562,6 +563,28 @@ long import_entry(void)
     break;
   }
   delta += msynch();
+
+  return delta;
+}
+
+long section_stdlib()
+{
+  unsigned long off0, off1;
+  unsigned long len;
+  unsigned long count;
+  long delta = 0;
+
+  len = mgetsize(&off0, &off1);
+  if (len) {
+    /* delta += */ msynch();
+    mputuleb128(count = mgetuleb128());
+    delta += msynch();
+    while (count--)
+      delta += import_entry();
+    delta += msetsize(off0, off1, delta);
+  } else {
+    delta = msynch();
+  }
 
   return delta;
 }
@@ -1018,6 +1041,7 @@ long section(void)
   case  9: delta += section_element(); break;
   case 10: delta += section_code(); break;
   case 11: delta += section_data(); break;
+  case 15: delta += section_stdlib(); break;
   case  0: delta += section_named(); break;
   }
 

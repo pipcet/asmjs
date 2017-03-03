@@ -25,6 +25,7 @@ __wasm_chars_\name\():
         .endm
 
         section_id type 1
+        section_id stdlib 15
         section_id import 2
         section_id function 3
         section_id table 4
