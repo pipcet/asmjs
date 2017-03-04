@@ -45,3 +45,7 @@
 	path = subrepos/musl
 	url = https://github.com/pipcet/musl
 	branch = asmjs
+[submodule "subrepos/wabt"]
+	path = subrepos/wabt
+	url = https://github.com/pipcet/wabt
+	branch = asmjs
