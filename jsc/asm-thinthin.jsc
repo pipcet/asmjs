@@ -2689,7 +2689,7 @@ if (typeof(os) !== "undefined" &&
     for (var syscall in Syscalls)
         ThinThin[syscall] = Syscalls[syscall];
     ThinThin.exit = function (code) {
-                console.log("exiting");
+        //console.log("exiting");
         if (os.getenv("STATS"))
             console.log("runtime: " + (Date.now() - lastdonetime));
         quit(code);
