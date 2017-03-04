@@ -93,7 +93,7 @@ SECTIONS
 {
   .output (INFO) : {
     LONG(0x6d736100)
-    LONG(1) /* as of 20170304 */
+    LONG(1) /* MVP: see https://lists.w3.org/Archives/Public/public-webassembly/2017Feb/0002.html */
     SECTION_SIZED(type)
     SECTION_SIZED(import)
     SECTION_SIZED(function)
