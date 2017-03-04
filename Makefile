@@ -122,6 +122,10 @@ build/asmjs-cross/emacs.dir: build/asmjs-cross/.dir
 	test -d build/asmjs-cross/emacs || $(MKDIR) build/asmjs-cross/emacs
 	touch $@
 
+build/common/wabt.dir: build/common/.dir
+	test -d build/common/wabt || $(MKDIR) build/common/wabt
+	touch $@
+
 build/common/spidermonkey.dir: build/common/.dir
 	test -d build/common/spidermonkey || $(MKDIR) build/common/spidermonkey
 	touch $@
@@ -465,6 +469,15 @@ build/wasm32-cross/perl.make: build/wasm32-cross/perl.dir build/wasm32-cross/per
 	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl install
 	touch $@
 
+build/common/wabt.cmake: src/wabt.dir build/common/wabt.dir
+	(cd build/common/wabt; cmake ../../../src/wabt -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$(PWD)/common)
+	touch $@
+
+build/common/wabt.make: build/common/wabt.cmake
+	$(MAKE) -C build/common/wabt
+	$(MAKE) -C build/common/wabt install
+	touch $@
+
 build/common/spidermonkey.configure: src/spidermonkey.dir build/common/spidermonkey.dir
 	(cd src/spidermonkey/js/src; autoconf2.13)
 	(cd build/common/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/common/spidermonkey --without-system-zlib)
@@ -659,6 +672,11 @@ src/emacs.dir: src/.dir
 src/spidermonkey.dir: src/.dir
 	test -d src/spidermonkey || mkdir src/spidermonkey
 	(cd subrepos/mozilla; tar c --exclude .git .) | (cd src/spidermonkey; tar x)
+	touch $@
+
+src/wabt.dir: src/.dir
+	test -d src/wabt || mkdir src/wabt
+	(cd subrepos/wabt; tar c --exclude .git .) | (cd src/wabt; tar x)
 	touch $@
 
 src/perl.dir: src/.dir
