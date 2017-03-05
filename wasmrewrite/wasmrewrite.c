@@ -271,7 +271,12 @@ long ast(unsigned long len, unsigned long index)
     case 0x10:
     case 0x20 ... 0x24:
     case 0x3f:
-    case 0x40 ... 0x41:
+    case 0x40:
+      mputchar(c);
+      mputuleb128(mgetuleb128());
+      delta += msynch();
+      break;
+    case 0x41:
       mputchar(c);
       mputsleb128(mgetsleb128(), 32);
       delta += msynch();
@@ -356,6 +361,9 @@ long ast(unsigned long len, unsigned long index)
         mputchar(0x0c);
         mputsleb128(mgetsleb128()+1, 32);
         break;
+      default:
+        fprintf(stderr, "unknown pseudo-br code!\n");
+        for(;;);
       }
       delta += msynch();
       break;
@@ -784,7 +792,12 @@ long init_expr()
     case 0x10:
     case 0x20 ... 0x24:
     case 0x3f:
-    case 0x40 ... 0x41:
+    case 0x40:
+      mputchar(c);
+      mputuleb128(mgetuleb128());
+      delta += msynch();
+      break;
+    case 0x41:
       mputchar(c);
       mputsleb128(mgetsleb128(), 32);
       delta += msynch();
@@ -992,7 +1005,11 @@ long section_named(void)
     mputstring(str);
     delta += section_name(len);
   } else {
-    abort();
+    len -= strlen(str) + 1;
+    mputstring(str);
+    while (len--) {
+      mputchar(mgetchar());
+    }
   }
 
   delta += msetsize(off0, off1, delta);
