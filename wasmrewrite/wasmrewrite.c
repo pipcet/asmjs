@@ -1001,7 +1001,7 @@ long section_named(void)
   msynch();
   char *str = mgetstring();
 
-  if (strcmp(str, "name") == 0) {
+  if (strcmp(str, "name") == 0 && 0) {
     mputstring(str);
     delta += section_name(len);
   } else {
