@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+my $off = 0;
+my @lines;
+while (<>) {
+    last if (/^########/);
+    push @lines, [$off, $_];
+    $off += length $_;
+}
+
+while (<>) {
+    my ($off, $comment) = /^# ([0-9]*): (.*)$/;
+    push @lines, [$off-1, "$comment\n"];
+}
+
+@lines = sort { $a->[0] <=> $b->[0] } @lines;
+
+for my $line (@lines) {
+    my ($off, $text) = @$line;
+
+    print $text;
+}
