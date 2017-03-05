@@ -973,19 +973,29 @@ long section_name(long len)
   long delta = 0;
   long lcount = 0;
 
-  if (len) {
-    mputuleb128(count = mgetuleb128());
-    delta += msynch();
-    while (count--) {
-      mputstring(mgetstring());
-      mputuleb128(lcount = mgetuleb128());
-      while (lcount--)
-        mputstring(mgetstring());
-      delta += msynch();
-    }
-  } else {
-    delta += msynch();
+  assert(mgetuleb128() == 1);
+  mputuleb128(1);
+  mputuleb128(mgetuleb128()); /* subsection length */
+  mputuleb128(count = mgetuleb128());
+  while (count--) {
+    mputuleb128(mgetuleb128());
+    mputstring(mgetstring());
   }
+
+  assert(mgetuleb128() == 2);
+  mputuleb128(2);
+  mputuleb128(mgetuleb128()); /* subsection length */
+  mputuleb128(count = mgetuleb128());
+  while (count--) {
+    mputuleb128(mgetuleb128());
+    mputuleb128(lcount = mgetuleb128());
+    while (lcount--) {
+      mputuleb128(mgetuleb128());
+      mputstring(mgetstring());
+    }
+  }
+
+  delta += msynch();
 
   return delta;
 }
@@ -1001,7 +1011,7 @@ long section_named(void)
   msynch();
   char *str = mgetstring();
 
-  if (strcmp(str, "name") == 0 && 0) {
+  if (strcmp(str, "name") == 0) {
     mputstring(str);
     delta += section_name(len);
   } else {
