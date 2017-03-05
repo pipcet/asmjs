@@ -331,35 +331,35 @@ long ast(unsigned long len, unsigned long index)
         //mputchar(0x01);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+1, 32);
+        mputuleb128(mgetsleb128()+1);
         break;
       case 2: /* throw */
         //mputchar(0x41);
         //mputchar(0x02);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+2, 32);
+        mputuleb128(mgetsleb128()+2);
         break;
       case 3: /* jump1 */
         //mputchar(0x41);
         //mputchar(0x03);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+2, 32);
+        mputuleb128(mgetsleb128()+2);
         break;
       case 4: /* throw1 */
         //mputchar(0x41);
         //mputchar(0x04);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+3, 32);
+        mputuleb128(mgetsleb128()+3);
         break;
       case 5: /* jump2 */
         //mputchar(0x41);
         //mputchar(0x05);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+1, 32);
+        mputuleb128(mgetsleb128()+1);
         break;
       default:
         fprintf(stderr, "unknown pseudo-br code!\n");
@@ -852,35 +852,35 @@ long init_expr()
         //mputchar(0x01);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+1, 32);
+        mputuleb128(mgetsleb128()+1);
         break;
       case 2: /* throw */
         //mputchar(0x41);
         //mputchar(0x02);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+2, 32);
+        mputuleb128(mgetsleb128()+2);
         break;
       case 3: /* jump1 */
         //mputchar(0x41);
         //mputchar(0x03);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+2, 32);
+        mputuleb128(mgetsleb128()+2);
         break;
       case 4: /* throw1 */
         //mputchar(0x41);
         //mputchar(0x04);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+3, 32);
+        mputuleb128(mgetsleb128()+3);
         break;
       case 5: /* jump2 */
         //mputchar(0x41);
         //mputchar(0x05);
         //mputchar(0x1a);
         mputchar(0x0c);
-        mputsleb128(mgetsleb128()+1, 32);
+        mputuleb128(mgetsleb128()+1);
         break;
       }
       delta += msynch();
