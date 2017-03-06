@@ -21,33 +21,33 @@
   BYTE((((x)>>8*7)&0x7f)|0x80);                 \
   BYTE((((x)>>9*7)&0x7f))
 
-#define SECTION_SIZED(name)                                          \
-  */wasm32-headers.o(.wasm.header_id.name)                               \
-  LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
-  __wasm_##name##_payload = .;                                       \
-  */wasm32-headers.o(.wasm.header.name);                                 \
-  LONGLEB128(__wasm_chars_##name##_end - __wasm_chars_##name);       \
-  *(.wasm.payload.name);                                            \
+#define SECTION_SIZED(name)                                             \
+  */wasm32-headers.o(.wasm.header_id.name)                              \
+  LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload);    \
+  __wasm_##name##_payload = .;                                          \
+  */wasm32-headers.o(.wasm.header.name);                                \
+  LONGLEB128(__wasm_chars_##name##_end - __wasm_chars_##name);          \
+  *(.wasm.payload.name);                                                \
   __wasm_##name##_payload_end = .;
 
-#define SECTION_NAME(name) \
-  */wasm32-headers.o(.wasm.header_id.name)                                 \
-  LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
-  __wasm_##name##_payload = .;                                       \
-  */wasm32-headers.o(.wasm.header.name);                                 \
-  BYTE(1) \
+#define SECTION_NAME(name)                                              \
+  */wasm32-headers.o(.wasm.header_id.name)                              \
+  LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload);    \
+  __wasm_##name##_payload = .;                                          \
+  */wasm32-headers.o(.wasm.header.name);                                \
+  BYTE(1)                                                               \
   LONGLEB128(__wasm_##name##_function_payload_end - __wasm_##name##_function_payload) \
-  __wasm_##name##_function_payload = .; \
-  LONGLEB128(__wasm_chars_##name##_function_end - __wasm_chars_##name##_function);       \
-  *(.wasm.payload.name.function) \
-  *(.wasm.payload.name.function.plt) \
-  __wasm_##name##_function_payload_end = .; \
-  BYTE(2) \
+  __wasm_##name##_function_payload = .;                                 \
+  LONGLEB128(__wasm_chars_##name##_function_end - __wasm_chars_##name##_function); \
+  *(.wasm.payload.name.function)                                        \
+  *(.wasm.payload.name.function.plt)                                    \
+  __wasm_##name##_function_payload_end = .;                             \
+  BYTE(2)                                                               \
   LONGLEB128(__wasm_##name##_local_payload_end - __wasm_##name##_local_payload) \
-  __wasm_##name##_local_payload = .; \
-  LONGLEB128(__wasm_chars_##name##_local_end - __wasm_chars_##name##_local);       \
-  *(.wasm.payload.name.local) \
-  __wasm_##name##_local_payload_end = .; \
+  __wasm_##name##_local_payload = .;                                    \
+  LONGLEB128(__wasm_chars_##name##_local_end - __wasm_chars_##name##_local); \
+  *(.wasm.payload.name.local)                                           \
+  __wasm_##name##_local_payload_end = .;                                \
   __wasm_##name##_payload_end = .;
 
 #define SECTION_ELEMENT(name)                                           \
@@ -61,7 +61,7 @@
   BYTE(0x01);                                                           \
   BYTE(0x0b);                                                           \
   LONGLEB128(__wasm_chars_##name##_end - __wasm_chars_##name);          \
-  *(.wasm.payload.name);                                               \
+  *(.wasm.payload.name);                                                \
   __wasm_##name##_payload_end = .;
 
 #define SECTION_DATA_HEADER(name)                                       \
@@ -88,42 +88,42 @@
   __wasm_##name##_segment_end = .;                                   \
   __wasm_##name##_payload_end = .;
 
-#define SECTION_UNSIZED(name, contents)                              \
-  */wasm32-headers.o(.wasm.header_id.name);                              \
-  LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload); \
-  */wasm32-headers.o(.wasm.header.name);                                 \
-  __wasm_##name##_payload = .;                                       \
-  contents;                                                          \
-  *(.wasm.payload.name*);                                            \
+#define SECTION_UNSIZED(name, contents)                                 \
+  */wasm32-headers.o(.wasm.header_id.name);                             \
+  LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload);    \
+  */wasm32-headers.o(.wasm.header.name);                                \
+  __wasm_##name##_payload = .;                                          \
+  contents;                                                             \
+  *(.wasm.payload.name*);                                               \
   __wasm_##name##_payload_end = .;
 
-#define SECTION_CHARS(name)                     \
-  .discard.chars.name :                \
-  {                                             \
-       __wasm_chars_##name = .;                 \
-       *(.wasm.chars.name.a);                   \
-       *(.wasm.chars.name.b);                   \
-       *(.wasm.chars.name);                    \
-       *(.wasm.chars.name.*);                    \
-       __wasm_chars_##name##_end = .;           \
-       __wasm_chars_##name##_size = . - __wasm_chars_##name; \
-       *(.wasm.payload.name.dummy);             \
+#define SECTION_CHARS(name)                                  \
+  .discard.chars.name :                                      \
+  {                                                          \
+    __wasm_chars_##name = .;                                 \
+    *(.wasm.chars.name.a);                                   \
+    *(.wasm.chars.name.b);                                   \
+    *(.wasm.chars.name);                                     \
+    *(.wasm.chars.name.*);                                   \
+    __wasm_chars_##name##_end = .;                           \
+    __wasm_chars_##name##_size = . - __wasm_chars_##name;    \
+    *(.wasm.payload.name.dummy);                             \
   }
 
-#define SECTION_CHARS_NAME(name)                     \
-  .discard.chars.name :                \
-  {                                             \
-       __wasm_chars_##name = .;                 \
-       __wasm_chars_##name##_function = .; \
-       *(.wasm.chars.name.function) \
-       *(.wasm.chars.name.function.plt) \
-       __wasm_chars_##name##_function_end = .; \
-       __wasm_chars_##name##_local = .; \
-       *(.wasm.chars.name.local) \
-       __wasm_chars_##name##_local_end = .; \
-       __wasm_chars_##name##_end = .;           \
-       __wasm_chars_##name##_size = . - __wasm_chars_##name; \
-       *(.wasm.payload.name.dummy);             \
+#define SECTION_CHARS_NAME(name)                             \
+  .discard.chars.name :                                      \
+  {                                                          \
+    __wasm_chars_##name = .;                                 \
+    __wasm_chars_##name##_function = .;                      \
+    *(.wasm.chars.name.function)                             \
+      *(.wasm.chars.name.function.plt)                       \
+      __wasm_chars_##name##_function_end = .;                \
+    __wasm_chars_##name##_local = .;                         \
+    *(.wasm.chars.name.local)                                \
+      __wasm_chars_##name##_local_end = .;                   \
+    __wasm_chars_##name##_end = .;                           \
+    __wasm_chars_##name##_size = . - __wasm_chars_##name;    \
+    *(.wasm.payload.name.dummy);                             \
   }
 
 ENTRY(_start)
