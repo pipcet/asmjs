@@ -1,0 +1,15 @@
+digraph G {
+  "C source" -> "Assembler source" [label="GNU CC"];
+  "Assembler source" -> "ELF object file" [label="GNU as"];
+  "ELF object file" -> "ELF library" [label="GNU ld"];
+  "ELF object file" -> "ELF executable" [label="GNU ld"];
+  "ELF library" -> "ELF executable" [label="elfedit"];
+  "ELF executable" -> "ELF intermediate" [label="wasm32.cpp-lds.lds"];
+  "ELF intermediate" -> "long WASM" [label="wasm32-wasmify.lds"];
+  "long WASM" -> "short WASM" [label="wasmrewrite"];
+  "short WASM" -> "final WASM" [label="dyninfo"];
+
+  "long WASM" -> "Assembler source" [label="wasm2s", constraint=false];
+  "short WASM" -> "Assembler source" [label="wasm2s", constraint=false];
+  "final WASM" -> "Assembler source" [label="wasm2s", constraint=false];
+}
