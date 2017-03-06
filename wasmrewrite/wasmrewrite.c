@@ -247,6 +247,10 @@ long ast(unsigned long len, unsigned long index)
   long delta = 0;
   long block = 0;
 
+  long last_set_local_beg = -1;
+  long last_set_local_end = -1;
+  int try_merging;
+
   while (roff < off0 + len) {
     u8 c = mgetchar();
     switch (c) {
@@ -269,12 +273,36 @@ long ast(unsigned long len, unsigned long index)
     case 0x0c:
     case 0x0d:
     case 0x10:
-    case 0x20 ... 0x24:
+    case 0x22 ... 0x24:
     case 0x3f:
     case 0x40:
       mputchar(c);
       mputuleb128(mgetuleb128());
       delta += msynch();
+      break;
+    case 0x21:
+      last_set_local_beg = woff;
+      mputchar(c);
+      mputuleb128(mgetuleb128());
+      last_set_local_end = woff;
+      break;
+    case 0x20:
+      try_merging = (woff == last_set_local_end);
+      mputchar(c);
+      mputuleb128(mgetuleb128());
+      if (try_merging) {
+        int l2 = woff - last_set_local_end;
+        int l1 = last_set_local_end - last_set_local_beg;
+
+        if (l1 == l2 && memcmp (gbuf+last_set_local_beg+1,
+                                gbuf+last_set_local_end+1,
+                                l1-1) == 0) {
+          memset(gmask + last_set_local_end, 0, woff - last_set_local_end);
+          woff = last_set_local_end;
+          gbuf[last_set_local_beg] = 0x22;
+          last_set_local_end = -1;
+        }
+      }
       break;
     case 0x41:
       mputchar(c);
