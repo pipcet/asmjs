@@ -8,26 +8,55 @@ It was originally based on Emscripten, but no Emscripten code remains at this po
 * Pipeline
 The stages of building a WebAssembly program are as follows:
 
-** GCC invocation
+** GCC
+
+GCC invocation:
 
 The GCC cross-compiler, =wasm32-virtual-wasm32-gcc= is invoked to produce ELF objects and ultimately to link those into an ELF executable.
 
-*** GCC translates C/C++ code to assembler code
+*** cc1
+
+GCC translates C/C++ code to assembler code.
+
 This uses the standard GCC frontend, including full optimization, and a custom GCC backend that translates GCC's internal RTL expressions into wasm32 code.
 
-*** GNU as translates assembler code into an ELF object file
+*** as
+
+GNU as translates assembler code into an ELF object file.
+
 We use the ELF format for intermediate files containing WebAssembly code, binary data, and debugging information in the DWARF format.
 
-*** GNU ld links the ELF object files into an ELF executable
+*** ld
+
+GNU ld links the ELF object files into an ELF executable.
+
 During this stage, special "LEB" relocations are used to patch little-endian base-128 addresses into the WebAssembly source code stored in the ELF files.
 
-** bin/wasmify-wasm32 invocation
+** wasmify
+
+bin/wasmify-wasm32 invocation:
 
 Afterwards, =wasmify-wasm32= is run on the ELF executable to produce a WebAssembly module file.
 
-*** GNU ld creates a temporary ELF object with WebAssembly code from the ELF executable
-*** GNU ld turns this temporary ELF object file into a valid WebAssembly module
-*** bin/wasmrewrite rewrites LEB-128 integers to have minimal length
+*** wasm32.cpp-lds.lds
+
+GNU ld creates a temporary ELF object with WebAssembly code from the ELF executable.
+
+*** wasm32-wasmify.lds
+
+GNU ld turns this temporary ELF object file into a valid WebAssembly module.
+
+*** wasmrewrite
+
+=bin/wasmrewrite= rewrites LEB-128 integers to have minimal length and shortens some instruction sequences.
+
+*** dyninfo
+
+=dyninfo/dyninfo.pl= extracts dynamic symbol information from the ELF executable and attaches it to the WebAssembly module as a custom WebAssembly section called "dyninfo".
+
+** wasm2s
+
+=common/bin/wasm2s= reads a WebAssembly module and produces assembler code that can be modified and reassembled into WebAssembly using =wasm32-virtual-wasm32-gcc= and =wasmify=.
 
 * Repositories
 

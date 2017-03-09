@@ -1,19 +1,19 @@
 digraph G {
   concentrate=true;
-  "C source" -> "ELF executable" [label="gcc", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#gcc-invocation"];
-  "ELF executable" -> "final WASM" [label="wasmify-wasm32", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#binwasmify-wasm32-invocation"];
+  "C source" -> "ELF executable" [label="gcc", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#GCC"];
+  "ELF executable" -> "final WASM" [label="wasmify-wasm32", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#wasmify"];
 
-  "C source" -> "Assembler source" [label="GNU CC", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#gcc-translates-cc-code-to-assembler-code"];
-  "Assembler source" -> "ELF object file" [label="GNU as", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#gnu-as-translates-assembler-code-into-an-elf-object-file"];
-  "ELF object file" -> "ELF library" [label="GNU ld", href=""];
-  "ELF object file" -> "ELF executable" [label="GNU ld", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#gnu-ld-links-the-elf-object-files-into-an-elf-executable"];
+  "C source" -> "Assembler source" [label="GNU CC", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#cc1"];
+  "Assembler source" -> "ELF object file" [label="GNU as", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#as"];
+  "ELF object file" -> "ELF library" [label="GNU ld", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#ld"];
+  "ELF object file" -> "ELF executable" [label="GNU ld", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#ld"];
   "ELF library" -> "ELF executable" [label="elfedit"];
-  "ELF executable" -> "ELF intermediate" [label="wasm32.cpp-lds.lds", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#gnu-ld-creates-a-temporary-elf-object-with-webassembly-code-from-the-elf-executable"];
-  "ELF intermediate" -> "long WASM" [label="wasm32-wasmify.lds", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#gnu-ld-turns-this-temporary-elf-object-file-into-a-valid-webassembly-module"];
-  "long WASM" -> "short WASM" [label="wasmrewrite", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#binwasmrewrite-rewrites-leb-128-integers-to-have-minimal-length"];
-  "short WASM" -> "final WASM" [label="dyninfo"];
+  "ELF executable" -> "ELF intermediate" [label="wasm32.cpp-lds.lds", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#wasm32.cpp-lds.lds"];
+  "ELF intermediate" -> "long WASM" [label="wasm32-wasmify.lds", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#wasm32-wasmify.lds"];
+  "long WASM" -> "short WASM" [label="wasmrewrite", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#wasmrewrite"];
+  "short WASM" -> "final WASM" [label="dyninfo", href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#dyninfo"];
 
-  "wasm2s" [shape=box, href="https://github.com/pipcet/"];
+  "wasm2s" [shape=box, href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#wasm2s"];
   "Assembler source" -> "wasm2s" [dir=back];
   "wasm2s" -> "long WASM" [dir=back];
   "wasm2s" -> "short WASM" [dir=back];
