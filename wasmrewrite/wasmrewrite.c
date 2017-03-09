@@ -1003,16 +1003,23 @@ long section_name(long len)
 
   assert(mgetuleb128() == 1);
   mputuleb128(1);
-  mputuleb128(mgetuleb128()); /* subsection length */
+  msynch();
+  mgetsize(&off0, &off1);
+  msynch();
   mputuleb128(count = mgetuleb128());
   while (count--) {
     mputuleb128(mgetuleb128());
     mputstring(mgetstring());
   }
+  delta += msynch();
+  msetsize(off0, off1, delta);
+  delta += msynch();
 
   assert(mgetuleb128() == 2);
   mputuleb128(2);
-  mputuleb128(mgetuleb128()); /* subsection length */
+  msynch();
+  mgetsize(&off0, &off1);
+  msynch();
   mputuleb128(count = mgetuleb128());
   while (count--) {
     mputuleb128(mgetuleb128());
@@ -1022,7 +1029,8 @@ long section_name(long len)
       mputstring(mgetstring());
     }
   }
-
+  delta += msynch();
+  msetsize(off0, off1, delta);
   delta += msynch();
 
   return delta;
