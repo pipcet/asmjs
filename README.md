@@ -7,4 +7,4 @@ Build instructions
  * `make build/binfmt_misc.install` (this will call `sudo`)
  * `make all`
 
-See the (wasm32-specific documentation)[https://github.com/pipcet/asmjs/blob/everything/wasm32.org] or the (project documentation)[https://github.com/pipcet/asmjs/blob/everything/asmjs.org] for more information.
+See the [wasm32-specific documentation](https://github.com/pipcet/asmjs/blob/everything/wasm32.org) or the [project documentation](https://github.com/pipcet/asmjs/blob/everything/asmjs.org) for more information.
