@@ -50,12 +50,20 @@ build/wasm32/.dir: build/.dir
 	test -d build/wasm32 || $(MKDIR) build/wasm32
 	touch $@
 
+build/native/.dir: build/.dir
+	test -d build/native || $(MKDIR) build/native
+	touch $@
+
 build/asmjs/binutils-gdb.dir: build/asmjs/.dir
 	test -d build/asmjs/binutils-gdb || $(MKDIR) build/asmjs/binutils-gdb
 	touch $@
 
 build/wasm32/binutils-gdb.dir: build/wasm32/.dir
 	test -d build/wasm32/binutils-gdb || $(MKDIR) build/wasm32/binutils-gdb
+	touch $@
+
+build/native/binutils-gdb.dir: build/native/.dir
+	test -d build/native/binutils-gdb || $(MKDIR) build/native/binutils-gdb
 	touch $@
 
 build/asmjs/gcc-preliminary.dir: build/asmjs/.dir
@@ -200,6 +208,11 @@ build/wasm32/binutils-gdb.configure: src/binutils-gdb.dir build/wasm32/binutils-
 	(cd build/wasm32/binutils-gdb; ../../../src/binutils-gdb/configure --target=wasm32-virtual-wasm32 --enable-debug --prefix=$(PWD)/wasm32-virtual-wasm32 CFLAGS=$(OPT_NATIVE))
 	touch $@
 
+build/native/binutils-gdb.configure: src/binutils-gdb.dir build/native/binutils-gdb.dir
+	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
+	(cd build/native/binutils-gdb; ../../../src/binutils-gdb/configure --enable-debug --prefix=$(PWD)/native-virtual-native CFLAGS=$(OPT_NATIVE))
+	touch $@
+
 build/asmjs/binutils-gdb.make: build/asmjs/binutils-gdb.dir build/asmjs/binutils-gdb.configure
 	$(MAKE) -C build/asmjs/binutils-gdb
 	$(MAKE) -C build/asmjs/binutils-gdb install
@@ -208,6 +221,11 @@ build/asmjs/binutils-gdb.make: build/asmjs/binutils-gdb.dir build/asmjs/binutils
 build/wasm32/binutils-gdb.make: build/wasm32/binutils-gdb.dir build/wasm32/binutils-gdb.configure
 	$(MAKE) -C build/wasm32/binutils-gdb
 	$(MAKE) -C build/wasm32/binutils-gdb install
+	touch $@
+
+build/native/binutils-gdb.make: build/native/binutils-gdb.dir build/native/binutils-gdb.configure
+	$(MAKE) -C build/native/binutils-gdb
+	$(MAKE) -C build/native/binutils-gdb install
 	touch $@
 
 build/binutils-gdb.clean: FORCE
@@ -779,6 +797,14 @@ bin/wasmsect: wasmrewrite/wasmsect.c
 	gcc -g3 $< -o $@
 
 .PHONY: FORCE clean fetch
+
+update-binutils-gdb:
+	diff -ur src/binutils-gdb subrepos/binutils-gdb -x '*.in' -x '*.m4' | (cd src/binutils-gdb; patch -p 2)
+	false
+
+update-wabt:
+	diff -ur src/wabt subrepos/wabt -x 'Makefile' | (cd src/wabt; patch -p 2)
+	false
 
 # build/wasm64/.dir: build/.dir
 # 	test -d build/wasm64 || $(MKDIR) build/wasm64
