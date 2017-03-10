@@ -802,6 +802,11 @@ update-binutils-gdb:
 	diff -ur src/binutils-gdb subrepos/binutils-gdb -x '*.in' -x '*.m4' | (cd src/binutils-gdb; patch -p 2)
 	false
 
+update-gcc:
+	diff -ur src/gcc-preliminary subrepos/gcc -x '*.in' -x '*.m4' | (cd src/gcc-preliminary; patch -p 2)
+	diff -ur src/gcc-final subrepos/gcc -x '*.in' -x '*.m4' | (cd src/gcc-final; patch -p 2)
+	false
+
 update-wabt:
 	diff -ur src/wabt subrepos/wabt -x 'Makefile' | (cd src/wabt; patch -p 2)
 	false
