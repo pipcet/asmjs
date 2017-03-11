@@ -108,7 +108,7 @@ void mputsleb128(long value, int bits)
     c = value & 0x7fL;
     value >>= 7;
     if (gmask[woff]) {
-      fprintf(stderr, "mputuleb128\n");
+      fprintf(stderr, "mputsleb128\n");
       abort();
     }
     more = (value && value != -1) || (!!(c&0x40) != (value < 0));
@@ -1051,7 +1051,7 @@ long section_named(void)
     mputstring(str);
     delta += section_name(len);
   } else {
-    len -= strlen(str) + 1;
+    len -= roff - woff;
     mputstring(str);
     while (len--) {
       mputchar(mgetchar());
