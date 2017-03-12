@@ -591,3 +591,22 @@ In addition to including the new object file code, constructors and destructors 
 This is implemented by modifying the linker script files to produce a linked list of file descriptors, starting at the fixed offset 16384, with new descriptors appended to existing object files after the .bss section.
 ** dummy sections
 The wasm32 backend uses a number of dummy ELF sections whose only purpose it is to allocate positions in some index space.
+** The new intermediate macro assembler language
+*** file_header
+*** =function_name= /index/, /name/
+*** =local_name= /findex/, /lindex/, /name/
+*** =numbered_section= /index/, /name/
+*** =named_section= /name/
+*** opcodes
+*** relocations
+**** =@plt=
+**** =@got=
+**** =@gotcode=
+Since WebAssembly has separate spaces for data addresses and function indices, relocations must distinguish between code and data references. Usually, GOT references are to data; =@gotcode= references, however, are to function indices.
+*** index spaces
+**** =.space.function=
+**** =.space.global=
+**** =.space.table=
+**** =.space.memory=
+**** =.space.pc=
+
