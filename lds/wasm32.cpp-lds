@@ -26,8 +26,8 @@
   LONGLEB128(__wasm_##name##_payload_end - __wasm_##name##_payload);    \
   __wasm_##name##_payload = .;                                          \
   */wasm32-headers.o(.wasm.header.name);                                \
-  LONGLEB128(__wasm_chars_##name##_end - __wasm_chars_##name);          \
-  *(.wasm.payload.name);                                                \
+  LONGLEB128(__wasm_space_##name##_end - __wasm_space_##name);          \
+  *(.wasm.name);                                                \
   __wasm_##name##_payload_end = .;
 
 #define SECTION_NAME(name)                                              \
@@ -38,15 +38,15 @@
   BYTE(1)                                                               \
   LONGLEB128(__wasm_##name##_function_payload_end - __wasm_##name##_function_payload) \
   __wasm_##name##_function_payload = .;                                 \
-  LONGLEB128(__wasm_chars_##name##_function_end - __wasm_chars_##name##_function); \
-  *(.wasm.payload.name.function)                                        \
-  *(.wasm.payload.name.function.plt)                                    \
+  LONGLEB128(__wasm_space_##name##_function_end - __wasm_space_##name##_function); \
+  *(.wasm.name.function)                                        \
+  *(.wasm.name.function.plt)                                    \
   __wasm_##name##_function_payload_end = .;                             \
   BYTE(2)                                                               \
   LONGLEB128(__wasm_##name##_local_payload_end - __wasm_##name##_local_payload) \
   __wasm_##name##_local_payload = .;                                    \
-  LONGLEB128(__wasm_chars_##name##_local_end - __wasm_chars_##name##_local); \
-  *(.wasm.payload.name.local)                                           \
+  LONGLEB128(__wasm_space_##name##_local_end - __wasm_space_##name##_local); \
+  *(.wasm.name.local)                                           \
   __wasm_##name##_local_payload_end = .;                                \
   __wasm_##name##_payload_end = .;
 
@@ -60,8 +60,8 @@
   BYTE(0x23);                                                           \
   BYTE(0x01);                                                           \
   BYTE(0x0b);                                                           \
-  LONGLEB128(__wasm_chars_##name##_end - __wasm_chars_##name);          \
-  *(.wasm.payload.name);                                                \
+  LONGLEB128(__wasm_space_##name##_end - __wasm_space_##name);          \
+  *(.wasm.name);                                                \
   __wasm_##name##_payload_end = .;
 
 #define SECTION_DATA_HEADER(name)                                       \
@@ -94,36 +94,37 @@
   */wasm32-headers.o(.wasm.header.name);                                \
   __wasm_##name##_payload = .;                                          \
   contents;                                                             \
-  *(.wasm.payload.name*);                                               \
+  *(.wasm.name*);                                               \
   __wasm_##name##_payload_end = .;
 
-#define SECTION_CHARS(name)                                  \
-  .discard.chars.name :                                      \
+#define SECTION_SPACE(name)                                  \
+  .discard.space.name :                                      \
   {                                                          \
-    __wasm_chars_##name = .;                                 \
-    *(.wasm.chars.name.a);                                   \
-    *(.wasm.chars.name.b);                                   \
-    *(.wasm.chars.name);                                     \
-    *(.wasm.chars.name.*);                                   \
-    __wasm_chars_##name##_end = .;                           \
-    __wasm_chars_##name##_size = . - __wasm_chars_##name;    \
-    *(.wasm.payload.name.dummy);                             \
+    __wasm_space_##name = .;                                 \
+    *(.space.name.import);                              \
+    *(.space.name.*);                                   \
+    *(.space.name*);                                   \
+    *(.space.name##_.plt);                              \
+    __wasm_space_##name##_end = .;                           \
+    __wasm_space_##name##_size = . - __wasm_space_##name;    \
   }
-
-#define SECTION_CHARS_NAME(name)                             \
-  .discard.chars.name :                                      \
+#define SECTION_SPACE_NAME(name)                             \
+  .discard.space.name :                                      \
   {                                                          \
-    __wasm_chars_##name = .;                                 \
-    __wasm_chars_##name##_function = .;                      \
-    *(.wasm.chars.name.function)                             \
-      *(.wasm.chars.name.function.plt)                       \
-      __wasm_chars_##name##_function_end = .;                \
-    __wasm_chars_##name##_local = .;                         \
-    *(.wasm.chars.name.local)                                \
-      __wasm_chars_##name##_local_end = .;                   \
-    __wasm_chars_##name##_end = .;                           \
-    __wasm_chars_##name##_size = . - __wasm_chars_##name;    \
-    *(.wasm.payload.name.dummy);                             \
+    __wasm_space_##name = .;                                 \
+    __wasm_space_##name##_function = .;                      \
+    *(.space.name.function.import);                     \
+    *(.space.name.function.*);                          \
+    *(.space.name.function*);                          \
+    *(.space.name.function##_.plt);                     \
+    __wasm_space_##name##_function_end = .;                  \
+    __wasm_space_##name##_local = .;                         \
+    *(.space.name.local.import);                        \
+    *(.space.name.local.*);                             \
+    *(.space.name.local*);                             \
+    *(.space.name.local##_.plt);                        \
+    __wasm_space_##name##_local_end = .;                     \
+    __wasm_space_##name##_size = . - __wasm_space_##name;    \
   }
 
 ENTRY(_start)
@@ -240,17 +241,17 @@ SECTIONS
   .output.named (INFO) : {
     SECTION_NAME(name)
   }
-  SECTION_CHARS(function_index)
-  SECTION_CHARS(type)
-  SECTION_CHARS(import)
-  SECTION_CHARS(function)
-  //SECTION_CHARS(table)
-  //SECTION_CHARS(memory)
-  SECTION_CHARS(global)
-  SECTION_CHARS(export)
-  SECTION_CHARS(element)
-  SECTION_CHARS(code)
-  SECTION_CHARS(data)
-  SECTION_CHARS_NAME(name)
+  SECTION_SPACE(function_index)
+  SECTION_SPACE(type)
+  SECTION_SPACE(import)
+  SECTION_SPACE(function)
+  //SECTION_SPACE(table)
+  //SECTION_SPACE(memory)
+  SECTION_SPACE(global)
+  SECTION_SPACE(export)
+  SECTION_SPACE(element)
+  SECTION_SPACE(code)
+  SECTION_SPACE(data)
+  SECTION_SPACE_NAME(name)
   /DISCARD/ : { *(.asmjs.header) *(.asmjs.term) *(.got.plt) *(.dynamic) }
 }

@@ -5,8 +5,6 @@
         .popsection
         .pushsection .wasm.header.\name
         .popsection
-        .pushsection .wasm.chars.\name
-        __wasm_chars_\name\():
         .endm
 
         .macro section name
@@ -19,9 +17,6 @@ __wasm_\name\()_id:
         .ascii "\name"
 __wasm_\name\()_id_end:
         .popsection
-
-        .pushsection .wasm.chars.\name
-__wasm_chars_\name\():
         .endm
 
         section_id type 1
@@ -37,20 +32,20 @@ __wasm_chars_\name\():
         section_id data 11
         section name
 
-        .pushsection .wasm.chars.table
+        .pushsection .space.table
         .byte 0x00
         .popsection
-        .pushsection .wasm.payload.table
+        .pushsection .wasm.table
         .byte 0x70                         ; anyfunc
         .byte 0x1                          ; maximum field present
         rleb128_32 1024
         rleb128_32 65536
         .popsection
 
-        .pushsection .wasm.chars.import
+        .pushsection .space.import
         .byte 0x00
         .popsection
-        .pushsection .wasm.payload.import
+        .pushsection .wasm.import
         lstring "sys"
         lstring "got"
         .byte 3                 ; global
@@ -58,10 +53,10 @@ __wasm_chars_\name\():
         .byte 0                 ; immutable
         .popsection
 
-        .pushsection .wasm.chars.import
+        .pushsection .space.import
         .byte 0x00
         .popsection
-        .pushsection .wasm.payload.import
+        .pushsection .wasm.import
         lstring "sys"
         lstring "plt"
         .byte 3                 ; global
@@ -69,10 +64,10 @@ __wasm_chars_\name\():
         .byte 0                 ; immutable
         .popsection
 
-        .pushsection .wasm.chars.import
+        .pushsection .space.import
         .byte 0x00
         .popsection
-        .pushsection .wasm.payload.import
+        .pushsection .wasm.import
         lstring "sys"
         lstring "gpo"
         .byte 3                 ; global
@@ -80,10 +75,10 @@ __wasm_chars_\name\():
         .byte 0                 ; immutable
         .popsection
 
-        .pushsection .wasm.chars.import
+        .pushsection .space.import
         .byte 0x00
         .popsection
-        .pushsection .wasm.payload.import
+        .pushsection .wasm.import
         lstring "sys"
         lstring "table"
         .byte 1                 ; table
@@ -93,10 +88,10 @@ __wasm_chars_\name\():
         rleb128_32 65536        ; maximum size
         .popsection
 
-        .pushsection .wasm.chars.import
+        .pushsection .space.import
         .byte 0x00
         .popsection
-        .pushsection .wasm.payload.import
+        .pushsection .wasm.import
         lstring "sys"
         lstring "memory"
         .byte 2                 ; memory
