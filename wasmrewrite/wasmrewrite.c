@@ -1082,6 +1082,8 @@ long section(void)
   case 10: delta += section_code(); break;
   case 11: delta += section_data(); break;
   case  0: delta += section_named(); break;
+  default:
+    abort();
   }
 
   return delta;
