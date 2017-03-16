@@ -210,7 +210,7 @@ build/wasm32/binutils-gdb.configure: src/binutils-gdb.dir build/wasm32/binutils-
 
 build/native/binutils-gdb.configure: src/binutils-gdb.dir build/native/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/native/binutils-gdb; ../../../src/binutils-gdb/configure --enable-debug --prefix=$(PWD)/native-virtual-native CFLAGS=$(OPT_NATIVE))
+	(cd build/native/binutils-gdb; ../../../src/binutils-gdb/configure --enable-debug --prefix=$(PWD)/native CFLAGS=$(OPT_NATIVE))
 	touch $@
 
 build/asmjs/binutils-gdb.make: build/asmjs/binutils-gdb.dir build/asmjs/binutils-gdb.configure
