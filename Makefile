@@ -7,7 +7,7 @@ OPT_ASMJS ?= "-O2"
 
 env:
 	@echo "export ASMJSDIR=$(PWD)"
-	@echo "export PATH=$(PWD)/common3/bin:$(PWD)/asmjs-virtual-asmjs/bin:$(PWD)/wasm32-virtual-wasm32/bin:$(PWD)/bin:$$PATH"
+	@echo "export PATH=$(PWD)/common3/bin:$(PWD)/asmjs-virtual-asmjs/bin:$(PWD)/wasm32-unknown-none/bin:$(PWD)/bin:$$PATH"
 	@echo "export LANG=C"
 	@echo "export JSFLAGS=\"--wasm-always-baseline --no-threads\""
 
@@ -103,7 +103,7 @@ build/wasm32/musl.dir: build/wasm32/.dir
 	touch $@
 
 build/wasm32/musl.configure: build/wasm32/musl.dir src/musl.dir
-	(cd build/wasm32/musl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/musl/configure LDFLAGS="-Wl,-soname=libc.wasm" --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --build=x86_64-pc-linux-gnu --enable-shared --enable-static)
+	(cd build/wasm32/musl; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/musl/configure LDFLAGS="-Wl,-soname=libc.wasm" --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none --target=wasm32-unknown-none --build=x86_64-pc-linux-gnu --enable-shared --enable-static)
 	touch $@
 
 build/asmjs/ncurses.dir: build/asmjs/.dir
@@ -205,7 +205,7 @@ build/asmjs/binutils-gdb.configure: src/binutils-gdb.dir build/asmjs/binutils-gd
 
 build/wasm32/binutils-gdb.configure: src/binutils-gdb.dir build/wasm32/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/wasm32/binutils-gdb; ../../../src/binutils-gdb/configure --target=wasm32-virtual-wasm32 --enable-debug --prefix=$(PWD)/wasm32-virtual-wasm32 CFLAGS=$(OPT_NATIVE))
+	(cd build/wasm32/binutils-gdb; ../../../src/binutils-gdb/configure --target=wasm32-unknown-none --enable-debug --prefix=$(PWD)/wasm32-unknown-none CFLAGS=$(OPT_NATIVE))
 	touch $@
 
 build/native/binutils-gdb.configure: src/binutils-gdb.dir build/native/binutils-gdb.dir
@@ -240,7 +240,7 @@ build/asmjs/gcc-preliminary.configure: src/gcc-preliminary.dir build/asmjs/gcc-p
 	touch $@
 
 build/wasm32/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm32/gcc-preliminary.dir | build/wasm32/binutils-gdb.make
-	(cd build/wasm32/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm32-virtual-wasm32 --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm32-virtual-wasm32)
+	(cd build/wasm32/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm32-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm32-unknown-none)
 	touch $@
 
 build/asmjs/gcc-preliminary.make: build/asmjs/gcc-preliminary.dir build/asmjs/gcc-preliminary.configure
@@ -253,8 +253,8 @@ build/asmjs/gcc-preliminary.make: build/asmjs/gcc-preliminary.dir build/asmjs/gc
 build/wasm32/gcc-preliminary.make: build/wasm32/gcc-preliminary.dir build/wasm32/gcc-preliminary.configure
 	$(MAKE) -C build/wasm32/gcc-preliminary
 	$(MAKE) -C build/wasm32/gcc-preliminary install
-	cp wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc.a wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc_eh.a
-	cp wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc.a wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc_s.a
+	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/libgcc_eh.a
+	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/libgcc_s.a
 	touch $@
 
 build/gcc-preliminary.clean: FORCE
@@ -273,11 +273,11 @@ build/asmjs-cross/glibc.configure: src/glibc.dir build/asmjs-cross/glibc.dir | b
 	touch $@
 
 build/wasm32/glibc.configure: src/glibc.dir build/wasm32/glibc.dir | build/wasm32/gcc-preliminary.make
-	(cd build/wasm32/glibc; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/glibc/configure CFLAGS="-fPIC -O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	(cd build/wasm32/glibc; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/glibc/configure CFLAGS="-fPIC -O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-unknown-none --target=wasm32-unknown-none --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
 build/wasm32/glibc-static.configure: src/glibc.dir build/wasm32/glibc-static.dir | build/wasm32/gcc-preliminary.make
-	(cd build/wasm32/glibc-static; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/glibc/configure CFLAGS="-O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-virtual-wasm32 --target=wasm32-virtual-wasm32 --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	(cd build/wasm32/glibc-static; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/glibc/configure CFLAGS="-O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-unknown-none --target=wasm32-unknown-none --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
 build/asmjs/glibc.make: build/asmjs/glibc.dir build/asmjs/glibc.configure
@@ -291,22 +291,22 @@ build/asmjs-cross/glibc.make: build/asmjs-cross/glibc.dir build/asmjs-cross/glib
 	touch $@
 
 build/wasm32/glibc.make: build/wasm32/glibc.dir build/wasm32/glibc.configure
-	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/glibc
-	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/glibc install
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc install
 	touch $@
 
 build/wasm32/glibc-static.make: build/wasm32/glibc-static.dir build/wasm32/glibc-static.configure
-	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/glibc-static
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc-static
 	touch $@
 
 build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
-	$(PWD)/wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld -shared --whole-archive $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.a --no-whole-archive $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/libgcc.a -o $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so
-	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libc.so > $(PWD)/libc.wasm
+	$(PWD)/wasm32-unknown-none/bin/wasm32-unknown-none-ld -shared --whole-archive $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.a --no-whole-archive $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/libgcc.a -o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so
+	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so > $(PWD)/libc.wasm
 	touch $@
 
 build/wasm32/libdl.make: build/wasm32/glibc-semishared.make build/wasm32/gcc-final.make
 	$(MAKE) -C libdl
-	cp libdl/libdl.so wasm32-virtual-wasm32/wasm32-virtual-wasm32/lib/libdl.so
+	cp libdl/libdl.so wasm32-unknown-none/wasm32-unknown-none/lib/libdl.so
 	wasmify-wasm32 libdl/libdl.so > libdl.wasm
 	touch $@
 
@@ -321,8 +321,8 @@ build/glibc.clean: FORCE
 	rm -f build/glibc.make
 
 build/wasm32/musl.make: build/wasm32/musl.dir build/wasm32/musl.configure
-	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/musl
-	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/musl install
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/musl
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/musl install
 	touch $@
 
 build/asmjs/gcc-final.configure: src/gcc-final.dir build/asmjs/gcc-final.dir | build/asmjs/glibc.make
@@ -330,7 +330,7 @@ build/asmjs/gcc-final.configure: src/gcc-final.dir build/asmjs/gcc-final.dir | b
 	touch $@
 
 build/wasm32/gcc-final.configure: src/gcc-final.dir build/wasm32/gcc-final.dir | build/wasm32/glibc.make
-	(cd build/wasm32/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=wasm32-virtual-wasm32 --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/wasm32-virtual-wasm32)
+	(cd build/wasm32/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=wasm32-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/wasm32-unknown-none)
 	touch $@
 
 build/asmjs/gcc-final.make: build/asmjs/gcc-final.dir build/asmjs/gcc-final.configure
@@ -347,10 +347,10 @@ build/wasm32/gcc-final.make: build/wasm32/gcc-final.dir build/wasm32/gcc-final.c
 	test -d build/wasm32/gcc-final/gcc || $(MKDIR) build/wasm32/gcc-final/gcc
 	cp build/wasm32/gcc-preliminary/gcc/libgcc.a build/wasm32/gcc-final/gcc/libgcc_eh.a
 	cp build/wasm32/gcc-preliminary/gcc/libgcc.a build/wasm32/gcc-final/gcc/libgcc_s.a
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/gcc-final
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/gcc-final
 	cp build/wasm32/gcc-final/gcc/libgcc.a build/wasm32/gcc-final/gcc/libgcc_eh.a
 	cp build/wasm32/gcc-final/gcc/libgcc.a build/wasm32/gcc-final/gcc/libgcc_s.a
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/gcc-final install
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/gcc-final install
 	touch $@
 
 build/asmjs/ncurses.configure: src/ncurses.dir build/asmjs/ncurses.dir | build/asmjs/gcc-final.make
@@ -358,7 +358,7 @@ build/asmjs/ncurses.configure: src/ncurses.dir build/asmjs/ncurses.dir | build/a
 	touch $@
 
 build/wasm32/ncurses.configure: src/ncurses.dir build/wasm32/ncurses.dir | build/wasm32/gcc-final.make
-	(cd build/wasm32/ncurses; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	(cd build/wasm32/ncurses; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
 build/asmjs/ncurses.make: build/asmjs/ncurses.configure
@@ -367,8 +367,8 @@ build/asmjs/ncurses.make: build/asmjs/ncurses.configure
 	touch $@
 
 build/wasm32/ncurses.make: build/wasm32/ncurses.configure
-	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/ncurses
-	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/ncurses install
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/ncurses
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/ncurses install
 	touch $@
 
 build/asmjs-cross/ncurses.configure: src/ncurses.dir build/asmjs-cross/ncurses.dir | build/asmjs/gcc-final.make
@@ -395,7 +395,7 @@ build/asmjs-cross/emacs.configure: src/emacs.dir build/asmjs-cross/emacs.dir | b
 build/wasm32/emacs.configure: src/emacs.dir build/wasm32/emacs.dir | build/wasm32/ncurses.make
 	(cd src/emacs; autoreconf -ivf)
 	cp config/config.sub src/emacs/build-aux
-	(cd build/wasm32/emacs; CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	(cd build/wasm32/emacs; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
 build/asmjs/emacs.make: build/asmjs/emacs.configure build/asmjs/ncurses.make | build/binfmt_misc.install
@@ -417,12 +417,12 @@ build/asmjs-cross/emacs.make: build/asmjs-cross/emacs.configure build/asmjs-cros
 	touch $@
 
 build/wasm32/emacs.make: build/wasm32/emacs.configure build/wasm32/ncurses.make | build/binfmt_misc.install
-	$(MKDIR) -p $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/arpa $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/netinet
-	touch $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/arpa/inet.h
-	touch $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/netdb.h
-	touch $(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32/include/netinet/in.h
-	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/emacs
-	CC=wasm32-virtual-wasm32-gcc PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/emacs install
+	$(MKDIR) -p $(PWD)/wasm32-unknown-none/wasm32-unknown-none/include/arpa $(PWD)/wasm32-unknown-none/wasm32-unknown-none/include/netinet
+	touch $(PWD)/wasm32-unknown-none/wasm32-unknown-none/include/arpa/inet.h
+	touch $(PWD)/wasm32-unknown-none/wasm32-unknown-none/include/netdb.h
+	touch $(PWD)/wasm32-unknown-none/wasm32-unknown-none/include/netinet/in.h
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/emacs
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/emacs install
 	touch $@
 
 build/asmjs/bash.configure: src/bash.dir build/asmjs/bash.dir | build/asmjs/gcc-final.make
@@ -435,12 +435,12 @@ build/asmjs/bash.make: build/asmjs/bash.configure
 	touch $@
 
 build/wasm32/bash.configure: src/bash.dir build/wasm32/bash.dir | build/wasm32/gcc-final.make
-	(cd build/wasm32/bash; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/bash/configure --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32 --disable-net-redirections --without-bash-malloc)
+	(cd build/wasm32/bash; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/bash/configure --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none --disable-net-redirections --without-bash-malloc)
 	touch $@
 
 build/wasm32/bash.make: build/wasm32/bash.configure
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/bash
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/bash install
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/bash
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/bash install
 	touch $@
 
 build/asmjs/perl.configure: src/perl.dir build/asmjs/perl.dir | build/asmjs/gcc-final.make
@@ -468,23 +468,23 @@ build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.c
 build/wasm32/perl.configure: src/perl.dir build/wasm32/perl.dir | build/wasm32/gcc-final.make build/wasm32/libs.make
 	test -f build/wasm32/perl/config.sh && mv build/wasm32/perl/config.sh build/wasm32/perl/config.sh.old || true
 	touch build/wasm32/perl/config.sh
-	(cd build/wasm32/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Uversiononly -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/../../../../wasm32-virtual-wasm32/lib' -Dcccdlflags='-fPIC -Wl,--shared -shared' -Dlddlflags='-Wl,--shared -shared' -Dccdlflags='-Wl,-E'  -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
+	(cd build/wasm32/perl; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH sh ./Configure -der -Uversiononly -Uusemymalloc -Dcc=wasm32-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/include $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/include-fixed $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/../../../../wasm32-unknown-none/include' -Dlibpth='$(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/include-fixed $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/../../../../wasm32-unknown-none/lib' -Dcccdlflags='-fPIC -Wl,--shared -shared' -Dlddlflags='-Wl,--shared -shared' -Dccdlflags='-Wl,-E'  -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-unknown-none/wasm32-unknown-none')
 	touch $@
 
 build/wasm32/perl.make: build/wasm32/perl.dir build/wasm32/perl.configure
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/perl
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/perl install
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/perl
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/perl install
 	touch $@
 
 build/wasm32-cross/perl.configure: src/perl.dir build/wasm32-cross/perl.dir | build/wasm32/gcc-final.make
 	test -f build/wasm32-cross/perl/config.sh && mv build/wasm32-cross/perl/config.sh build/wasm32-cross/perl/config.sh.old || true
 	touch build/wasm32-cross/perl/config.sh
-	(cd build/wasm32-cross/perl; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/wasm32-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=wasm32-virtual-wasm32-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/../../../../wasm32-virtual-wasm32/include' -Dlibpth='$(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/include-fixed $(PWD)/wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/../../../../wasm32-virtual-wasm32/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32')
+	(cd build/wasm32-cross/perl; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/wasm32-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=wasm32-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/include $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/include-fixed $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/../../../../wasm32-unknown-none/include' -Dlibpth='$(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/include-fixed $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/../../../../wasm32-unknown-none/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-unknown-none/wasm32-unknown-none')
 	touch $@
 
 build/wasm32-cross/perl.make: build/wasm32-cross/perl.dir build/wasm32-cross/perl.configure
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl install
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl install
 	touch $@
 
 build/common/wabt.cmake: src/wabt.dir build/common/wabt.dir
@@ -570,12 +570,12 @@ build/asmjs/coreutils.make: build/asmjs/coreutils.configure
 
 build/wasm32/coreutils.configure: src/coreutils.dir build/wasm32/coreutils.dir | build/wasm32/gcc-final.make
 	(cd src/coreutils; ./bootstrap --gnulib-srcdir=gnulib --skip-po)
-	(cd build/wasm32/coreutils; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/coreutils/configure --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32)
+	(cd build/wasm32/coreutils; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/coreutils/configure --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
 build/wasm32/coreutils.make: build/wasm32/coreutils.configure
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/coreutils
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/coreutils install
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/coreutils
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/coreutils install
 	touch $@
 
 build/asmjs/graphviz.configure: src/graphviz.dir build/asmjs/graphviz.dir | build/asmjs/gcc-final.make
@@ -592,12 +592,12 @@ build/asmjs/graphviz.make: build/asmjs/graphviz.configure
 build/wasm32/graphviz.configure: src/graphviz.dir build/wasm32/graphviz.dir | build/wasm32/gcc-final.make
 	(cd src/graphviz; sh autogen.sh NOCONFIG)
 	cp config/config.sub src/graphviz/config/config.sub
-	(cd build/wasm32/graphviz; PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH ../../../src/graphviz/configure --host=wasm32-virtual-wasm32 --prefix=$(PWD)/wasm32-virtual-wasm32/wasm32-virtual-wasm32 --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --without-qt --enable-static --disable-shared --disable-ltdl)
+	(cd build/wasm32/graphviz; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/graphviz/configure --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --without-qt --enable-static --disable-shared --disable-ltdl)
 	touch $@
 
 build/wasm32/graphviz.make: build/wasm32/graphviz.configure
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/graphviz
-	PATH=$(PWD)/wasm32-virtual-wasm32/bin:$$PATH $(MAKE) -C build/wasm32/graphviz install
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/graphviz
+	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/graphviz install
 	touch $@
 
 build/binfmt_misc.install: /proc/sys/fs/binfmt_misc
@@ -788,7 +788,7 @@ examples/002-perl/perl.js: asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/perl5.25.
 	cpp < $< | egrep -v '^#' > $@
 
 lib/wasm32-headers.o: headers/wasm32-headers.s build/wasm32/gcc-final.make
-	./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gcc -c $< -o $@
+	./wasm32-unknown-none/bin/wasm32-unknown-none-gcc -c $< -o $@
 
 bin/wasmrewrite: wasmrewrite/wasmrewrite.c
 	gcc -g3 $< -o $@

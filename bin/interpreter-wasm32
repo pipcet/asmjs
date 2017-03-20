@@ -11,8 +11,8 @@ if [ x"$DELAY" = x ]; then
 fi
 cp "$1" $TMPD/elf
 chmod u+rw $TMPD/elf
-wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32.cpp-lds.lds $ASMJSDIR/lib/wasm32-headers.o $TMPD/elf -o $TMPD/intermediate -N --warn-unresolved-symbols --no-check-sections 2>/dev/null || exit 1
-wasm32-virtual-wasm32-ld -T $ASMJSDIR/lds/wasm32-wasmify.lds $TMPD/intermediate -o $TMPD/longwasm 2> /dev/null || exit 1
+wasm32-unknown-none-ld -T $ASMJSDIR/lds/wasm32.cpp-lds.lds $ASMJSDIR/lib/wasm32-headers.o $TMPD/elf -o $TMPD/intermediate -N --warn-unresolved-symbols --no-check-sections 2>/dev/null || exit 1
+wasm32-unknown-none-ld -T $ASMJSDIR/lds/wasm32-wasmify.lds $TMPD/intermediate -o $TMPD/longwasm 2> /dev/null || exit 1
 $ASMJSDIR/bin/wasmrewrite $TMPD/longwasm > $TMPD/wasm
 perl $ASMJSDIR/dyninfo/dyninfo.pl $TMPD/elf > $TMPD/dyninfo.js
 $ASMJSDIR/wasmrewrite/wasmsect $TMPD/dyninfo.js > $TMPD/dyninfo.wass

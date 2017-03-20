@@ -23,7 +23,7 @@ my @rawlibs;
 my @libs;
 
 for my $file (@ARGV) {
-    open $fh, "wasm32-virtual-wasm32-objdump -T $file|" or die;
+    open $fh, "wasm32-unknown-none-objdump -T $file|" or die;
 
     while (<$fh>) {
         s/[ \t]+/ /g;
@@ -49,35 +49,35 @@ for my $file (@ARGV) {
             }
     }
 
-    open $fh, "wasm32-virtual-wasm32-objdump -R $file|" or die;
+    open $fh, "wasm32-unknown-none-objdump -R $file|" or die;
 
     while (<$fh>) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^([0-9a-f]*) R_ASMJS_ABS32(_CODE)? ([@.a-zA-Z0-9_\$]*)$/) {
+            if (/^([0-9a-f]*) R_WASM32_ABS32(_CODE)? ([@.a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$3);
                 my $version;
                 $symbol =~ s/@+(.*)// and $version = $1;
 
                 $ref{$symbol}{$refaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_(ABS|REL)32 \*ABS\*\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_(ABS|REL)32 \*ABS\*\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixup{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32 ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_ABS32 ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixup{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32_CODE ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_ABS32_CODE ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixupfun{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32_CODE (\*ABS\*)\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_ABS32_CODE (\*ABS\*)\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixupfun{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_(LEB128_)?PLT_INDEX ([@.a-zA-Z0-9_\$]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_(LEB128_)?PLT_INDEX ([@.a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$3);
                 my $version;
                 $symbol =~ s/@+(.*)// and $version = $1;
@@ -87,7 +87,7 @@ for my $file (@ARGV) {
                 }
 
                 $refun{$symbol}{$refaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_ASMJS_PLT_LAZY ([@.a-zA-Z0-9_\$]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_PLT_LAZY ([@.a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1, $2);
                 my $version;
                 $symbol =~ s/@+(.*)// and $version = $1;
@@ -98,18 +98,18 @@ for my $file (@ARGV) {
                     warn "undefined version for lazy symbol $symbol";
                     $flag_lazy = 0;
                 }
-            } elsif (/^([0-9a-f]*) R_ASMJS_COPY ([a-zA-Z0-9_\$]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_COPY ([a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$2);
                 $symbol =~ s/@+.*//;
 
                 $copy{$symbol}{$refaddr} = $cachedsize{$symbol};
-            } elsif (/^00000000 R_ASMJS_NONE /) {
+            } elsif (/^00000000 R_WASM32_NONE /) {
             } else {
                 #warn("unhandled dynreloc " . $_);
             }
     }
 
-    open $fh, "wasm32-virtual-wasm32-objdump -t $file|" or die;
+    open $fh, "wasm32-unknown-none-objdump -t $file|" or die;
 
     while (<$fh>) {
         s/[ \t]+/ /g;
@@ -134,7 +134,7 @@ for my $file (@ARGV) {
             }
     }
 
-    open $fh, "wasm32-virtual-wasm32-readelf -d $file|" or die;
+    open $fh, "wasm32-unknown-none-readelf -d $file|" or die;
 
     while (<$fh>) {
         s/[ \t]+/ /g;
