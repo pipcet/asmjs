@@ -556,7 +556,7 @@ proc ld_link_defsyms {} {
 #
 proc run_dump_test { name {extra_options {}} } {
     global subdir srcdir
-    global OBJDUMP NM AS OBJCOPY READELF LD CC
+    global OBJDUMP NM AS OBJCOPY READELF LD CC CFLAGS
     global OBJDUMPFLAGS NMFLAGS ASFLAGS OBJCOPYFLAGS READELFFLAGS LDFLAGS
     global host_triplet runtests
     global env verbose
@@ -584,10 +584,14 @@ proc run_dump_test { name {extra_options {}} } {
     set ccflags ""
     set status 0
     set stderr ""
+    set current_file ""
     foreach i $opt_array {
         set opt_name [lindex $i 0]
         set opt_val [lindex $i 1]
 
+        verbose -log "opt_name $opt_name"
+        verbose -log "opt_val $opt_val"
+        
         switch -- $opt_name {
             c {
                 remote_file build delete tmpdir/$name.c
@@ -607,6 +611,7 @@ proc run_dump_test { name {extra_options {}} } {
                     set current_file $srcdir/$subdir/$name
                 }
                 verbose -log "current_file is $current_file"
+                # set content [file_contents $current_file]
             }
             ccflags {
                 set ccflags $opt_val
@@ -621,12 +626,16 @@ proc run_dump_test { name {extra_options {}} } {
                     fail $name
                     return
                 }
-                if ![string match "*.c" $current_file] {
+                if { ![string match "*.c" $current_file]
+                     && $current_file != "" } {
                     set current_file [concat $current_file.c]
                 }
                 set new_file [concat "[file rootname [file tail $current_file]]"]
+                if { $new_file == "" } {
+                    set new_file "gcc.exe"
+                }
                 set err_file "gcc.stderr"
-                set cmd "$CC $ccflags $current_file -o $new_file"
+                set cmd "$CC $CFLAGS $current_file $opt_val -o $new_file"
                 set status [remote_exec host [concat sh -c [list "$cmd 2>$err_file"]] "" "/dev/null"]
                 verbose -log "status is $status"
                 set stderr [file_contents $err_file]
@@ -648,6 +657,9 @@ proc run_dump_test { name {extra_options {}} } {
                     fail $name
                     return
                 }
+                set stdout ""
+                set stderr ""
+                set status 0
             }
             run {
                 if { [lindex $status 0] != 0 } {
@@ -675,9 +687,53 @@ proc run_dump_test { name {extra_options {}} } {
                 verbose -log "stderr is $stderr"
                 verbose -log "stdout is $stdout"
             }
+            match {
+                if { [lindex $status 0] != 0 } {
+                    fail $name
+                    return
+                }
+                if { $stderr != "" } {
+                    fail $name
+                    return
+                }
+                if ![regexp $opt_val $stdout] {
+                    fail $name
+                    return
+                }
+                set stdout [regsub "\[^\n\]*\n" $stdout ""]
+                verbose -log "stdout is $stdout"
+            }
+            pass {
+                if { [lindex $status 0] != 0 } {
+                    fail $name
+                    return
+                }
+                if { $stderr != "" } {
+                    fail $name
+                    return
+                }
+                if { $stdout != "" } {
+                    fail $name
+                    return
+                }
+                pass $name
+                return
+            }
         }
     }
 
+    if { [lindex $status 0] != 0 } {
+        fail $name
+        return
+    }
+    if { $stderr != "" } {
+        fail $name
+        return
+    }
+    if { $stdout != "" } {
+        fail $name
+        return
+    }
     pass $name
 
     return
@@ -1179,15 +1235,11 @@ proc slurp_options { file } {
 	set line [string trim $line]
 	# Whitespace here is space-tab.
 	if [regexp $pat $line xxx opt_name opt_val] {
-	    # match!
-	    if [info exists options_regsub($opt_name)] {
-		set subst $options_regsub($opt_name)
-		regsub -all -- [lindex $subst 0] $opt_val [lindex $subst 1] \
-		    opt_val
-	    }
 	    lappend opt_array [list $opt_name $opt_val]
-	} else {
-	    break
+	} elseif { $line == "#pass" } {
+            lappend opt_array [list "pass" ""]
+        } else {
+            lappend opt_array [list "match" $line]
 	}
     }
     close $f
