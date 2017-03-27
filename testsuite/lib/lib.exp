@@ -556,18 +556,14 @@ proc ld_link_defsyms {} {
 #
 proc run_dump_test { name {extra_options {}} } {
     global subdir srcdir
-    global OBJDUMP NM AS OBJCOPY READELF LD
+    global OBJDUMP NM AS OBJCOPY READELF LD CC
     global OBJDUMPFLAGS NMFLAGS ASFLAGS OBJCOPYFLAGS READELFFLAGS LDFLAGS
     global host_triplet runtests
     global env verbose
     global ld_elf_shared_opt
 
-    if { [is_elf_format] && [check_shared_lib_support] } {
-	set ld_extra_opt "$ld_elf_shared_opt"
-    } else {
-	set ld_extra_opt ""
-    }
-
+    set CC "wasm32-unknown-none-gcc"
+    
     if [string match "*/*" $name] {
 	set file $name
 	set name [file tail $name]
@@ -585,6 +581,107 @@ proc run_dump_test { name {extra_options {}} } {
 	unresolved $subdir/$name
 	return
     }
+    set ccflags ""
+    set status 0
+    set stderr ""
+    foreach i $opt_array {
+        set opt_name [lindex $i 0]
+        set opt_val [lindex $i 1]
+
+        switch -- $opt_name {
+            c {
+                remote_file build delete tmpdir/$name.c
+                remote_file host delete tmpdir/$name.c
+
+                set mode "out"
+                set outf [open tmpdir/$name.c "w+"]
+                puts $outf $opt_val
+                close $outf
+
+                set current_file tmpdir/$name.c
+            }
+            source {
+                if [string match "*/*" $opt_val] {
+                    set current_file $opt_val
+                } else {
+                    set current_file $srcdir/$subdir/$name
+                }
+                verbose -log "current_file is $current_file"
+            }
+            ccflags {
+                set ccflags $opt_val
+                verbose -log "ccflags is $ccflags"
+            }
+            gcc {
+                if { [lindex $status 0] != 0 } {
+                    fail $name
+                    return
+                }
+                if { $stderr != "" } {
+                    fail $name
+                    return
+                }
+                if ![string match "*.c" $current_file] {
+                    set current_file [concat $current_file.c]
+                }
+                set new_file [concat "[file rootname [file tail $current_file]]"]
+                set err_file "gcc.stderr"
+                set cmd "$CC $ccflags $current_file -o $new_file"
+                set status [remote_exec host [concat sh -c [list "$cmd 2>$err_file"]] "" "/dev/null"]
+                verbose -log "status is $status"
+                set stderr [file_contents $err_file]
+                verbose -log "stderr is $stderr"
+                set current_file $new_file
+            }
+            warning {
+                verbose -log "stderr is $stderr, expected: $opt_val"
+                if ![regexp $opt_val $stderr] {
+                    fail $name
+                    return
+                }
+
+                set stderr ""
+            }
+            error {
+                verbose -log "stderr is $stderr, expected: $opt_val"
+                if ![regexp $opt_val $stderr] {
+                    fail $name
+                    return
+                }
+            }
+            run {
+                if { [lindex $status 0] != 0 } {
+                    fail $name
+                    return
+                }
+                if { $stderr != "" } {
+                    fail $name
+                    return
+                }
+                set new_file [concat "[file rootname [file tail $current_file]].out"]
+                set err_file "run.stderr"
+                if ![string match "/*" $current_file] {
+                    set current_file [concat ./$current_file]
+                }
+                if { $opt_val != "" } {
+                    set cmd "$current_file | head -$opt_val > $new_file"
+                } else {
+                    set cmd "$current_file > $new_file"
+                }
+                set status [remote_exec host [concat sh -c [list "$cmd 2>$err_file"]] "" "/dev/null"]
+                verbose -log "status is $status"
+                set stderr [file_contents $err_file]
+                set stdout [file_contents $new_file]
+                verbose -log "stderr is $stderr"
+                verbose -log "stdout is $stdout"
+            }
+        }
+    }
+
+    pass $name
+
+    return
+
     set dumpfile tmpdir/dump.out
     set run_ld 0
     set run_objcopy 0

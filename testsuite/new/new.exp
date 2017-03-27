@@ -1,0 +1,3 @@
+run_dump_test "001-fail"
+run_dump_test "002-in"
+run_dump_test "003-head"

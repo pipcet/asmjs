@@ -112,14 +112,10 @@ if { [istarget rx-*-*] } {
 }
 
 # load the utility procedures
-load_lib ld-lib.exp
+load_lib lib.exp
 
 proc get_target_emul {} {
-    global target_triplet
-    global srcdir
-    set status [catch "exec sh -c \"targ='$target_triplet' && . $srcdir/../configure.tgt && echo \\\$targ_emul\"" result]
-    if $status { error "Error getting emulation name: $result" }
-    return $result
+    return "wasm32-unknown-none"
 }
 
 if ![info exists HOSTING_EMU] { set HOSTING_EMU "-m [get_target_emul]" }
