@@ -55,25 +55,25 @@ for my $file (@ARGV) {
         s/[ \t]+/ /g;
         s/[ \t]+/ /g;
         chomp;
-            if (/^([0-9a-f]*) R_WASM32_ABS32(_CODE)? ([@.a-zA-Z0-9_\$]*)$/) {
+            if (/^([0-9a-f]*) R_WASM32_32(_CODE)? ([@.a-zA-Z0-9_\$]*)$/) {
                 my ($refaddr, $symbol) = (hex $1,$3);
                 my $version;
                 $symbol =~ s/@+(.*)// and $version = $1;
 
                 $ref{$symbol}{$refaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_WASM32_(ABS|REL)32 \*ABS\*\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_(REL)?32 \*ABS\*\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixup{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_WASM32_ABS32 ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_32 ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixup{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_WASM32_ABS32_CODE ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_32_CODE ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixupfun{$refaddr}{$defaddr} = 1;
-            } elsif (/^([0-9a-f]*) R_WASM32_ABS32_CODE (\*ABS\*)\+0x([0-9a-f]*)$/) {
+            } elsif (/^([0-9a-f]*) R_WASM32_32_CODE (\*ABS\*)\+0x([0-9a-f]*)$/) {
                 my ($refaddr, $defaddr) = (hex $1, hex $3);
 
                 $fixupfun{$refaddr}{$defaddr} = 1;
