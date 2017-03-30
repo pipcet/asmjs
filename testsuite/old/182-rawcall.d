@@ -1,7 +1,7 @@
 # source: 182-rawcall.c
 # gcc:
 # warning: .*
-# run: 10
+# run: | head -10
 hello world: 82
 hello world: 98
 hello world: 114

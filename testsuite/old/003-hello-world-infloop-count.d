@@ -1,7 +1,6 @@
 #source: 003-hello-world-infloop-count.c
 #gcc:
-#warning: .*
-#run: 10
+#run: | head -10
 hello world: %d %%f %s %c
 
 hello world: 0 %f string x

@@ -1,7 +1,7 @@
 #source: 004-hello-world-infloop-count.c
 #gcc:
 #warning: .*
-#run: 10
+#run: | head -10
 hello world: 42
 hello world: 58
 hello world: 74

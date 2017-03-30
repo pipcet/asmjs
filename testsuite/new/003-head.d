@@ -1,7 +1,6 @@
-#c: int main(void) { while (1) printf("XXX\n"); }
+#source: 003-head.c
 #gcc:
-#warning: .*
-#run: 10
+#run: | head -10
 XXX
 XXX
 XXX
@@ -12,4 +11,3 @@ XXX
 XXX
 XXX
 XXX
-#pass

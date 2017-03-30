@@ -1,4 +1,4 @@
-# source: 188-weaksym.c
+# source: 187-plt.c
 # gcc:
 # run:
 hi

@@ -1,7 +1,7 @@
 #source: 005-hello-world-infloop-double.c
 #gcc:
 #warning: .*
-#run: 10
+#run: | head -10
 hello world: 0 4.500000 string x
 hello world: 33 4.500000 string x
 hello world: 67 4.500000 string x

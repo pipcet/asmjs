@@ -1,3 +1,5 @@
 run_dump_test "001-fail"
-run_dump_test "002-in"
+run_dump_test "002-warning"
 run_dump_test "003-head"
+run_dump_test "007-exception"
+run_dump_test "008-exception-class"
