@@ -22,3 +22,4 @@ wasm32-virtual-wasm32/
 /wasmrewrite/wasmsect
 /full-examples/
 /common3x/
+/wasm32-unknown-none/
