@@ -788,7 +788,7 @@ Wasm32Thread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 
 Wasm32Thread.prototype.set_arg = function (index, arg)
 {
-    this.HEAP32[4096 + (index+1) * 4 >> 2] = arg;
+    this.HEAP32[8296 + index * 8 >> 2] = arg;
 };
 
 /* This is somewhat tricky. The dwarf expressions we want to generate are:
@@ -817,7 +817,7 @@ Wasm32Thread.prototype.eh_return = function (fp, sp, handler)
 
     fp = this.HEAP32[this.HEAP32[fp>>2]>>2]|0;
 
-    this.HEAP32[fp+16>>2] = handler - this.HEAP32[fp+28>>2] + 1;
+    this.HEAP32[fp+16>>2] = handler - this.HEAP32[fp+28>>2];
 
     fp |= 3;
 
