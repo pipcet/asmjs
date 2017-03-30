@@ -554,17 +554,15 @@ proc ld_link_defsyms {} {
 # regexps in FILE.d.  `regexp_diff' is defined in binutils-common.exp;
 # see further comments there.
 #
-proc run_dump_test { name {extra_options {}} } {
+proc run_dump_test_cflags { name testcounter cflags } {
     global subdir srcdir
-    global OBJDUMP NM AS OBJCOPY READELF LD CC CFLAGS
+    global OBJDUMP NM AS OBJCOPY READELF LD CC CFLAGS CXX
     global OBJDUMPFLAGS NMFLAGS ASFLAGS OBJCOPYFLAGS READELFFLAGS LDFLAGS
     global host_triplet runtests
     global env verbose
     global ld_elf_shared_opt
 
-    set CC "wasm32-unknown-none-gcc"
-    set CXX "wasm32-unknown-none-g++"
-    set CFLAGS "-flto -O3 -Wl,--gc-sections"
+    set CFLAGS $cflags
 
     if [string match "*/*" $name] {
         set file $name
@@ -573,14 +571,16 @@ proc run_dump_test { name {extra_options {}} } {
         set file "$srcdir/$subdir/$name"
     }
 
-    if ![runtest_file_p $runtests $name] then {
+    set fullname [concat "$name-$testcounter"]
+
+    if ![runtest_file_p $runtests $fullname] then {
         return
     }
 
     set opt_array [slurp_options "${file}.d"]
     if { $opt_array == -1 } {
         perror "error reading options from $file.d"
-        unresolved $subdir/$name
+        unresolved $subdir/$fullname
         return
     }
     set ccflags ""
@@ -599,27 +599,27 @@ proc run_dump_test { name {extra_options {}} } {
         switch -- $opt_name {
             status {
                 if { [lindex $status 0] != $opt_val } {
-                    fail $name
+                    fail $fullname
                     return
                 }
                 set status 0
             }
             pass {
                 if { [lindex $status 0] != 0 } {
-                    fail $name
+                    fail $fullname
                     return
                 }
                 if { $stderr != "" } {
-                    fail $name
+                    fail $fullname
                     return
                 }
-                pass $name
+                pass $fullname
                 return
             }
             error {
                 verbose -log "stderr is $stderr, expected: $opt_val"
                 if ![regexp $opt_val $stderr] {
-                    fail $name
+                    fail $fullname
                     return
                 }
                 set content ""
@@ -629,7 +629,7 @@ proc run_dump_test { name {extra_options {}} } {
             warning {
                 verbose -log "stderr is $stderr, expected: $opt_val"
                 if ![regexp $opt_val $stderr] {
-                    fail $name
+                    fail $fullname
                     return
                 }
 
@@ -639,11 +639,11 @@ proc run_dump_test { name {extra_options {}} } {
 
         if { $stderr != "" } {
             verbose -log "stderr is $stderr"
-            fail $name
+            fail $fullname
             return
         }
         if { [lindex $status 0] != 0 } {
-            fail $name
+            fail $fullname
             return
         }
 
@@ -665,14 +665,14 @@ proc run_dump_test { name {extra_options {}} } {
                 set content ""
             }
             gcc {
-                set current_file [concat "tmpdir/$name-$counter.c"]
+                set current_file [concat "tmpdir/$fullname-$counter.c"]
                 incr counter
 
                 set f [open $current_file "w"]
                 puts -nonewline $f $content
                 close $f
 
-                set new_file [concat "tmpdir/$name-$counter.out"]
+                set new_file [concat "tmpdir/$fullname-$counter.out"]
                 incr counter
 
                 set err_file "gcc.stderr"
@@ -687,14 +687,14 @@ proc run_dump_test { name {extra_options {}} } {
                 }
             }
             gxx {
-                set current_file [concat "tmpdir/$name-$counter.cpp"]
+                set current_file [concat "tmpdir/$fullname-$counter.cpp"]
                 incr counter
 
                 set f [open $current_file "w"]
                 puts -nonewline $f $content
                 close $f
 
-                set new_file [concat "tmpdir/$name-$counter.out"]
+                set new_file [concat "tmpdir/$fullname-$counter.out"]
                 incr counter
 
                 set err_file "gcc.stderr"
@@ -710,7 +710,7 @@ proc run_dump_test { name {extra_options {}} } {
                 }
             }
             run {
-                set current_file [concat "tmpdir/$name-$counter.exe"]
+                set current_file [concat "tmpdir/$fullname-$counter.exe"]
                 incr counter
 
                 set f [open $current_file "w"]
@@ -720,7 +720,7 @@ proc run_dump_test { name {extra_options {}} } {
 
                 exec "chmod" "u+x" $current_file
 
-                set new_file [concat "tmpdir/$name-$counter.out"]
+                set new_file [concat "tmpdir/$fullname-$counter.out"]
                 incr counter
 
                 set err_file "gcc.stderr"
@@ -739,16 +739,16 @@ proc run_dump_test { name {extra_options {}} } {
             }
             match {
                 if { [lindex $status 0] != 0 } {
-                    fail $name
+                    fail $fullname
                     return
                 }
                 if { $stderr != "" } {
-                    fail $name
+                    fail $fullname
                     return
                 }
                 set line [lindex [split $content "\n"] 0]
                 if ![regexp $opt_val $line] {
-                    fail $name
+                    fail $fullname
                     return
                 }
                 set content [regsub "\[^\n\]*\n" $content ""]
@@ -757,495 +757,43 @@ proc run_dump_test { name {extra_options {}} } {
     }
 
     if { [lindex $status 0] != 0 } {
-        fail $name
+        fail $fullname
         return
     }
     if { $stderr != "" } {
-        fail $name
+        fail $fullname
         return
     }
     if { $content != "" } {
-        fail $name
+        fail $fullname
         return
     }
-    pass $name
+    pass $fullname
 
     return
+}
 
-    set dumpfile tmpdir/dump.out
-    set run_ld 0
-    set run_objcopy 0
-    set objfile_names {}
-    set opts(as) {}
-    set opts(ld) {}
-    set opts(ld_after_inputfiles) {}
-    set opts(xfail) {}
-    set opts(target) {}
-    set opts(notarget) {}
-    set opts(objdump) {}
-    set opts(nm) {}
-    set opts(objcopy) {}
-    set opts(readelf) {}
-    set opts(name) {}
-    set opts(PROG) {}
-    set opts(source) {}
-    set opts(dump) {}
-    set opts(error) {}
-    set opts(warning) {}
-    set opts(error_output) {}
-    set opts(warning_output) {}
-    set opts(objcopy_linked_file) {}
-    set opts(objcopy_objects) {}
-    set opts(map) {}
+proc run_dump_test { name {extra_options {}} } {
+    global subdir srcdir
+    global OBJDUMP NM AS OBJCOPY READELF LD CC CFLAGS CXX
+    global OBJDUMPFLAGS NMFLAGS ASFLAGS OBJCOPYFLAGS READELFFLAGS LDFLAGS
+    global host_triplet runtests
+    global env verbose
+    global ld_elf_shared_opt
 
-    foreach i $opt_array {
-        set opt_name [lindex $i 0]
-        set opt_val [lindex $i 1]
-        if ![info exists opts($opt_name)] {
-            perror "unknown option $opt_name in file $file.d"
-            unresolved $subdir/$name
-            return
-        }
+    set CC "wasm32-unknown-none-gcc"
+    set CXX "wasm32-unknown-none-g++"
+    set CFLAGS "-flto -O3 -Wl,--gc-sections"
 
-        switch -- $opt_name {
-            xfail {}
-            target {}
-            notarget {}
-            warning {}
-            error {}
-            source {
-                # Move any source-specific as-flags to a separate list to
-                # simplify processing.
-                if { [llength $opt_val] > 1 } {
-                    lappend asflags [lrange $opt_val 1 end]
-                    set opt_val [lindex $opt_val 0]
-                } else {
-                    lappend asflags {}
-                }
+    set cflags_array [list {-O0} {-O1} {-O2} {-O3} {-O0 -flto} {-O1 -flto} {-O2 -flto} {-O3 -flto} {-O0 -Wl,--gc-sections} {-O2 -Wl,--gc-sections}]
 
-                # Create the object file name based on nothing but the source
-                # file name.
-                set new_objfile \
-                    [concat tmpdir/[file rootname [file tail [lindex $opt_val 0]]].o]
-                # But, sometimes, we have the exact same source filename in
-                # different directories (foo/src.s bar/src.s) which would lead
-                # us to try and create two src.o files.  We detect this
-                # conflict here, and instead create src.o and src1.o.
-                set j 0
-                while { [lsearch $objfile_names $new_objfile] != -1 } {
-                    incr j
-                    set new_objfile \
-                        [concat tmpdir/[file rootname [file tail  [lindex $opt_val 0]]]${j}.o]
-                }
-                lappend objfile_names $new_objfile
-            }
-            default {
-                if [string length $opts($opt_name)] {
-                    perror "option $opt_name multiply set in $file.d"
-                    unresolved $subdir/$name
-                    return
-                }
+    set counter 0
 
-                # A single "# ld:" with no options should do the right thing.
-                if { $opt_name == "ld" } {
-                    set run_ld 1
-                }
-                # Likewise objcopy_linked_file.
-                if { $opt_name == "objcopy_linked_file" } {
-                    set run_objcopy 1
-                }
-            }
-        }
-        if { $opt_name == "as" || $opt_name == "ld" } {
-            set opt_val [subst $opt_val]
-        }
-
-        # Append differently whether it's a message (without space) or
-        # an option or list (with space).
-        switch -- $opt_name {
-            warning -
-            error {
-                append opts($opt_name) $opt_val
-            }
-            default {
-                set opts($opt_name) [concat $opts($opt_name) $opt_val]
-            }
-        }
+    foreach i $cflags_array {
+        set cflags $i
+        run_dump_test_cflags $name $counter $cflags
+        incr counter
     }
-
-    foreach i $extra_options {
-        set opt_name [lindex $i 0]
-        set opt_val [lindex $i 1]
-        if ![info exists opts($opt_name)] {
-            perror "unknown option $opt_name given in extra_opts"
-            unresolved $subdir/$name
-            return
-        }
-        # Add extra option to end of existing option, adding space
-        # if necessary.
-        if { ![regexp "warning|error" $opt_name]
-             && [string length $opts($opt_name)] } {
-            append opts($opt_name) " "
-        }
-        append opts($opt_name) $opt_val
-    }
-
-    foreach opt { as ld } {
-        regsub {\[big_or_little_endian\]} $opts($opt) \
-            [big_or_little_endian] opts($opt)
-    }
-
-    # Decide early whether we should run the test for this target.
-    if { [llength $opts(target)] > 0 } {
-        set targmatch 0
-        foreach targ $opts(target) {
-            if [istarget $targ] {
-                set targmatch 1
-                break
-            }
-        }
-        if { $targmatch == 0 } {
-            return
-        }
-    }
-    foreach targ $opts(notarget) {
-        if [istarget $targ] {
-            return
-        }
-    }
-
-    set program ""
-    # It's meaningless to require an output-testing method when we
-    # expect an error.
-    if { $opts(error) == "" && $opts(error_output) == "" } {
-        if {$opts(PROG) != ""} {
-            switch -- $opts(PROG) {
-                objdump	{ set program objdump }
-                nm	{ set program nm }
-                objcopy	{ set program objcopy }
-                readelf	{ set program readelf }
-                default
-                { perror "unrecognized program option $opts(PROG) in $file.d"
-                  unresolved $subdir/$name
-                  return }
-            }
-        } else {
-        # Guess which program to run, by seeing which option was specified.
-            foreach p {objdump objcopy nm readelf} {
-                if {$opts($p) != ""} {
-                    if {$program != ""} {
-                        perror "ambiguous dump program in $file.d"
-                        unresolved $subdir/$name
-                        return
-                    } else {
-                        set program $p
-                    }
-                }
-            }
-        }
-        if { $program == "" \
-                 && $opts(map) == "" \
-                 && $opts(warning) == "" \
-                 && $opts(warning_output) == "" \
-                 && $opts(error) == "" \
-                 && $opts(error_output) == "" } {
-            perror "dump program unspecified in $file.d"
-            unresolved $subdir/$name
-            return
-        }
-    }
-
-    if { $opts(name) == "" } {
-        set testname "$subdir/$name"
-    } else {
-        set testname $opts(name)
-    }
-
-    if { $opts(source) == "" } {
-        set sourcefiles [list ${file}.s]
-        set asflags [list ""]
-        set objfile_names [list tmpdir/[file tail ${file}].o]
-    } else {
-        set sourcefiles {}
-        foreach sf $opts(source) {
-            if { [string match "/*" $sf] } {
-                lappend sourcefiles "$sf"
-            } else {
-                lappend sourcefiles "$srcdir/$subdir/$sf"
-            }
-        }
-    }
-
-    if { $opts(dump) == "" } {
-        set dfile ${file}.d
-    } else {
-        set dfile $srcdir/$subdir/$opts(dump)
-    }
-
-    # Time to setup xfailures.
-    foreach targ $opts(xfail) {
-        setup_xfail $targ
-    }
-
-    # Assemble each file.
-    set objfiles {}
-    for { set i 0 } { $i < [llength $sourcefiles] } { incr i } {
-        set sourcefile [lindex $sourcefiles $i]
-        set sourceasflags [lindex $asflags $i]
-        set run_objcopy_objects 0
-
-        if { [string match "*RUN_OBJCOPY*" $sourceasflags] } {
-            set run_objcopy_objects 1
-        }
-        regsub "RUN_OBJCOPY" $sourceasflags "" sourceasflags
-
-        set objfile [lindex $objfile_names $i]
-        catch "exec rm -f $objfile" exec_output
-        lappend objfiles $objfile
-        set cmd "$AS $ASFLAGS $opts(as) $sourceasflags -o $objfile $sourcefile"
-
-        send_log "$cmd\n"
-        set cmdret [remote_exec host [concat sh -c [list "$cmd 2>&1"]] "" "/dev/null" "ld.tmp"]
-        remote_upload host "ld.tmp"
-        set comp_output [prune_warnings [file_contents "ld.tmp"]]
-        remote_file host delete "ld.tmp"
-        remote_file build delete "ld.tmp"
-
-        if { [lindex $cmdret 0] != 0 || ![string match "" $comp_output] } then {
-            send_log -- "$comp_output\n"
-            verbose "$comp_output" 3
-
-            set exitstat "succeeded"
-            if { $cmdret != 0 } { set exitstat "failed" }
-            verbose -log "$exitstat with: <$comp_output>"
-            fail $testname
-            return
-        }
-
-        if { $run_objcopy_objects } {
-            set cmd "$OBJCOPY $opts(objcopy_objects) $objfile"
-
-            send_log "$cmd\n"
-            set cmdret [remote_exec host [concat sh -c [list "$cmd 2>&1"]] \
-                        "" "/dev/null" "objcopy.tmp"]
-            remote_upload host "objcopy.tmp"
-            set comp_output [prune_warnings [file_contents "objcopy.tmp"]]
-            remote_file host delete "objcopy.tmp"
-            remote_file build delete "objcopy.tmp"
-
-            if { [lindex $cmdret 0] != 0 \
-                  || ![string match "" $comp_output] } {
-                send_log -- "$comp_output\n"
-                verbose "$comp_output" 3
-
-                set exitstat "succeeded"
-                if { $cmdret != 0 } { set exitstat "failed" }
-                verbose -log "$exitstat with: <$comp_output>"
-                fail $testname
-                return
-            }
-        }
-    }
-
-    if { (($opts(warning) != "") && ($opts(error) != "")) \
-         || (($opts(warning) != "") && ($opts(error_output) != "")) \
-         || (($opts(warning) != "") && ($opts(warning_output) != "")) \
-         || (($opts(error) != "") && ($opts(warning_output) != "")) \
-         || (($opts(error) != "") && ($opts(error_output) != "")) \
-         || (($opts(warning_output) != "") && ($opts(error_output) != "")) } {
-        perror "$testname: bad mix of warning, error, warning_output, and error_output test-directives"
-        unresolved $testname
-        return
-    }
-
-    set check_ld(source) ""
-    set check_ld(terminal) 0
-    if { $opts(error) != "" \
-         || $opts(warning) != "" \
-         || $opts(error_output) != "" \
-         || $opts(warning_output) != "" } {
-
-        if { $opts(error) != "" || $opts(error_output) != "" } {
-            set check_ld(terminal) 1
-        } else {
-            set check_ld(terminal) 0
-        }
-
-        if { $opts(error) != "" || $opts(warning) != "" } {
-            set check_ld(source) "regex"
-            if { $opts(error) != "" } {
-                set check_ld(regex) $opts(error)
-            } else {
-                set check_ld(regex) $opts(warning)
-            }
-        } else {
-            set check_ld(source) "file"
-            if { $opts(error_output) != "" } {
-                set check_ld(file) $opts(error_output)
-            } else {
-                set check_ld(file) $opts(warning_output)
-            }
-        }
-    }
-
-    # Perhaps link the file(s).
-    if { $run_ld } {
-        set objfile "tmpdir/dump"
-        catch "exec rm -f $objfile" exec_output
-
-        # Add -L$srcdir/$subdir so that the linker command can use
-        # linker scripts in the source directory.
-        set cmd "$LD $ld_extra_opt $LDFLAGS -L$srcdir/$subdir \
-                   $opts(ld) -o $objfile $objfiles $opts(ld_after_inputfiles)"
-
-        # If needed then check for, or add a -Map option.
-        set mapfile ""
-        if { $opts(map) != "" } then {
-            if { [regexp -- "-Map=(\[^ \]+)" $cmd all mapfile] } then {
-                # Found existing mapfile option
-                verbose -log "Existing mapfile '$mapfile' found"
-            } else {
-                # No mapfile option.
-                set mapfile "tmpdir/dump.map"
-                verbose -log "Adding mapfile '$mapfile'"
-                set cmd "$cmd -Map=$mapfile"
-            }
-        }
-
-        send_log "$cmd\n"
-        set cmdret [remote_exec host [concat sh -c [list "$cmd 2>&1"]] "" "/dev/null" "ld.tmp"]
-        remote_upload host "ld.tmp"
-        set comp_output [file_contents "ld.tmp"]
-        remote_file host delete "ld.tmp"
-        remote_file build delete "ld.tmp"
-        set cmdret [lindex $cmdret 0]
-
-        if { $cmdret == 0 && $run_objcopy } {
-            set infile $objfile
-            set objfile "tmpdir/dump1"
-            remote_file host delete $objfile
-
-            # Note that we don't use OBJCOPYFLAGS here; any flags must be
-            # explicitly specified.
-            set cmd "$OBJCOPY $opts(objcopy_linked_file) $infile $objfile"
-
-            send_log "$cmd\n"
-            set cmdret [remote_exec host [concat sh -c [list "$cmd 2>&1"]] "" "/dev/null" "ld.tmp"]
-            remote_upload host "ld.tmp"
-            append comp_output [file_contents "ld.tmp"]
-            remote_file host delete "ld.tmp"
-            remote_file build delete "ld.tmp"
-            set cmdret [lindex $cmdret 0]
-        }
-
-        regsub "\n$" $comp_output "" comp_output
-        if { $cmdret != 0 || $comp_output != "" || $check_ld(source) != "" } then {
-            set exitstat "succeeded"
-            if { $cmdret != 0 } { set exitstat "failed" }
-
-            if { $check_ld(source) == "regex" } {
-                verbose -log "$exitstat with: <$comp_output>, expected: <$check_ld(regex)>"
-            } elseif { $check_ld(source) == "file" } {
-                verbose -log "$exitstat with: <$comp_output>, expected in file $check_ld(file)"
-                set_file_contents "tmpdir/ld.messages" "$comp_output"
-            } else {
-                verbose -log "$exitstat with: <$comp_output>, no expected output"
-            }
-            send_log -- "$comp_output\n"
-            verbose "$comp_output" 3
-
-            if { (($check_ld(source) == "") == ($comp_output == "")) \
-                 && (($cmdret == 0) == ($check_ld(terminal) == 0)) \
-                 && ((($check_ld(source) == "regex") \
-                      && ($check_ld(regex) == "") == ($comp_output == "") \
-                      && [regexp $check_ld(regex) $comp_output]) \
-                     || (($check_ld(source) == "file") \
-                         && (![regexp_diff "tmpdir/ld.messages" "$srcdir/$subdir/$check_ld(file)"]))) } {
-                # We have the expected output from ld.
-                if { $check_ld(terminal) || $program == "" } {
-                    pass $testname
-                    return
-                }
-            } else {
-                fail $testname
-                return
-            }
-        }
-
-        if { $opts(map) != "" } then {
-            # Check the map file matches.
-            set map_pattern_file $srcdir/$subdir/$opts(map)
-            verbose -log "Compare '$mapfile' against '$map_pattern_file'"
-            if { [regexp_diff $mapfile $map_pattern_file] } then {
-                fail "$testname (map file check)"
-            } else {
-                pass "$testname (map file check)"
-            }
-
-            if { $program == "" } then {
-                return
-            }
-        }
-    } else {
-        set objfile [lindex $objfiles 0]
-    }
-
-    # We must not have expected failure if we get here.
-    if { $opts(error) != "" } {
-        fail $testname
-        return
-    }
-
-    set progopts1 $opts($program)
-    eval set progopts \$[string toupper $program]FLAGS
-    eval set binary \$[string toupper $program]
-
-    if { ![is_remote host] && [which $binary] == 0 } {
-        untested $testname
-        return
-    }
-
-    if { $progopts1 == "" } { set $progopts1 "-r" }
-    verbose "running $binary $progopts $progopts1" 3
-
-    # Objcopy, unlike the other two, won't send its output to stdout,
-    # so we have to run it specially.
-    set cmd "$binary $progopts $progopts1 $objfile > $dumpfile"
-    if { $program == "objcopy" } {
-        set cmd "$binary $progopts $progopts1 $objfile $dumpfile"
-    }
-
-    # Ensure consistent sorting of symbols
-    if {[info exists env(LC_ALL)]} {
-        set old_lc_all $env(LC_ALL)
-    }
-    set env(LC_ALL) "C"
-    send_log "$cmd\n"
-    set cmdret [remote_exec host [concat sh -c [list "$cmd 2>ld.tmp"]] "" "/dev/null"]
-    set cmdret [lindex $cmdret 0]
-    remote_upload host "ld.tmp"
-    set comp_output [prune_warnings [file_contents "ld.tmp"]]
-    remote_file host delete "ld.tmp"
-    remote_file build delete "ld.tmp"
-    if {[info exists old_lc_all]} {
-        set env(LC_ALL) $old_lc_all
-    } else {
-        unset env(LC_ALL)
-    }
-    if { $cmdret != 0 || $comp_output != "" } {
-        send_log "exited abnormally with $cmdret, output:$comp_output\n"
-        fail $testname
-        return
-    }
-
-    if { $verbose > 2 } then { verbose "output is [file_contents $dumpfile]" 3 }
-    if { [regexp_diff $dumpfile "${dfile}"] } then {
-        fail $testname
-        if { $verbose == 2 } then { verbose "output is [file_contents $dumpfile]" 2 }
-        return
-    }
-
-    pass $testname
 }
 
 proc slurp_options { file } {
