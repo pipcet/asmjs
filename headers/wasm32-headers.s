@@ -43,10 +43,11 @@ __wasm_\name\()_id_end:
         .popsection
 
         .pushsection .space.import
+        .reloc .,R_WASM32_CODE_POINTER,0f
         .byte 0x00
         .popsection
         .pushsection .wasm.import
-        lstring "sys"
+0:      lstring "sys"
         lstring "got"
         .byte 3                 ; global
         .byte 0x7f              ; i32
@@ -54,10 +55,11 @@ __wasm_\name\()_id_end:
         .popsection
 
         .pushsection .space.import
+        .reloc .,R_WASM32_CODE_POINTER,0f
         .byte 0x00
         .popsection
         .pushsection .wasm.import
-        lstring "sys"
+0:      lstring "sys"
         lstring "plt"
         .byte 3                 ; global
         .byte 0x7f              ; i32
@@ -65,10 +67,11 @@ __wasm_\name\()_id_end:
         .popsection
 
         .pushsection .space.import
+        .reloc .,R_WASM32_CODE_POINTER,0f
         .byte 0x00
         .popsection
         .pushsection .wasm.import
-        lstring "sys"
+0:      lstring "sys"
         lstring "gpo"
         .byte 3                 ; global
         .byte 0x7f              ; i32
@@ -76,10 +79,11 @@ __wasm_\name\()_id_end:
         .popsection
 
         .pushsection .space.import
+        .reloc .,R_WASM32_CODE_POINTER,0f
         .byte 0x00
         .popsection
         .pushsection .wasm.import
-        lstring "sys"
+0:      lstring "sys"
         lstring "table"
         .byte 1                 ; table
         .byte 0x70
@@ -89,10 +93,11 @@ __wasm_\name\()_id_end:
         .popsection
 
         .pushsection .space.import
+        .reloc .,R_WASM32_CODE_POINTER,0f
         .byte 0x00
         .popsection
         .pushsection .wasm.import
-        lstring "sys"
+0:      lstring "sys"
         lstring "memory"
         .byte 2                 ; memory
         .byte 1                 ; maximum present
