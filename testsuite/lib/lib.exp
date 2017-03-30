@@ -785,7 +785,7 @@ proc run_dump_test { name {extra_options {}} } {
     set CXX "wasm32-unknown-none-g++"
     set CFLAGS "-flto -O3 -Wl,--gc-sections"
 
-    set cflags_array [list {-O0} {-O1} {-O2} {-O3} {-O0 -flto} {-O1 -flto} {-O2 -flto} {-O3 -flto} {-O0 -Wl,--gc-sections} {-O2 -Wl,--gc-sections}]
+    set cflags_array [list {-O0} {-O1} {-O2} {-O3} {-O0 -flto} {-O1 -flto} {-O2 -flto} {-O3 -flto} {-O0 -Wl,--gc-sections} {-O2 -Wl,--gc-sections} {-O0 -static} {-O2 -static} {-O3 -static} {-O0 -static -Wl,--gc-sections} {-O3 -static -Wl,--gc-sections} {-O0 -ffunction-sections} {-O2 -ffunction-sections} {-O0 -ffunction-sections -static} {-O2 -ffunction-sections -static} {-O0 -ffunction-sections -Wl,--gc-sections} {-O2 -ffunction-sections -Wl,--gc-sections} {-O0 -ffunction-sections -static -Wl,--gc-sections} {-O2 -ffunction-sections -static -Wl,--gc-sections}]
 
     set counter 0
 
