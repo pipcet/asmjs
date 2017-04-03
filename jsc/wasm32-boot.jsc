@@ -62,9 +62,7 @@ if (remote) {
                     if (!system.threads[0].stopped())
                         Promise.resolve().then(run);
                 } catch (e) {
-                    console.log("another exception");
                     console.log(e);
-                    console.log(e.stack);
                 }
             };
             run();
@@ -106,9 +104,7 @@ if (remote) {
                     if (!system.threads[0].stopped())
                         Promise.resolve().then(run);
                 } catch (e) {
-                    console.log("another exception");
                     console.log(e);
-                    console.log(e.stack);
                 }
             };
             run();
