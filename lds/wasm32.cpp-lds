@@ -227,6 +227,7 @@ SECTIONS
     SECTION_NAME(name)
   }
   SECTION_SPACE(function_index)
+  SECTION_SPACE(global_index)
   SECTION_SPACE(type)
   SECTION_SPACE(import)
   SECTION_SPACE(function)
