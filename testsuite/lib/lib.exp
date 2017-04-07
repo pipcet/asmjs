@@ -709,6 +709,30 @@ proc run_dump_test_cflags { name testcounter cflags } {
                     set content ""
                 }
             }
+            wasmify {
+                set current_file [concat "tmpdir/$fullname-$counter.elf"]
+                incr counter
+
+                set f [open $current_file "w"]
+                puts -nonewline $f $content
+                close $f
+
+                set new_file [concat "tmpdir/$fullname-$counter.wasm"]
+                incr counter
+
+                set err_file "wasmify.stderr"
+                set cmd "wasmify-wasm32 $current_file > $new_file"
+                set status [remote_exec host [concat sh -c [list "$cmd 2>$err_file"]] "" "/dev/null"]
+                verbose -log "status is $status"
+                set stderr [file_contents $err_file]
+                verbose -log "stderr is $stderr"
+                set stderr ""
+                if { [file exists $new_file] } {
+                    set content [file_contents $new_file]
+                } else {
+                    set content ""
+                }
+            }
             run {
                 set current_file [concat "tmpdir/$fullname-$counter.exe"]
                 incr counter
