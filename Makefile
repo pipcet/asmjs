@@ -300,7 +300,7 @@ build/wasm32/glibc-static.make: build/wasm32/glibc-static.dir build/wasm32/glibc
 	touch $@
 
 build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
-	$(PWD)/wasm32-unknown-none/bin/wasm32-unknown-none-ld -shared --whole-archive $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.a --no-whole-archive $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/libgcc.a -o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so
+	$(PWD)/wasm32-unknown-none/bin/wasm32-unknown-none-ld -shared --whole-archive lib/wasm32-globals.o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.a --no-whole-archive $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/7.0.1/libgcc.a -o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so
 	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so > $(PWD)/libc.wasm
 	touch $@
 
@@ -788,6 +788,9 @@ examples/002-perl/perl.js: asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/perl5.25.
 	cpp < $< | egrep -v '^#' > $@
 
 lib/wasm32-headers.o: headers/wasm32-headers.s build/wasm32/gcc-final.make
+	./wasm32-unknown-none/bin/wasm32-unknown-none-gcc -c $< -o $@
+
+lib/wasm32-globals.o: headers/wasm32-globals.s build/wasm32/gcc-preliminary.make
 	./wasm32-unknown-none/bin/wasm32-unknown-none-gcc -c $< -o $@
 
 bin/wasmrewrite: wasmrewrite/wasmrewrite.c
