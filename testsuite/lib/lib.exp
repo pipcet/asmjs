@@ -664,6 +664,12 @@ proc run_dump_test_cflags { name testcounter cflags } {
                 close $f
                 set content ""
             }
+            skipcflags {
+                if [regexp $opt_val $cflags] {
+                    pass $fullname
+                    return
+                }
+            }
             gcc {
                 set current_file [concat "tmpdir/$fullname-$counter.c"]
                 incr counter
