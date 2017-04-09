@@ -3388,3 +3388,87 @@ ThinThin.syscall = function (n, ...args)
     else
         return -38;
 };
+
+ThinThin.init_trampoline = function (mtramp)
+{
+    var sigstr = CStringAt(this.HEAPU8, this.HEAPU32[mtramp>>2]);
+    var sigarray = build_sig(sigstr);
+    var length = 8 + 11 + 7 + 1 + 1 + sigarray.length;
+    var siglength = sigarray.length;
+    var ab = new ArrayBuffer (length);
+    var code = new Uint8Array (ab);
+    var i = 0;
+
+    code[i++] = 0x00;
+    code[i++] = 0x61;
+    code[i++] = 0x73;
+    code[i++] = 0x6d;
+
+    code[i++] = 0x01;
+    code[i++] = 0x00;
+    code[i++] = 0x00;
+    code[i++] = 0x00;
+
+    code[i++] = 0x01; // signature
+    code[i++] = (sigarray.length & 0x7f); // XXX > 127 args
+    while (sigarray.length)
+        code[i++] = sigarray.shift();
+
+    code[i++] = 0x02; // import
+    code[i++] = 9; // length
+    code[i++] = 0x01; // 1 import
+    code[i++] = 0x03;
+    code[i++] = 0x73;
+    code[i++] = 0x79;
+    code[i++] = 0x73;
+
+    code[i++] = 0x01;
+    code[i++] = 0x54;
+
+    code[i++] = 0x00; // function
+    code[i++] = 0x00; // signature
+
+
+    code[i++] = 0x07; // export
+    code[i++] = 5; // length
+    code[i++] = 0x01; // 1 export
+    code[i++] = 0x01;
+    code[i++] = 0x54;
+    code[i++] = 0x00; // function
+    code[i++] = 0x00; // func 0
+
+    if (i !== length) {
+        console.log(i + " != " + length);
+        throw "length mismatch";
+    }
+
+    return WebAssembly.compile(code).then(module => {
+        var imports = {};
+        imports.sys = {};
+        imports.sys.T = (...args) => {
+            var fnaddr = this.HEAPU32[mtramp+8>>2];
+            var static_chain = this.HEAPU32[mtramp+16>>2];
+
+            this.set_rv(static_chain);
+            return this.vm.table.get(fnaddr)(...args);
+        };
+        return WebAssembly.instantiate(module, imports);
+    }).then(instance => {
+        let index = this.vm.space_functions.alloc(1);
+        this.vm.table.set(index, instance.exports.T);
+        this.HEAPU32[mtramp+24>>2] = index;
+        return 0;
+    }).catch(e => {
+        console.log("error in build_trampoline: " + e);
+        return -%{EIO};
+    });
+};
+
+ThinThin.destroy_trampoline = function (mtramp)
+{
+    var index = this.HEAPU32[mtramp+24>>2];
+
+    this.vm.space_functions.free(index);
+
+    return 0;
+};

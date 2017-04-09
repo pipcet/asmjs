@@ -788,6 +788,52 @@ Wasm32Thread.prototype.null_called = function ()
     throw "NULL called!";
 };
 
+function build_sig(sigstr)
+{
+    var ret = [];
+    ret.push(1); // 1 signature;
+    ret.push(0x60); // signature;
+    ret.push(sigstr.length - 3);
+    for (var i = 2; i < sigstr.length && sigstr[i] !== 'E'; i++) {
+        switch (sigstr[i]) {
+        case 'i':
+            ret.push(0x7f);
+            break;
+        case 'l':
+            ret.push(0x7e);
+            break;
+        case 'f':
+            ret.push(0x7d);
+            break;
+        case 'd':
+            ret.push(0x7c);
+            break;
+        }
+    }
+
+    if (sigstr[1] == 'v') {
+        ret.push(0x00); 
+    } else {
+        ret.push(0x01); 
+        switch (sigstr[1]) {
+        case 'i':
+            ret.push(0x7f);
+            break;
+        case 'l':
+            ret.push(0x7e);
+            break;
+        case 'f':
+            ret.push(0x7d);
+            break;
+        case 'd':
+            ret.push(0x7c);
+            break;
+        }
+    }
+
+    return ret;
+}
+
 Wasm32Thread.prototype.indcall = function (mbz, sp, r0, r1, rpc, pc)
 {
     return this.vm.table.get(pc)(mbz, sp, r0, r1, rpc, pc);
