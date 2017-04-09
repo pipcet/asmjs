@@ -69,13 +69,19 @@ RangeAllocator.prototype.alloc_range = function (n)
     let lastrange = this.ranges_by_end[this.end];
     if (lastrange && lastrange.free) {
         this.grow(n - lastrange.length);
+        delete this.ranges_by_end[this.end];
         this.end += n - lastrange.length;
+        this.ranges_by_end[this.end] = lastrange;
         lastrange.end = this.end;
+        lastrange.free = false;
         return lastrange;
     } else {
         this.grow(n);
         let range = new AllocatorRange(true, this.end, this.end + n);
+        this.ranges_by_start[this.end] = range;
+        this.ranges_by_end[this.end + n] = range;
         this.end += n;
+        range.free = false;
         return range;
     }
 };
