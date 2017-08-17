@@ -7,11 +7,11 @@ OPT_ASMJS ?= "-O2"
 
 env:
 	@echo "export ASMJSDIR=$(PWD)"
-	@echo "export PATH=$(PWD)/common3/bin:$(PWD)/asmjs-virtual-asmjs/bin:$(PWD)/wasm32-unknown-none/bin:$(PWD)/bin:$$PATH"
+	@echo "export PATH=$(PWD)/common3/bin:$(PWD)/asmjs-unknown-none/bin:$(PWD)/wasm32-unknown-none/bin:$(PWD)/bin:$$PATH"
 	@echo "export LANG=C"
 	@echo "export JSFLAGS=\"--wasm-always-baseline --no-threads\""
 
-# asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/libgcc_eh.a: asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/7.0.1/libgcc.a
+# asmjs-unknown-none/lib/gcc/asmjs-unknown-none/7.0.1/libgcc_eh.a: asmjs-unknown-none/lib/gcc/asmjs-unknown-none/7.0.1/libgcc.a
 #	cp $< $@
 
 build/.dir:
@@ -200,7 +200,7 @@ build/wasm32/coreutils.dir: build/wasm32/.dir
 
 build/asmjs/binutils-gdb.configure: src/binutils-gdb.dir build/asmjs/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/asmjs/binutils-gdb; ../../../src/binutils-gdb/configure --target=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs CFLAGS=$(OPT_NATIVE))
+	(cd build/asmjs/binutils-gdb; ../../../src/binutils-gdb/configure --target=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none CFLAGS=$(OPT_NATIVE))
 	touch $@
 
 build/wasm32/binutils-gdb.configure: src/binutils-gdb.dir build/wasm32/binutils-gdb.dir
@@ -236,7 +236,7 @@ build/binutils-gdb.clean: FORCE
 	rm -f build/binutils-gdb.make
 
 build/asmjs/gcc-preliminary.configure: src/gcc-preliminary.dir build/asmjs/gcc-preliminary.dir | build/asmjs/binutils-gdb.make
-	(cd build/asmjs/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
+	(cd build/asmjs/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-unknown-none)
 	touch $@
 
 build/wasm32/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm32/gcc-preliminary.dir | build/wasm32/binutils-gdb.make
@@ -246,8 +246,8 @@ build/wasm32/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm32/gcc
 build/asmjs/gcc-preliminary.make: build/asmjs/gcc-preliminary.dir build/asmjs/gcc-preliminary.configure
 	$(MAKE) -C build/asmjs/gcc-preliminary
 	$(MAKE) -C build/asmjs/gcc-preliminary install
-	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/libgcc_eh.a
-	cp asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/libgcc.a asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/libgcc_s.a
+	cp asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc.a asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc_eh.a
+	cp asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc.a asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc_s.a
 	touch $@
 
 build/wasm32/gcc-preliminary.make: build/wasm32/gcc-preliminary.dir build/wasm32/gcc-preliminary.configure
@@ -265,11 +265,11 @@ build/gcc-preliminary.clean: FORCE
 	rm -f build/gcc-preliminary.make
 
 build/asmjs/glibc.configure: src/glibc.dir build/asmjs/glibc.dir | build/asmjs/gcc-preliminary.make
-	(cd build/asmjs/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-virtual-asmjs --target=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/asmjs/glibc; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-unknown-none --target=asmjs-unknown-none --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
 	touch $@
 
 build/asmjs-cross/glibc.configure: src/glibc.dir build/asmjs-cross/glibc.dir | build/asmjs/gcc-preliminary.make
-	(cd build/asmjs-cross/glibc; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-virtual-asmjs --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/asmjs-cross/glibc; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-unknown-none --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
 	touch $@
 
 build/wasm32/glibc.configure: src/glibc.dir build/wasm32/glibc.dir | build/wasm32/gcc-preliminary.make
@@ -281,13 +281,13 @@ build/wasm32/glibc-static.configure: src/glibc.dir build/wasm32/glibc-static.dir
 	touch $@
 
 build/asmjs/glibc.make: build/asmjs/glibc.dir build/asmjs/glibc.configure
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/glibc
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/glibc install
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/glibc
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/glibc install
 	touch $@
 
 build/asmjs-cross/glibc.make: build/asmjs-cross/glibc.dir build/asmjs-cross/glibc.configure
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc install
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc install
 	touch $@
 
 build/wasm32/glibc.make: build/wasm32/glibc.dir build/wasm32/glibc.configure
@@ -326,7 +326,7 @@ build/wasm32/musl.make: build/wasm32/musl.dir build/wasm32/musl.configure
 	touch $@
 
 build/asmjs/gcc-final.configure: src/gcc-final.dir build/asmjs/gcc-final.dir | build/asmjs/glibc.make
-	(cd build/asmjs/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-virtual-asmjs --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-virtual-asmjs)
+	(cd build/asmjs/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-unknown-none)
 	touch $@
 
 build/wasm32/gcc-final.configure: src/gcc-final.dir build/wasm32/gcc-final.dir | build/wasm32/glibc.make
@@ -337,10 +337,10 @@ build/asmjs/gcc-final.make: build/asmjs/gcc-final.dir build/asmjs/gcc-final.conf
 	test -d build/asmjs/gcc-final/gcc || $(MKDIR) build/asmjs/gcc-final/gcc
 	cp build/asmjs/gcc-preliminary/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_eh.a
 	cp build/asmjs/gcc-preliminary/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_s.a
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/gcc-final
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/gcc-final
 	cp build/asmjs/gcc-final/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_eh.a
 	cp build/asmjs/gcc-final/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_s.a
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/gcc-final install
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/gcc-final install
 	touch $@
 
 build/wasm32/gcc-final.make: build/wasm32/gcc-final.dir build/wasm32/gcc-final.configure
@@ -354,7 +354,7 @@ build/wasm32/gcc-final.make: build/wasm32/gcc-final.dir build/wasm32/gcc-final.c
 	touch $@
 
 build/asmjs/ncurses.configure: src/ncurses.dir build/asmjs/ncurses.dir | build/asmjs/gcc-final.make
-	(cd build/asmjs/ncurses; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/asmjs/ncurses; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
 	touch $@
 
 build/wasm32/ncurses.configure: src/ncurses.dir build/wasm32/ncurses.dir | build/wasm32/gcc-final.make
@@ -362,8 +362,8 @@ build/wasm32/ncurses.configure: src/ncurses.dir build/wasm32/ncurses.dir | build
 	touch $@
 
 build/asmjs/ncurses.make: build/asmjs/ncurses.configure
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/ncurses
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/ncurses install
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/ncurses
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/ncurses install
 	touch $@
 
 build/wasm32/ncurses.make: build/wasm32/ncurses.configure
@@ -372,24 +372,24 @@ build/wasm32/ncurses.make: build/wasm32/ncurses.configure
 	touch $@
 
 build/asmjs-cross/ncurses.configure: src/ncurses.dir build/asmjs-cross/ncurses.dir | build/asmjs/gcc-final.make
-	(cd build/asmjs-cross/ncurses; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/asmjs-cross/ncurses; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
 	touch $@
 
 build/asmjs-cross/ncurses.make: build/asmjs-cross/ncurses.configure
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses install
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses install
 	touch $@
 
 build/asmjs/emacs.configure: src/emacs.dir build/asmjs/emacs.dir | build/asmjs/ncurses.make
 	(cd src/emacs; autoreconf -ivf)
 	cp config/config.sub src/emacs/build-aux
-	(cd build/asmjs/emacs; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/asmjs/emacs; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
 	touch $@
 
 build/asmjs-cross/emacs.configure: src/emacs.dir build/asmjs-cross/emacs.dir | build/asmjs-cross/ncurses.make
 	(cd src/emacs; autoreconf -ivf)
 	cp config/config.sub src/emacs/build-aux
-	(cd build/asmjs-cross/emacs; CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --build=x86_64-pc-linux-gnu --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs)
+	(cd build/asmjs-cross/emacs; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
 	touch $@
 
 build/wasm32/emacs.configure: src/emacs.dir build/wasm32/emacs.dir | build/wasm32/ncurses.make
@@ -399,21 +399,21 @@ build/wasm32/emacs.configure: src/emacs.dir build/wasm32/emacs.dir | build/wasm3
 	touch $@
 
 build/asmjs/emacs.make: build/asmjs/emacs.configure build/asmjs/ncurses.make | build/binfmt_misc.install
-	$(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet
-	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa/inet.h
-	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netdb.h
-	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet/in.h
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
+	$(MKDIR) -p $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet
+	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa/inet.h
+	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netdb.h
+	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet/in.h
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
 	touch $@
 
 build/asmjs-cross/emacs.make: build/asmjs-cross/emacs.configure build/asmjs-cross/ncurses.make | build/binfmt_misc.install
-	$(MKDIR) -p $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet
-	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/arpa/inet.h
-	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netdb.h
-	touch $(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs/include/netinet/in.h
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs
-	CC=asmjs-virtual-asmjs-gcc PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
+	$(MKDIR) -p $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet
+	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa/inet.h
+	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netdb.h
+	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet/in.h
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs
+	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
 	touch $@
 
 build/wasm32/emacs.make: build/wasm32/emacs.configure build/wasm32/ncurses.make | build/binfmt_misc.install
@@ -426,12 +426,12 @@ build/wasm32/emacs.make: build/wasm32/emacs.configure build/wasm32/ncurses.make 
 	touch $@
 
 build/asmjs/bash.configure: src/bash.dir build/asmjs/bash.dir | build/asmjs/gcc-final.make
-	(cd build/asmjs/bash; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/bash/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --disable-net-redirections --without-bash-malloc)
+	(cd build/asmjs/bash; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/bash/configure --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none --disable-net-redirections --without-bash-malloc)
 	touch $@
 
 build/asmjs/bash.make: build/asmjs/bash.configure
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/bash
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/bash install
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/bash
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/bash install
 	touch $@
 
 build/wasm32/bash.configure: src/bash.dir build/wasm32/bash.dir | build/wasm32/gcc-final.make
@@ -446,23 +446,23 @@ build/wasm32/bash.make: build/wasm32/bash.configure
 build/asmjs/perl.configure: src/perl.dir build/asmjs/perl.dir | build/asmjs/gcc-final.make
 	test -f build/asmjs/perl/config.sh && mv build/asmjs/perl/config.sh build/asmjs/perl/config.sh.old || true
 	touch build/asmjs/perl/config.sh
-	(cd build/asmjs/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs')
+	(cd build/asmjs/perl; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/include' -Dlibpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-unknown-none/asmjs-unknown-none')
 	touch $@
 
 build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/perl
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/perl install
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/perl
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/perl install
 	touch $@
 
 build/asmjs-cross/perl.configure: src/perl.dir build/asmjs-cross/perl.dir | build/asmjs/gcc-final.make
 	test -f build/asmjs-cross/perl/config.sh && mv build/asmjs-cross/perl/config.sh build/asmjs-cross/perl/config.sh.old || true
 	touch build/asmjs-cross/perl/config.sh
-	(cd build/asmjs-cross/perl; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/asmjs-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=asmjs-virtual-asmjs-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/include $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/../../../../asmjs-virtual-asmjs/include' -Dlibpth='$(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/include-fixed $(PWD)/asmjs-virtual-asmjs/lib/gcc/asmjs-virtual-asmjs/8.0.0/../../../../asmjs-virtual-asmjs/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs')
+	(cd build/asmjs-cross/perl; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/asmjs-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=asmjs-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/include' -Dlibpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-unknown-none/asmjs-unknown-none')
 	touch $@
 
 build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.configure
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl install
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl install
 	touch $@
 
 build/wasm32/perl.configure: src/perl.dir build/wasm32/perl.dir | build/wasm32/gcc-final.make build/wasm32/libs.make
@@ -560,12 +560,12 @@ build/common/spidermonkey.clean: FORCE
 
 build/asmjs/coreutils.configure: src/coreutils.dir build/asmjs/coreutils.dir | build/asmjs/gcc-final.make
 	(cd src/coreutils; ./bootstrap --gnulib-srcdir=gnulib --skip-po)
-	(cd build/asmjs/coreutils; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/coreutils/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --enable-static --disable-shared)
+	(cd build/asmjs/coreutils; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/coreutils/configure --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none --enable-static --disable-shared)
 	touch $@
 
 build/asmjs/coreutils.make: build/asmjs/coreutils.configure
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/coreutils
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/coreutils install
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/coreutils
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/coreutils install
 	touch $@
 
 build/wasm32/coreutils.configure: src/coreutils.dir build/wasm32/coreutils.dir | build/wasm32/gcc-final.make
@@ -581,12 +581,12 @@ build/wasm32/coreutils.make: build/wasm32/coreutils.configure
 build/asmjs/graphviz.configure: src/graphviz.dir build/asmjs/graphviz.dir | build/asmjs/gcc-final.make
 	(cd src/graphviz; sh autogen.sh NOCONFIG)
 	cp config/config.sub src/graphviz/config/config.sub
-	(cd build/asmjs/graphviz; PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH ../../../src/graphviz/configure --host=asmjs-virtual-asmjs --prefix=$(PWD)/asmjs-virtual-asmjs/asmjs-virtual-asmjs --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --without-qt --enable-static --disable-shared --disable-ltdl)
+	(cd build/asmjs/graphviz; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/graphviz/configure --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --without-qt --enable-static --disable-shared --disable-ltdl)
 	touch $@
 
 build/asmjs/graphviz.make: build/asmjs/graphviz.configure
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/graphviz
-	PATH=$(PWD)/asmjs-virtual-asmjs/bin:$$PATH $(MAKE) -C build/asmjs/graphviz install
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/graphviz
+	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/graphviz install
 	touch $@
 
 build/wasm32/graphviz.configure: src/graphviz.dir build/wasm32/graphviz.dir | build/wasm32/gcc-final.make
@@ -706,7 +706,7 @@ bin/hexify: hexify/hexify.c
 	$(CC) $< -o $@
 
 lib/asmjs.o: lib/asmjs.S build/asmjs/gcc-final.make
-	asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -c $< -o $@
+	asmjs-unknown-none/bin/asmjs-unknown-none-gcc -c $< -o $@
 
 js/.dir:
 	test -d js || mkdir js
@@ -714,19 +714,19 @@ js/.dir:
 
 js/asmjs-%.jsc.js: jsc/asmjs-%.jsc js/.dir build/asmjs/gcc-final.make
 	test -d cache || mkdir cache
-	perl ./bin/interpolate asmjs-virtual-asmjs < $< > $@
+	perl ./bin/interpolate asmjs-unknown-none < $< > $@
 
 js/asmjs-%.jsc.js: jsc/asm-%.jsc js/.dir build/asmjs/gcc-final.make
 	test -d cache || mkdir cache
-	perl ./bin/interpolate asmjs-virtual-asmjs < $< > $@
+	perl ./bin/interpolate asmjs-unknown-none < $< > $@
 
 js/wasm32-%.jsc.js: jsc/wasm32-%.jsc js/.dir
 	test -d cache || mkdir cache
-	perl ./bin/interpolate asmjs-virtual-asmjs < $< > $@
+	perl ./bin/interpolate asmjs-unknown-none < $< > $@
 
 js/wasm32-%.jsc.js: jsc/asm-%.jsc js/.dir
 	test -d cache || mkdir cache
-	perl ./bin/interpolate asmjs-virtual-asmjs < $< > $@
+	perl ./bin/interpolate asmjs-unknown-none < $< > $@
 
 js/asmjs.js: js/asmjs-main.jsc.js js/asmjs-system.jsc.js js/asmjs-thinthin.jsc.js js/asmjs-thinthin-jsexport.jsc.js js/asmjs-vt100.jsc.js build/asmjs/gcc-final.make
 	echo "// autogenerated, do not edit" > $@.new
@@ -753,35 +753,35 @@ cache/interpolate-cache.pl: bootstrap/interpolate-cache.pl
 	cp $< $@
 
 clean:
-	rm -rf asmjs-virtual-asmjs build src js bin/hexify # cache
+	rm -rf asmjs-unknown-none build src js bin/hexify # cache
 
 tests/%.c.s: tests/%.c build/gcc-final.make
-	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -S $< -o $@
+	./asmjs-unknown-none/bin/asmjs-unknown-none-gcc -S $< -o $@
 
 tests/%.cpp.s: tests/%.cpp build/gcc-final.make
-	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-g++ -S $< -o $@
+	./asmjs-unknown-none/bin/asmjs-unknown-none-g++ -S $< -o $@
 
 tests/%.s.o: tests/%.s build/gcc-final.make
-	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc -c $< -o $@
+	./asmjs-unknown-none/bin/asmjs-unknown-none-gcc -c $< -o $@
 
 tests/%.o.exe: tests/%.o build/gcc-final.make
-	./asmjs-virtual-asmjs/bin/asmjs-virtual-asmjs-gcc $< -o $@
+	./asmjs-unknown-none/bin/asmjs-unknown-none-gcc $< -o $@
 
 tests/%.exe.js: tests/%.exe build/gcc-final.make
 	./bin/prepare $< > $@
 
-intermediate/dot: asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/dot_static lib/mfinfo.o lib/loop.o | build/graphviz.make
+intermediate/dot: asmjs-unknown-none/asmjs-unknown-none/bin/dot_static lib/mfinfo.o lib/loop.o | build/graphviz.make
 	./bin/jsexport $< intermediate/dot-export
 	./bin/multifile-add1 intermediate/dot-export lib/mfinfo.o intermediate/dot-export-mfinfo
 	./bin/multifile-add1 intermediate/dot-export-mfinfo lib/loop.o $@
 
 lib/%.o: lib/%.c
-	asmjs-virtual-asmjs-gcc -c -o $@ $<
+	asmjs-unknown-none-gcc -c -o $@ $<
 
 lib/%.o: lib/%.cc
-	asmjs-virtual-asmjs-g++ -c -o $@ $<
+	asmjs-unknown-none-g++ -c -o $@ $<
 
-examples/002-perl/perl.js: asmjs-virtual-asmjs/asmjs-virtual-asmjs/bin/perl5.25.7 bin/prepare js/asmjs.js
+examples/002-perl/perl.js: asmjs-unknown-none/asmjs-unknown-none/bin/perl5.25.7 bin/prepare js/asmjs.js
 	./bin/prepare $< > $@
 
 %.cpp-lds.lds: %.cpp-lds
@@ -848,7 +848,7 @@ update-wabt:
 # 	(cd build/wasm64/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm64-virtual-wasm64 --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm64-virtual-wasm64)
 # 	touch $@
 
-# test -L asmjs-virtual-asmjs/asmjs-virtual-asmjs || ln -sf . asmjs-virtual-asmjs/asmjs-virtual-asmjs
+# test -L asmjs-unknown-none/asmjs-unknown-none || ln -sf . asmjs-unknown-none/asmjs-unknown-none
 
 # build/wasm64/gcc-preliminary.make: build/wasm64/gcc-preliminary.dir build/wasm64/gcc-preliminary.configure
 # 	$(MAKE) -C build/wasm64/gcc-preliminary

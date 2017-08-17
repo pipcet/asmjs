@@ -18,11 +18,11 @@ fi
 if [ x"$DELAY" = x ]; then
     DELAY=1
 fi
-asmjs-virtual-asmjs-objcopy --dump-section .data=$TMP2 --dump-section .prev.data=$TMP8 --dump-section .asmjs.header=$TMP9 $1 $TMP1 2>/dev/null
+asmjs-unknown-none-objcopy --dump-section .data=$TMP2 --dump-section .prev.data=$TMP8 --dump-section .asmjs.header=$TMP9 $1 $TMP1 2>/dev/null
 cat $TMP8 $TMP9 $TMP2 | $ASMJSDIR/bin/hexify > $TMP3
-asmjs-virtual-asmjs-objcopy --add-section .javascript.data=$TMP3 $1 $TMP4
-asmjs-virtual-asmjs-ld -T $ASMJSDIR/lds/asmjs.lds $ASMJSDIR/lib/asmjs.o $TMP4 -o $TMP5 || exit 1
-asmjs-virtual-asmjs-ld -T $ASMJSDIR/lds/asmjs-js1ify.lds $ASMJSDIR/lib/asmjs.o $TMP5 -o $TMP6 || exit 1
+asmjs-unknown-none-objcopy --add-section .javascript.data=$TMP3 $1 $TMP4
+asmjs-unknown-none-ld -T $ASMJSDIR/lds/asmjs.lds $ASMJSDIR/lib/asmjs.o $TMP4 -o $TMP5 || exit 1
+asmjs-unknown-none-ld -T $ASMJSDIR/lds/asmjs-js1ify.lds $ASMJSDIR/lib/asmjs.o $TMP5 -o $TMP6 || exit 1
 cat $ASMJSDIR/js/asmjs.js $TMP6 > $TMP7
 rm $TMP1 $TMP2 $TMP3 $TMP4 $TMP5 $TMP6
 (sleep $DELAY && rm $TMP7) & disown
