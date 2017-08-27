@@ -74,6 +74,10 @@ build/wasm32/gcc-preliminary.dir: build/wasm32/.dir
 	test -d build/wasm32/gcc-preliminary || $(MKDIR) build/wasm32/gcc-preliminary
 	touch $@
 
+build/native/gcc.dir: build/native/.dir
+	test -d build/native/gcc || $(MKDIR) build/native/gcc
+	touch $@
+
 build/asmjs/glibc.dir: build/asmjs/.dir
 	test -d build/asmjs/glibc || $(MKDIR) build/asmjs/glibc
 	touch $@
@@ -241,6 +245,10 @@ build/asmjs/gcc-preliminary.configure: src/gcc-preliminary.dir build/asmjs/gcc-p
 
 build/wasm32/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm32/gcc-preliminary.dir | build/wasm32/binutils-gdb.make
 	(cd build/wasm32/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm32-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm32-unknown-none)
+	touch $@
+
+build/native/gcc.configure: src/gcc-preliminary.dir build/native/gcc.dir
+	(cd build/native/gcc; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=x86_64-pc-linux-gnu --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/x86_64-linux-gnu/ --disable-bootstrap)
 	touch $@
 
 build/asmjs/gcc-preliminary.make: build/asmjs/gcc-preliminary.dir build/asmjs/gcc-preliminary.configure
