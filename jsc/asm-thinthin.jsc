@@ -3285,7 +3285,7 @@ ThinThin.dlload = function (addr, len, memp)
     var av = new Uint8Array(ab);
     for (var i=0; i < len; i++)
         av[i] = sav[i];
-    var module = new Wasm32Module(ab);
+    var module = new Wasm32Module(this.process, ab);
 
     return module.load(this, this.vm).then(ret => {
         this.HEAP32[memp>>2] = module.dyninfo.data_end - module.dyninfo.data;
