@@ -286,6 +286,7 @@ Wasm32Module.prototype.reload_at = function (thread, vm, clonedesc)
     this.imports.sys.eh_return = thread.eh_return.bind(thread);
     this.imports.sys.indcall = thread.indcall.bind(thread);
     this.imports.sys.trace = thread.trace.bind(thread);
+    this.imports.sys.truncdfsi = thread.truncdfsi.bind(thread);
     this.imports.sys.null = thread.null_called.bind(thread);
     this.imports.sys.got = clonedesc.got;
     this.imports.sys.gpo = clonedesc.gpo;
@@ -782,6 +783,11 @@ Wasm32Thread.prototype.trace = function (off, pc0, dpc, a0, a1, a2)
 
     while ((new Date()) - start < 100);
     return 0;
+};
+
+Wasm32Thread.prototype.truncdfsi = function (v)
+{
+    return v;
 };
 
 Wasm32Thread.prototype.null_called = function ()
