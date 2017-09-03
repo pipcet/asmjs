@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
-#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -128,7 +128,9 @@ void *dlopen(const char *path, int flags)
 
 void *dlsym(void *handle, const char *symbol)
 {
-  return __thinthin_dlsym((long)handle, symbol);
+  void *ret = __thinthin_dlsym((long)handle, symbol);
+
+  return ret;
 }
 
 int dlclose(void *handle)
