@@ -140,6 +140,7 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
             if (!this.refun[symbol])
                 this.refun[symbol] = [];
             this.refun[symbol].push([index + imports.sys.plt, module]);
+            //vm.tableset(index + imports.sys.plt, 0);
         }
     }
 

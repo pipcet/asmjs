@@ -2688,6 +2688,7 @@ if (typeof(os) !== "undefined" &&
     typeof(os.sys) !== "undefined") {
     for (var syscall in Syscalls)
         ThinThin[syscall] = Syscalls[syscall];
+/*
     ThinThin.exit = function (code) {
         //console.log("exiting");
         if (os.getenv("STATS"))
@@ -2698,6 +2699,7 @@ if (typeof(os) !== "undefined" &&
         else
             throw new SuccessException();
     };
+*/
     ThinThin.gethostname = function (addr, len) {
         this.HEAP8[addr] = 0;
 
@@ -3067,7 +3069,7 @@ if (typeof(os) !== "undefined" &&
         return ThinThin.stat.call(this, ptr, 0);
     };
     ThinThin.exit = function (code) {
-        console.log("exiting: " + code);
+        //console.log("exiting: " + code);
         return this.kport.req("exit", [code]).then(() => new Promise(() => {}))
 
         console.log("runtime: " + (Date.now() - lastdonetime));
