@@ -809,6 +809,10 @@ bin/wasmsect: wasmrewrite/wasmsect.c
 
 .PHONY: FORCE clean fetch
 
+update-mozilla:
+	diff -ur src/spidermonkey subrepos/mozilla -x '*.in' -x '*.m4' | (cd src/spidermonkey; patch -p 2)
+	false
+
 update-binutils-gdb:
 	diff -ur src/binutils-gdb subrepos/binutils-gdb -x '*.in' -x '*.m4' | (cd src/binutils-gdb; patch -p 2)
 	false
