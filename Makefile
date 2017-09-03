@@ -9,7 +9,7 @@ env:
 	@echo "export ASMJSDIR=$(PWD)"
 	@echo "export PATH=$(PWD)/common3/bin:$(PWD)/asmjs-unknown-none/bin:$(PWD)/wasm32-unknown-none/bin:$(PWD)/bin:$$PATH"
 	@echo "export LANG=C"
-	@echo "export JSFLAGS=\"--wasm-always-baseline --no-threads\""
+	@echo "export JSFLAGS=\"--no-threads\""
 
 # asmjs-unknown-none/lib/gcc/asmjs-unknown-none/7.0.1/libgcc_eh.a: asmjs-unknown-none/lib/gcc/asmjs-unknown-none/7.0.1/libgcc.a
 #	cp $< $@
@@ -512,7 +512,7 @@ build/common/spidermonkey.configure: src/spidermonkey.dir build/common/spidermon
 build/common/spidermonkey.make: build/common/spidermonkey.configure
 	$(MAKE) -C build/common/spidermonkey
 	$(MAKE) -C build/common/spidermonkey install
-	test -L $(PWD)/common/bin/js || ($(MKDIR) -p $(PWD)/common/bin; ln -sf ../spidermonkey/bin/js $(PWD)/common/bin/js)
+	test -L $(PWD)/common/bin/js || ($(MKDIR) -p $(PWD)/common/bin; ln -sf ../spidermonkey/bin/js57 $(PWD)/common/bin/js)
 	touch $@
 
 build/common3/spidermonkey.configure: src/spidermonkey.dir build/common3/spidermonkey.dir
@@ -528,13 +528,13 @@ build/common3x/spidermonkey.configure: src/spidermonkey.dir build/common3x/spide
 build/common3/spidermonkey.make: build/common3/spidermonkey.configure
 	$(MAKE) -C build/common3/spidermonkey
 	$(MAKE) -C build/common3/spidermonkey install
-	test -L $(PWD)/common3/bin/js || ($(MKDIR) -p $(PWD)/common3/bin; ln -sf ../spidermonkey/bin/js $(PWD)/common3/bin/js)
+	test -L $(PWD)/common3/bin/js || ($(MKDIR) -p $(PWD)/common3/bin; ln -sf ../spidermonkey/bin/js57 $(PWD)/common3/bin/js)
 	touch $@
 
 build/common3x/spidermonkey.make: build/common3x/spidermonkey.configure
 	$(MAKE) -C build/common3x/spidermonkey
 	$(MAKE) -C build/common3x/spidermonkey install
-	test -L $(PWD)/common3x/bin/js || ($(MKDIR) -p $(PWD)/common3x/bin; ln -sf ../spidermonkey/bin/js $(PWD)/common3x/bin/js)
+	test -L $(PWD)/common3x/bin/js || ($(MKDIR) -p $(PWD)/common3x/bin; ln -sf ../spidermonkey/bin/js57 $(PWD)/common3x/bin/js)
 	touch $@
 
 build/debug/spidermonkey.configure: src/spidermonkey.dir build/debug/spidermonkey.dir
