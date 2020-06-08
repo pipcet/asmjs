@@ -14,8 +14,58 @@ env:
 # asmjs-unknown-none/lib/gcc/asmjs-unknown-none/7.0.1/libgcc_eh.a: asmjs-unknown-none/lib/gcc/asmjs-unknown-none/7.0.1/libgcc.a
 #	cp $< $@
 
+# architecture-independent package-independent
 build/.dir:
 	test -d build || $(MKDIR) build
+	touch $@
+
+src/.dir:
+	test -d src || $(MKDIR) src
+	touch $@
+
+# wasm32 package-independent
+build/wasm32/.dir: build/.dir
+	test -d build/wasm32 || $(MKDIR) build/wasm32
+	touch $@
+
+src/wasm32/.dir: src/.dir
+	test -d src/wasm32 || $(MKDIR) src/wasm32
+	touch $@
+
+# wasm32 binutils-gdb
+build/wasm32/binutils-gdb.dir: build/wasm32/.dir
+	test -d build/wasm32/binutils-gdb || $(MKDIR) build/wasm32/binutils-gdb
+	touch $@
+
+src/wasm32/binutils-gdb.dir: src/wasm32/.dir
+	test -d src/wasm32/binutils-gdb || mkdir src/wasm32/binutils-gdb
+	(cd subrepos/binutils-gdb; tar c --exclude .git .) | (cd src/wasm32/binutils-gdb; tar x)
+	touch $@
+
+build/wasm32/binutils-gdb.configure: src/wasm32/binutils-gdb.dir build/wasm32/binutils-gdb.dir
+	(cd src/wasm32/binutils-gdb/gas; aclocal; automake; autoreconf)
+	(cd build/wasm32/binutils-gdb; ../../../src/wasm32/binutils-gdb/configure --target=wasm32-unknown-none --enable-debug --prefix=$(PWD)/wasm32-unknown-none CFLAGS=$(OPT_NATIVE))
+	touch $@
+
+build/wasm32/binutils-gdb.make: build/wasm32/binutils-gdb.dir build/wasm32/binutils-gdb.configure
+	$(MAKE) -C build/wasm32/binutils-gdb
+	$(MAKE) -C build/wasm32/binutils-gdb install
+	touch $@
+
+# wasm32 gcc-preliminary
+build/wasm32/gcc-preliminary.dir: build/wasm32/.dir
+	test -d build/wasm32/gcc-preliminary || $(MKDIR) build/wasm32/gcc-preliminary
+	touch $@
+
+build/wasm32/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm32/gcc-preliminary.dir | build/wasm32/binutils-gdb.make
+	(cd build/wasm32/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm32-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm32-unknown-none)
+	touch $@
+
+build/wasm32/gcc-preliminary.make: build/wasm32/gcc-preliminary.dir build/wasm32/gcc-preliminary.configure
+	$(MAKE) -C build/wasm32/gcc-preliminary
+	$(MAKE) -C build/wasm32/gcc-preliminary install
+	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc_eh.a
+	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc_s.a
 	touch $@
 
 build/common/.dir: build/.dir
@@ -46,10 +96,6 @@ build/asmjs-cross/.dir: build/.dir
 	test -d build/asmjs-cross || $(MKDIR) build/asmjs-cross
 	touch $@
 
-build/wasm32/.dir: build/.dir
-	test -d build/wasm32 || $(MKDIR) build/wasm32
-	touch $@
-
 build/native/.dir: build/.dir
 	test -d build/native || $(MKDIR) build/native
 	touch $@
@@ -58,20 +104,12 @@ build/asmjs/binutils-gdb.dir: build/asmjs/.dir
 	test -d build/asmjs/binutils-gdb || $(MKDIR) build/asmjs/binutils-gdb
 	touch $@
 
-build/wasm32/binutils-gdb.dir: build/wasm32/.dir
-	test -d build/wasm32/binutils-gdb || $(MKDIR) build/wasm32/binutils-gdb
-	touch $@
-
 build/native/binutils-gdb.dir: build/native/.dir
 	test -d build/native/binutils-gdb || $(MKDIR) build/native/binutils-gdb
 	touch $@
 
 build/asmjs/gcc-preliminary.dir: build/asmjs/.dir
 	test -d build/asmjs/gcc-preliminary || $(MKDIR) build/asmjs/gcc-preliminary
-	touch $@
-
-build/wasm32/gcc-preliminary.dir: build/wasm32/.dir
-	test -d build/wasm32/gcc-preliminary || $(MKDIR) build/wasm32/gcc-preliminary
 	touch $@
 
 build/native/gcc.dir: build/native/.dir
@@ -203,17 +241,12 @@ build/wasm32/coreutils.dir: build/wasm32/.dir
 	touch $@
 
 build/asmjs/binutils-gdb.configure: src/binutils-gdb.dir build/asmjs/binutils-gdb.dir
-	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
+	(cd src/binutils-gdb/gas; aclocal-1.15; automake-1.15)
 	(cd build/asmjs/binutils-gdb; ../../../src/binutils-gdb/configure --target=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none CFLAGS=$(OPT_NATIVE))
 	touch $@
 
-build/wasm32/binutils-gdb.configure: src/binutils-gdb.dir build/wasm32/binutils-gdb.dir
-	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
-	(cd build/wasm32/binutils-gdb; ../../../src/binutils-gdb/configure --target=wasm32-unknown-none --enable-debug --prefix=$(PWD)/wasm32-unknown-none CFLAGS=$(OPT_NATIVE))
-	touch $@
-
 build/native/binutils-gdb.configure: src/binutils-gdb.dir build/native/binutils-gdb.dir
-	(cd src/binutils-gdb/gas; aclocal-1.11; automake-1.11)
+	(cd src/binutils-gdb/gas; aclocal-1.15; automake-1.15)
 	(cd build/native/binutils-gdb; ../../../src/binutils-gdb/configure --enable-debug --prefix=$(PWD)/native CFLAGS=$(OPT_NATIVE))
 	touch $@
 
@@ -222,29 +255,27 @@ build/asmjs/binutils-gdb.make: build/asmjs/binutils-gdb.dir build/asmjs/binutils
 	$(MAKE) -C build/asmjs/binutils-gdb install
 	touch $@
 
-build/wasm32/binutils-gdb.make: build/wasm32/binutils-gdb.dir build/wasm32/binutils-gdb.configure
-	$(MAKE) -C build/wasm32/binutils-gdb
-	$(MAKE) -C build/wasm32/binutils-gdb install
-	touch $@
-
 build/native/binutils-gdb.make: build/native/binutils-gdb.dir build/native/binutils-gdb.configure
 	$(MAKE) -C build/native/binutils-gdb
 	$(MAKE) -C build/native/binutils-gdb install
 	touch $@
 
 build/binutils-gdb.clean: FORCE
-	rm -rf build/binutils-gdb src/binutils-gdb
+	rm -rf build/binutils-gdb src/binutils-gdb src/wasm32/binutils-gdb
 	rm -f build/binutils-gdb.dir
 	rm -f src/binutils-gdb.dir
 	rm -f build/binutils-gdb.configure
 	rm -f build/binutils-gdb.make
 
+build/%/binutils-gdb.clean: FORCE
+	rm -rf build/$*/binutils-gdb src/$*/binutils-gdb
+	rm -f build/$*/binutils-gdb.dir
+	rm -f src/$*/binutils-gdb.dir
+	rm -f build/$*/binutils-gdb.configure
+	rm -f build/$*/binutils-gdb.make
+
 build/asmjs/gcc-preliminary.configure: src/gcc-preliminary.dir build/asmjs/gcc-preliminary.dir | build/asmjs/binutils-gdb.make
 	(cd build/asmjs/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-unknown-none)
-	touch $@
-
-build/wasm32/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm32/gcc-preliminary.dir | build/wasm32/binutils-gdb.make
-	(cd build/wasm32/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=wasm32-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/wasm32-unknown-none)
 	touch $@
 
 build/native/gcc.configure: src/gcc-preliminary.dir build/native/gcc.dir
@@ -258,19 +289,11 @@ build/asmjs/gcc-preliminary.make: build/asmjs/gcc-preliminary.dir build/asmjs/gc
 	cp asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc.a asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc_s.a
 	touch $@
 
-build/wasm32/gcc-preliminary.make: build/wasm32/gcc-preliminary.dir build/wasm32/gcc-preliminary.configure
-	$(MAKE) -C build/wasm32/gcc-preliminary
-	$(MAKE) -C build/wasm32/gcc-preliminary install
-	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc_eh.a
-	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc_s.a
-	touch $@
-
-build/gcc-preliminary.clean: FORCE
-	rm -rf build/gcc-preliminary src/gcc-preliminary
-	rm -f build/gcc-preliminary.dir
-	rm -f src/gcc-preliminary.dir
-	rm -f build/gcc-preliminary.configure
-	rm -f build/gcc-preliminary.make
+build/%/gcc-preliminary.clean: FORCE
+	rm -rf build/$*/gcc-preliminary
+	rm -f build/$*/gcc-preliminary.dir
+	rm -f build/$*/gcc-preliminary.configure
+	rm -f build/$*/gcc-preliminary.make
 
 build/asmjs/glibc.configure: src/glibc.dir build/asmjs/glibc.dir | build/asmjs/gcc-preliminary.make
 	(cd build/asmjs/glibc; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-unknown-none --target=asmjs-unknown-none --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
@@ -281,7 +304,7 @@ build/asmjs-cross/glibc.configure: src/glibc.dir build/asmjs-cross/glibc.dir | b
 	touch $@
 
 build/wasm32/glibc.configure: src/glibc.dir build/wasm32/glibc.dir | build/wasm32/gcc-preliminary.make
-	(cd build/wasm32/glibc; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/glibc/configure CFLAGS="-fPIC -O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-unknown-none --target=wasm32-unknown-none --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
+	(cd build/wasm32/glibc; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/glibc/configure CFLAGS="-fPIC -O3 -Wno-error=missing-attributes" --enable-optimize=$(OPT_NATIVE) --host=wasm32-unknown-none --target=wasm32-unknown-none --enable-hacker-mode --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
 build/wasm32/glibc-static.configure: src/glibc.dir build/wasm32/glibc-static.dir | build/wasm32/gcc-preliminary.make
@@ -646,10 +669,6 @@ build/graphviz.clean: FORCE
 	rm -f src/graphviz.dir
 	rm -f build/graphviz.configure
 	rm -f build/graphviz.make
-
-src/.dir:
-	test -d src || $(MKDIR) src
-	touch $@
 
 src/bash.dir:
 	test -L src/bash || ln -sf ../subrepos/bash src/bash
