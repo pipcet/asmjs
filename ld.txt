@@ -1,0 +1,13 @@
+* wasm32_create_dynamic_sections
+** creates PPLT, unsized
+* _bfd_elf_adjust_dynamic_symbol
+** elf32_wasm32_adjust_dynamic_symbol
+*** early-drops PPLT entries
+* allocate_pplt
+** alloc-drops PPLT entries
+* elf32_wasm32_size_dynamic_sections
+** finalizes PPLT sizes
+* finish_pplt_entry
+** finishes PPLT entry
+* elf32_wasm32_relocate_section
+** late-drops PPLT entry

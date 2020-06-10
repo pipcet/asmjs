@@ -49,3 +49,6 @@
 	path = subrepos/wabt
 	url = https://github.com/pipcet/wabt
 	branch = asmjs
+[submodule "subrepos/config"]
+	path = subrepos/config
+	url = http://git.savannah.gnu.org/git/config.git

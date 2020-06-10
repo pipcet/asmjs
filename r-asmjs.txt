@@ -1,0 +1,611 @@
+./subrepos/mozilla/js/src/jsapi.cpp:      case JSJITCOMPILER_ASMJS_ATOMICS_ENABLE:
+./subrepos/mozilla/js/src/jsapi.cpp:      case JSJITCOMPILER_ASMJS_ATOMICS_ENABLE:
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_NONE,		/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_NONE",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_HEX16,		/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_HEX16",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_HEX16R4,	/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_HEX16R4",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_ABS32,		/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_ABS32",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_REL32,		/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_REL32",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:    HOWTO (R_ASMJS_HEX16R12,	/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_HEX16R12",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_REL16,		/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_REL16",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_ABS16,		/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_ABS16",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_ABS64,		/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_ABS64",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_REL64,		/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_REL64",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_LEB128,	/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_LEB128",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_LEB128R32,	/* type */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_LEB128_R32",	/* name */
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:    return wasm64_elf64_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS64");
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:    return wasm64_elf64_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS32");
+./subrepos/binutils-gdb/bfd/elf64-wasm64.c:    return wasm64_elf64_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS16");
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_NONE,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_NONE",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_HEX16,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_HEX16",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_HEX16R4,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_HEX16R4",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_ABS32,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_ABS32",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_REL32,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_REL32",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:    HOWTO (R_ASMJS_HEX16R12,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_HEX16R12",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_REL16,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_REL16",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_ABS16,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_ABS16",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:    return asmjs_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS32");
+./subrepos/binutils-gdb/bfd/elf32-asmjs.c:    return asmjs_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS16");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_NONE,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_NONE",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_HEX16,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_HEX16",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_HEX16R4,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_HEX16R4",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS32,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS32",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_REL32,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_REL32",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    HOWTO (R_ASMJS_HEX16R12,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_HEX16R12",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_REL16,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_REL16",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS16,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS16",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS64,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS64",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_REL64,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_REL64",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128R32,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128_R32",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128_GOT,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128_GOT",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128_PLT,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128_PLT",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_PLT_INDEX,     /* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_PLT_INDEX",   /* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS32_CODE,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS32_CODE",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS64_CODE,	/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS64_CODE",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_COPY,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_COPY",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128_GOT_CODE, /* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128_GOT_CODE",/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_PLT_LAZY,      /* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_PLT_LAZY",    /* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS8,		/* type */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS8",	/* name */
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS32");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS16");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS8");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_HEX16");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_HEX16R4");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_HEX16R12");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128R32");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128_GOT");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128_GOT_CODE");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128_PLT");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_PLT_INDEX");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS32_CODE");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_COPY");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LAZY");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_NONE");
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:  if (r_type > R_ASMJS_max)
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:          && (r_type == R_ASMJS_LEB128_PLT ||
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:              r_type == R_ASMJS_LEB128_GOT ||
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:              r_type == R_ASMJS_LEB128_GOT_CODE))
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT_CODE:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_PLT:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT_CODE:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:              h->got.offset = sgot->size + (r_type == R_ASMJS_LEB128_GOT_CODE ? 2 : 0);
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_PLT:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_HEX16:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:      if (r_type == R_ASMJS_LEB128_PLT)
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:      rel.r_info = ELF32_R_INFO (h->dynindx, R_ASMJS_PLT_INDEX);
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:          rel.r_info = ELF32_R_INFO (0, R_ASMJS_REL32);
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:          rel.r_info = ELF32_R_INFO (h->dynindx, (h->got.offset & 2) ? R_ASMJS_ABS32_CODE : R_ASMJS_ABS32);
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:      rel.r_info = ELF32_R_INFO (h->dynindx, R_ASMJS_COPY);
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:      if (r_type == (int) R_ASMJS_NONE)
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_PLT:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT_CODE:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:                  off = h->got.offset = sgot->size + (r_type == R_ASMJS_LEB128_GOT_CODE ? 2 : 0);
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:                    outrel.r_info = ELF32_R_INFO (0, (r_type == R_ASMJS_LEB128_GOT_CODE) ? R_ASMJS_ABS32_CODE : R_ASMJS_REL32);
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_ABS32:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_ABS32_CODE:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_HEX16:
+./subrepos/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_REL32:
+./subrepos/binutils-gdb/gas/testsuite/gas/wasm32/reloc.d:			1: R_ASMJS_LEB128_PLT	f
+./subrepos/binutils-gdb/gas/testsuite/gas/wasm32/reloc.d:			7: R_ASMJS_LEB128_GOT	x
+./subrepos/binutils-gdb/gas/testsuite/gas/wasm32/reloc.d:			d: R_ASMJS_LEB128_GOT_CODE	f
+./subrepos/binutils-gdb/gas/doc/wasm32.texi:Special relocations are available by using the @samp{@@@var{plt}}, @samp{@@@var{got}}, or @samp{@@@var{got}} suffixes after a constant expression, which correspond to the R_ASMJS_LEB128_PLT, R_ASMJS_LEB128_GOT, and R_ASMJS_LEB128_GOT_CODE relocations, respectively.
+./subrepos/binutils-gdb/gas/config/tc-wasm64.c:  reloc->u.a.howto = bfd_reloc_name_lookup (stdoutput, "R_ASMJS_LEB128");
+./subrepos/binutils-gdb/gas/config/tc-wasm64.c:  reloc->u.a.howto = bfd_reloc_name_lookup (stdoutput, "R_ASMJS_LEB128_R32");
+./subrepos/binutils-gdb/gas/config/tc-wasm32.c:                                            gotrel ? (code ? "R_ASMJS_LEB128_GOT_CODE" : "R_ASMJS_LEB128_GOT") :
+./subrepos/binutils-gdb/gas/config/tc-wasm32.c:                                            pltrel ? "R_ASMJS_LEB128_PLT" :
+./subrepos/binutils-gdb/gas/config/tc-wasm32.c:                                            "R_ASMJS_LEB128");
+./subrepos/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_NONE,            	  0)
+./subrepos/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_HEX16,            	  1)
+./subrepos/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_HEX16R4,            	  2)
+./subrepos/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_ABS32,           	  3)
+./subrepos/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_REL32,           	  4)
+./subrepos/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_HEX16R12,            	  5)
+./subrepos/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_REL16,           	  6)
+./subrepos/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_ABS16,           	  7)
+./subrepos/binutils-gdb/include/elf/asmjs.h:END_RELOC_NUMBERS (R_ASMJS_max = 8)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_NONE,            	  0)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_HEX16,            	  1)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_HEX16R4,            	  2)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS32,           	  3)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_REL32,           	  4)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_HEX16R12,            	  5)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_REL16,           	  6)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS16,           	  7)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS64,           	  8)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_REL64,           	  9)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128,                  10)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128R32,               11)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128_GOT,              12)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128_PLT,              13)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_PLT_INDEX,               14)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS32_CODE,              15)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS64_CODE,              16)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_COPY,                    17)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128_GOT_CODE,         18)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_PLT_LAZY,                19)
+./subrepos/binutils-gdb/include/elf/wasm32.h~:END_RELOC_NUMBERS (R_ASMJS_max = 19)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_NONE,            	  0)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_HEX16,            	  1)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_HEX16R4,            	  2)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_ABS32,           	  3)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_REL32,           	  4)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_HEX16R12,            	  5)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_REL16,           	  6)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_ABS16,           	  7)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_ABS64,           	  8)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_REL64,           	  9)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_LEB128,                  10)
+./subrepos/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_LEB128R32,               11)
+./subrepos/binutils-gdb/include/elf/wasm64.h:END_RELOC_NUMBERS (R_ASMJS_max = 8)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_NONE,            	  0)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_HEX16,            	  1)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_HEX16R4,            	  2)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS32,           	  3)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_REL32,           	  4)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_HEX16R12,            	  5)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_REL16,           	  6)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS16,           	  7)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS64,           	  8)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_REL64,           	  9)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128,                  10)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128R32,               11)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128_GOT,              12)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128_PLT,              13)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_PLT_INDEX,               14)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS32_CODE,              15)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS64_CODE,              16)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_COPY,                    17)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128_GOT_CODE,         18)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_PLT_LAZY,                19)
+./subrepos/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS8,           	 20)
+./subrepos/binutils-gdb/include/elf/wasm32.h:END_RELOC_NUMBERS (R_ASMJS_max = 20)
+./subrepos/gcc/gcc/config/wasm32/wasm32.c:      fputs (".reloc .,R_ASMJS_ABS32_CODE,", asm_out_file);
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s~:        .reloc .,R_ASMJS_HEX16,\name
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm32/wasm32-macros.s:        .reloc .,R_ASMJS_HEX16,\name
+./subrepos/gcc/gcc/config/asmjs/asmjs-macros.s:        .reloc .+2,R_ASMJS_HEX16,\label
+./subrepos/gcc/gcc/config/asmjs/asmjs-macros.s:        .reloc .+2,R_ASMJS_HEX16,\label
+./subrepos/gcc/gcc/config/asmjs/asmjs-macros.s:        .reloc .+2,R_ASMJS_HEX16,\label
+./subrepos/gcc/gcc/config/asmjs/asmjs-macros.s:        .reloc .+2,R_ASMJS_HEX16R4,\label
+./subrepos/gcc/gcc/config/asmjs/asmjs-macros.s:        .reloc .+2,R_ASMJS_HEX16R4,\label
+./subrepos/gcc/gcc/config/asmjs/asmjs-macros.s:        .reloc .+2,R_ASMJS_HEX16R4,\label
+./subrepos/gcc/gcc/config/asmjs/asmjs-macros.s:        .reloc .+2,R_ASMJS_HEX16R12,\label
+./subrepos/gcc/gcc/config/asmjs/asmjs-macros.s:        .reloc .+2,R_ASMJS_HEX16R4,\b-\a
+./subrepos/gcc/gcc/config/asmjs/asmjs-macros.s:        .reloc .+2,R_ASMJS_HEX16,\label
+./subrepos/gcc/gcc/config/asmjs/asmjs.c:		  fprintf (asm_out_file, "\t.reloc .+2,R_ASMJS_HEX16,%s\n",
+./subrepos/gcc/gcc/config/wasm64/wasm64-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./subrepos/gcc/gcc/config/wasm64/wasm64-macros.s:        .reloc .,R_ASMJS_LEB128_R32,\expr
+./subrepos/glibc/sysdeps/wasm32/dl-machine.h:#define R_ASMJS_HEX16R4 3
+./subrepos/glibc/sysdeps/wasm32/dl-machine.h:#define ELF_MACHINE_JMP_SLOT R_ASMJS_HEX16R4
+./subrepos/glibc/sysdeps/wasm32/dl-machine.h:  (R_ASMJS_HEX16R4)
+./subrepos/glibc/sysdeps/asmjs/dl-machine.h:#define R_ASMJS_HEX16R4 3
+./subrepos/glibc/sysdeps/asmjs/dl-machine.h:#define ELF_MACHINE_JMP_SLOT R_ASMJS_HEX16R4
+./subrepos/glibc/sysdeps/asmjs/dl-machine.h:  (R_ASMJS_HEX16R4)
+./subrepos/glibc/sysdeps/wasm64/dl-machine.h:#define R_ASMJS_HEX16R4 3
+./subrepos/glibc/sysdeps/wasm64/dl-machine.h:#define ELF_MACHINE_JMP_SLOT R_ASMJS_HEX16R4
+./subrepos/glibc/sysdeps/wasm64/dl-machine.h:  (R_ASMJS_HEX16R4)
+Binary file ./debug/spidermonkey/bin/js matches
+Binary file ./debug/spidermonkey/lib/libmozjs-53a1.so matches
+Binary file ./debug/spidermonkey/lib/libjs_static.ajs matches
+Binary file ./debug/spidermonkey/lib/libmozjs-52a1.so matches
+./dyninfo/dyninfo.pl:            if (/^([0-9a-f]*) R_ASMJS_ABS32(_CODE)? ([@.a-zA-Z0-9_\$]*)$/) {
+./dyninfo/dyninfo.pl:            } elsif (/^([0-9a-f]*) R_ASMJS_(ABS|REL)32 \*ABS\*\+0x([0-9a-f]*)$/) {
+./dyninfo/dyninfo.pl:            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32 ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+./dyninfo/dyninfo.pl:            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32_CODE ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+./dyninfo/dyninfo.pl:            } elsif (/^([0-9a-f]*) R_ASMJS_ABS32_CODE (\*ABS\*)\+0x([0-9a-f]*)$/) {
+./dyninfo/dyninfo.pl:            } elsif (/^([0-9a-f]*) R_ASMJS_(LEB128_)?PLT_INDEX ([@.a-zA-Z0-9_\$]*)$/) {
+./dyninfo/dyninfo.pl:            } elsif (/^([0-9a-f]*) R_ASMJS_PLT_LAZY ([@.a-zA-Z0-9_\$]*)$/) {
+./dyninfo/dyninfo.pl:            } elsif (/^([0-9a-f]*) R_ASMJS_COPY ([a-zA-Z0-9_\$]*)$/) {
+./dyninfo/dyninfo.pl:            } elsif (/^00000000 R_ASMJS_NONE /) {
+Binary file ./build/wasm32/gcc-preliminary/gcc/cc1 matches
+Binary file ./build/wasm32/gcc-preliminary/gcc/wasm32.o matches
+./build/wasm32/gcc-preliminary/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-preliminary/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-preliminary/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-preliminary/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-preliminary/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-preliminary/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_HEX16,\name
+Binary file ./build/wasm32/gcc-preliminary/gcc/lto1 matches
+Binary file ./build/wasm32/binutils-gdb/binutils/objdump matches
+Binary file ./build/wasm32/binutils-gdb/binutils/size matches
+Binary file ./build/wasm32/binutils-gdb/binutils/objcopy matches
+Binary file ./build/wasm32/binutils-gdb/binutils/strip-new matches
+Binary file ./build/wasm32/binutils-gdb/binutils/readelf matches
+Binary file ./build/wasm32/binutils-gdb/binutils/ranlib matches
+Binary file ./build/wasm32/binutils-gdb/binutils/strings matches
+Binary file ./build/wasm32/binutils-gdb/binutils/bfdtest2 matches
+Binary file ./build/wasm32/binutils-gdb/binutils/nm-new matches
+Binary file ./build/wasm32/binutils-gdb/binutils/addr2line matches
+Binary file ./build/wasm32/binutils-gdb/binutils/ar matches
+Binary file ./build/wasm32/binutils-gdb/binutils/bfdtest1 matches
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000000  00000b03 R_ASMJS_ABS32     00000000   rel_02_01 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000004  00000c03 R_ASMJS_ABS32     00000000   rel_02_02 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000008  00000d03 R_ASMJS_ABS32     00000000   rel_02_03 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000000  00000e03 R_ASMJS_ABS32     00000000   rel_03_01 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000004  00000f03 R_ASMJS_ABS32     00000000   rel_03_02 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000008  00001003 R_ASMJS_ABS32     00000000   rel_03_03 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000000  00000e03 R_ASMJS_ABS32     00000000   rel_03_01 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000004  00000f03 R_ASMJS_ABS32     00000000   rel_03_02 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000008  00001003 R_ASMJS_ABS32     00000000   rel_03_03 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000000  00000b03 R_ASMJS_ABS32     00000000   rel_02_01 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000004  00000c03 R_ASMJS_ABS32     00000000   rel_02_02 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000008  00000d03 R_ASMJS_ABS32     00000000   rel_02_03 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000000  00000e03 R_ASMJS_ABS32     00000000   rel_03_01 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000004  00000f03 R_ASMJS_ABS32     00000000   rel_03_02 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000008  00001003 R_ASMJS_ABS32     00000000   rel_03_03 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000000  00000b03 R_ASMJS_ABS32     00000000   rel_02_01 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000004  00000c03 R_ASMJS_ABS32     00000000   rel_02_02 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000008  00000d03 R_ASMJS_ABS32     00000000   rel_02_03 + 0
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000004 R_ASMJS_ABS32     external_symbol
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000004 R_ASMJS_ABS32     external_symbol
+./build/wasm32/binutils-gdb/binutils/binutils.log:00000004  00000703 R_ASMJS_ABS32     00000000   external_symbol + 0
+Binary file ./build/wasm32/binutils-gdb/binutils/cxxfilt matches
+Binary file ./build/wasm32/binutils-gdb/binutils/readelf.o matches
+Binary file ./build/wasm32/binutils-gdb/gdb/gdb matches
+./build/wasm32/binutils-gdb/ld/ld.log:line   "00000000 R_ASMJS_ABS32     foo"
+./build/wasm32/binutils-gdb/ld/ld.log:line   "00000000 R_ASMJS_ABS32     foo"
+Binary file ./build/wasm32/binutils-gdb/ld/ld-new matches
+Binary file ./build/wasm32/binutils-gdb/bfd/elf32-wasm32.o matches
+Binary file ./build/wasm32/binutils-gdb/bfd/libbfd.a matches
+Binary file ./build/wasm32/binutils-gdb/bfd/.libs/libbfd.a matches
+Binary file ./build/wasm32/binutils-gdb/gprof/gprof matches
+Binary file ./build/wasm32/binutils-gdb/gas/tc-wasm32.o matches
+./build/wasm32/binutils-gdb/gas/testsuite/dump.out:			1: R_ASMJS_LEB128_PLT	f
+./build/wasm32/binutils-gdb/gas/testsuite/dump.out:			7: R_ASMJS_LEB128_GOT	x
+./build/wasm32/binutils-gdb/gas/testsuite/dump.out:			d: R_ASMJS_LEB128_GOT_CODE	f
+Binary file ./build/wasm32/binutils-gdb/gas/as-new matches
+Binary file ./build/wasm32/gcc-final/gcc/cc1 matches
+Binary file ./build/wasm32/gcc-final/gcc/cc1plus matches
+Binary file ./build/wasm32/gcc-final/gcc/f951 matches
+Binary file ./build/wasm32/gcc-final/gcc/cc1obj matches
+Binary file ./build/wasm32/gcc-final/gcc/wasm32.o matches
+./build/wasm32/gcc-final/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-final/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-final/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-final/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-final/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./build/wasm32/gcc-final/gcc/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_HEX16,\name
+Binary file ./build/wasm32/gcc-final/gcc/lto1 matches
+Binary file ./build/native/binutils-gdb/binutils/readelf matches
+Binary file ./build/native/binutils-gdb/binutils/readelf.o matches
+Binary file ./build/common/spidermonkey/js/src/libmozjs-54a1.so matches
+Binary file ./build/common/spidermonkey/js/src/shell/js matches
+Binary file ./build/common/spidermonkey/js/src/libjs_static.a matches
+Binary file ./build/common/spidermonkey/js/src/Unified_cpp_js_src2.o matches
+Binary file ./build/common/spidermonkey/js/src/Unified_cpp_js_src24.o matches
+Binary file ./common3x/spidermonkey/bin/js matches
+Binary file ./common3x/spidermonkey/lib/libmozjs-53a1.so matches
+Binary file ./common3x/spidermonkey/lib/libjs_static.ajs matches
+./lib/asmjs.S:    .reloc .+2,R_ASMJS_HEX16,\label
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gdb matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ar matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-gprof matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-nm matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-strings matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-strip matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-c++filt matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld.bfd matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-objdump matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-readelf matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-as matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-size matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-objcopy matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-addr2line matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ld matches
+Binary file ./wasm32-virtual-wasm32/bin/wasm32-virtual-wasm32-ranlib matches
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s~:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s~:        .reloc .,R_ASMJS_HEX16,\name
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./wasm32-virtual-wasm32/lib/gcc/wasm32-virtual-wasm32/7.0.1/gas-macros/wasm32-macros.s:        .reloc .,R_ASMJS_HEX16,\name
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/objdump matches
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/objcopy matches
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/nm matches
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/as matches
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/ld matches
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/readelf matches
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/strip matches
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/ranlib matches
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/ar matches
+Binary file ./wasm32-virtual-wasm32/wasm32-virtual-wasm32/bin/ld.bfd matches
+Binary file ./wasm32-virtual-wasm32/libexec/gcc/wasm32-virtual-wasm32/7.0.1/cc1 matches
+Binary file ./wasm32-virtual-wasm32/libexec/gcc/wasm32-virtual-wasm32/7.0.1/cc1plus matches
+Binary file ./wasm32-virtual-wasm32/libexec/gcc/wasm32-virtual-wasm32/7.0.1/f951 matches
+Binary file ./wasm32-virtual-wasm32/libexec/gcc/wasm32-virtual-wasm32/7.0.1/cc1obj matches
+Binary file ./wasm32-virtual-wasm32/libexec/gcc/wasm32-virtual-wasm32/7.0.1/lto1 matches
+Binary file ./native-virtual-native/bin/readelf matches
+Binary file ./native-virtual-native/x86_64-pc-linux-gnu/bin/readelf matches
+./tests/148-wasm-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
+./tests/148-wasm-macros.s:        .reloc .,R_ASMJS_LEB128,__body_end_\name - __body_start_\name
+./tests/112-testreloc4.s:        .reloc .+2,R_ASMJS_HEX16R4,b-a
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_NONE,		/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_NONE",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_HEX16,		/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_HEX16",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_HEX16R4,	/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_HEX16R4",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_ABS32,		/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_ABS32",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_REL32,		/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_REL32",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:    HOWTO (R_ASMJS_HEX16R12,	/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_HEX16R12",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_REL16,		/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_REL16",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_ABS16,		/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_ABS16",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_ABS64,		/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_ABS64",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_REL64,		/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_REL64",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_LEB128,	/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_LEB128",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:  HOWTO (R_ASMJS_LEB128R32,	/* type */
+./src/binutils-gdb/bfd/elf64-wasm64.c:	 "R_ASMJS_LEB128_R32",	/* name */
+./src/binutils-gdb/bfd/elf64-wasm64.c:    return wasm64_elf64_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS64");
+./src/binutils-gdb/bfd/elf64-wasm64.c:    return wasm64_elf64_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS32");
+./src/binutils-gdb/bfd/elf64-wasm64.c:    return wasm64_elf64_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS16");
+./src/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_NONE,		/* type */
+./src/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_NONE",	/* name */
+./src/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_HEX16,		/* type */
+./src/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_HEX16",	/* name */
+./src/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_HEX16R4,	/* type */
+./src/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_HEX16R4",	/* name */
+./src/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_ABS32,		/* type */
+./src/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_ABS32",	/* name */
+./src/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_REL32,		/* type */
+./src/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_REL32",	/* name */
+./src/binutils-gdb/bfd/elf32-asmjs.c:    HOWTO (R_ASMJS_HEX16R12,	/* type */
+./src/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_HEX16R12",	/* name */
+./src/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_REL16,		/* type */
+./src/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_REL16",	/* name */
+./src/binutils-gdb/bfd/elf32-asmjs.c:  HOWTO (R_ASMJS_ABS16,		/* type */
+./src/binutils-gdb/bfd/elf32-asmjs.c:	 "R_ASMJS_ABS16",	/* name */
+./src/binutils-gdb/bfd/elf32-asmjs.c:    return asmjs_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS32");
+./src/binutils-gdb/bfd/elf32-asmjs.c:    return asmjs_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS16");
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_NONE,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_NONE",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_HEX16,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_HEX16",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_HEX16R4,	/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_HEX16R4",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS32,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS32",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_REL32,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_REL32",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:    HOWTO (R_ASMJS_HEX16R12,	/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_HEX16R12",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_REL16,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_REL16",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS16,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS16",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS64,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS64",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_REL64,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_REL64",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128,	/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128R32,	/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128_R32",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128_GOT,	/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128_GOT",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128_PLT,	/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128_PLT",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_PLT_INDEX,     /* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_PLT_INDEX",   /* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS32_CODE,	/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS32_CODE",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS64_CODE,	/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS64_CODE",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_COPY,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_COPY",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_LEB128_GOT_CODE, /* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_LEB128_GOT_CODE",/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_PLT_LAZY,      /* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_PLT_LAZY",    /* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:  HOWTO (R_ASMJS_ABS8,		/* type */
+./src/binutils-gdb/bfd/elf32-wasm32.c:         "R_ASMJS_ABS8",	/* name */
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS32");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS16");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS8");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_HEX16");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_HEX16R4");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_HEX16R12");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128R32");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128_GOT");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128_GOT_CODE");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LEB128_PLT");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_PLT_INDEX");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_ABS32_CODE");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_COPY");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LAZY");
+./src/binutils-gdb/bfd/elf32-wasm32.c:    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_NONE");
+./src/binutils-gdb/bfd/elf32-wasm32.c:  if (r_type > R_ASMJS_max)
+./src/binutils-gdb/bfd/elf32-wasm32.c:          && (r_type == R_ASMJS_LEB128_PLT ||
+./src/binutils-gdb/bfd/elf32-wasm32.c:              r_type == R_ASMJS_LEB128_GOT ||
+./src/binutils-gdb/bfd/elf32-wasm32.c:              r_type == R_ASMJS_LEB128_GOT_CODE))
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT_CODE:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_PLT:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT_CODE:
+./src/binutils-gdb/bfd/elf32-wasm32.c:              h->got.offset = sgot->size + (r_type == R_ASMJS_LEB128_GOT_CODE ? 2 : 0);
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_PLT:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_HEX16:
+./src/binutils-gdb/bfd/elf32-wasm32.c:      if (r_type == R_ASMJS_LEB128_PLT)
+./src/binutils-gdb/bfd/elf32-wasm32.c:      rel.r_info = ELF32_R_INFO (h->dynindx, R_ASMJS_PLT_INDEX);
+./src/binutils-gdb/bfd/elf32-wasm32.c:          rel.r_info = ELF32_R_INFO (0, R_ASMJS_REL32);
+./src/binutils-gdb/bfd/elf32-wasm32.c:          rel.r_info = ELF32_R_INFO (h->dynindx, (h->got.offset & 2) ? R_ASMJS_ABS32_CODE : R_ASMJS_ABS32);
+./src/binutils-gdb/bfd/elf32-wasm32.c:      rel.r_info = ELF32_R_INFO (h->dynindx, R_ASMJS_COPY);
+./src/binutils-gdb/bfd/elf32-wasm32.c:      if (r_type == (int) R_ASMJS_NONE)
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_PLT:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128_GOT_CODE:
+./src/binutils-gdb/bfd/elf32-wasm32.c:                  off = h->got.offset = sgot->size + (r_type == R_ASMJS_LEB128_GOT_CODE ? 2 : 0);
+./src/binutils-gdb/bfd/elf32-wasm32.c:                    outrel.r_info = ELF32_R_INFO (0, (r_type == R_ASMJS_LEB128_GOT_CODE) ? R_ASMJS_ABS32_CODE : R_ASMJS_REL32);
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_ABS32:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_ABS32_CODE:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_LEB128:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_HEX16:
+./src/binutils-gdb/bfd/elf32-wasm32.c:        case R_ASMJS_REL32:
+./src/binutils-gdb/gas/testsuite/gas/wasm32/reloc.d:			1: R_ASMJS_LEB128_PLT	f
+./src/binutils-gdb/gas/testsuite/gas/wasm32/reloc.d:			7: R_ASMJS_LEB128_GOT	x
+./src/binutils-gdb/gas/testsuite/gas/wasm32/reloc.d:			d: R_ASMJS_LEB128_GOT_CODE	f
+./src/binutils-gdb/gas/doc/wasm32.texi:Special relocations are available by using the @samp{@@@var{plt}}, @samp{@@@var{got}}, or @samp{@@@var{got}} suffixes after a constant expression, which correspond to the R_ASMJS_LEB128_PLT, R_ASMJS_LEB128_GOT, and R_ASMJS_LEB128_GOT_CODE relocations, respectively.
+./src/binutils-gdb/gas/config/tc-wasm64.c:  reloc->u.a.howto = bfd_reloc_name_lookup (stdoutput, "R_ASMJS_LEB128");
+./src/binutils-gdb/gas/config/tc-wasm64.c:  reloc->u.a.howto = bfd_reloc_name_lookup (stdoutput, "R_ASMJS_LEB128_R32");
+./src/binutils-gdb/gas/config/tc-wasm32.c:                                            gotrel ? (code ? "R_ASMJS_LEB128_GOT_CODE" : "R_ASMJS_LEB128_GOT") :
+./src/binutils-gdb/gas/config/tc-wasm32.c:                                            pltrel ? "R_ASMJS_LEB128_PLT" :
+./src/binutils-gdb/gas/config/tc-wasm32.c:                                            "R_ASMJS_LEB128");
+./src/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_NONE,            	  0)
+./src/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_HEX16,            	  1)
+./src/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_HEX16R4,            	  2)
+./src/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_ABS32,           	  3)
+./src/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_REL32,           	  4)
+./src/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_HEX16R12,            	  5)
+./src/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_REL16,           	  6)
+./src/binutils-gdb/include/elf/asmjs.h:  RELOC_NUMBER (R_ASMJS_ABS16,           	  7)
+./src/binutils-gdb/include/elf/asmjs.h:END_RELOC_NUMBERS (R_ASMJS_max = 8)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_NONE,            	  0)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_HEX16,            	  1)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_HEX16R4,            	  2)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS32,           	  3)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_REL32,           	  4)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_HEX16R12,            	  5)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_REL16,           	  6)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS16,           	  7)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS64,           	  8)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_REL64,           	  9)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128,                  10)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128R32,               11)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128_GOT,              12)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128_PLT,              13)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_PLT_INDEX,               14)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS32_CODE,              15)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_ABS64_CODE,              16)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_COPY,                    17)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_LEB128_GOT_CODE,         18)
+./src/binutils-gdb/include/elf/wasm32.h~:  RELOC_NUMBER (R_ASMJS_PLT_LAZY,                19)
+./src/binutils-gdb/include/elf/wasm32.h~:END_RELOC_NUMBERS (R_ASMJS_max = 19)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_NONE,            	  0)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_HEX16,            	  1)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_HEX16R4,            	  2)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_ABS32,           	  3)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_REL32,           	  4)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_HEX16R12,            	  5)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_REL16,           	  6)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_ABS16,           	  7)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_ABS64,           	  8)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_REL64,           	  9)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_LEB128,                  10)
+./src/binutils-gdb/include/elf/wasm64.h:  RELOC_NUMBER (R_ASMJS_LEB128R32,               11)
+./src/binutils-gdb/include/elf/wasm64.h:END_RELOC_NUMBERS (R_ASMJS_max = 8)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_NONE,            	  0)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_HEX16,            	  1)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_HEX16R4,            	  2)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS32,           	  3)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_REL32,           	  4)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_HEX16R12,            	  5)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_REL16,           	  6)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS16,           	  7)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS64,           	  8)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_REL64,           	  9)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128,                  10)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128R32,               11)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128_GOT,              12)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128_PLT,              13)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_PLT_INDEX,               14)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS32_CODE,              15)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS64_CODE,              16)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_COPY,                    17)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_LEB128_GOT_CODE,         18)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_PLT_LAZY,                19)
+./src/binutils-gdb/include/elf/wasm32.h:  RELOC_NUMBER (R_ASMJS_ABS8,           	 20)
+./src/binutils-gdb/include/elf/wasm32.h:END_RELOC_NUMBERS (R_ASMJS_max = 20)
+Binary file ./debug0/spidermonkey/bin/js matches
+Binary file ./debug0/spidermonkey/lib/libmozjs-53a1.so matches
+Binary file ./debug0/spidermonkey/lib/libjs_static.ajs matches
+./.git/logs/refs/heads/everything:769e4450cc18f83c1c418765811ade4310bd61ed 6ad3486c5ea5afeed86cd335cc0418e5cbf2b662 Pip Cet <pipcet@gmail.com> 1481313686 +0000	commit: handle R_ASMJS_ABS32_CODE
+./.git/logs/HEAD:769e4450cc18f83c1c418765811ade4310bd61ed 6ad3486c5ea5afeed86cd335cc0418e5cbf2b662 Pip Cet <pipcet@gmail.com> 1481313686 +0000	commit: handle R_ASMJS_ABS32_CODE
+./.git/modules/subrepos/binutils-gdb/COMMIT_EDITMSG:     return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_COPY");
+./.git/modules/subrepos/binutils-gdb/COMMIT_EDITMSG:     return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LAZY");
+./.git/modules/subrepos/binutils-gdb/COMMIT_EDITMSG:+    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_NONE");
+./.git/modules/subrepos/binutils-gdb/logs/refs/heads/asmjs:0786d231efd6b69527166eb640609842d32b8d66 91f2ab9797e371420ad9c9b675851ff663c9a597 Pip Cet <pipcet@gmail.com> 1481910033 +0000	commit: rename R_ASMJS_LEB128_PLT_INDEX to drop the LEB128
+./.git/modules/subrepos/binutils-gdb/logs/HEAD:0786d231efd6b69527166eb640609842d32b8d66 91f2ab9797e371420ad9c9b675851ff663c9a597 Pip Cet <pipcet@gmail.com> 1481910033 +0000	commit: rename R_ASMJS_LEB128_PLT_INDEX to drop the LEB128
+./.git/modules/subrepos/binutils-gdb/COMMIT_EDITMSG~:     return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_COPY");
+./.git/modules/subrepos/binutils-gdb/COMMIT_EDITMSG~:     return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_LAZY");
+./.git/modules/subrepos/binutils-gdb/COMMIT_EDITMSG~:+    return wasm32_elf32_bfd_reloc_name_lookup(abfd, "R_ASMJS_NONE");
+Binary file ./common3/spidermonkey/bin/js matches
+Binary file ./common3/spidermonkey/lib/libmozjs-54a1.so matches
+Binary file ./common3/spidermonkey/lib/libmozjs-53a1.so matches
+Binary file ./common3/spidermonkey/lib/libjs_static.ajs matches
+Binary file ./common/spidermonkey/bin/js matches
+Binary file ./common/spidermonkey/lib/libmozjs-54a1.so matches
+Binary file ./common/spidermonkey/lib/libmozjs-53a1.so matches
+Binary file ./common/spidermonkey/lib/libjs_static.ajs matches
+./unsorted-experimentation/wasm-experimentation/wasm-macros.s:        .reloc .,R_ASMJS_LEB128,\expr
