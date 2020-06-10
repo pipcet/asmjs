@@ -1,10 +1,8 @@
-asm("createsig FiiE");
-
-extern int f(int) __attribute__((weak)) __attribute__((rawcall));
+extern int f(int) __attribute__((weak));
 
 int main(void)
 {
-  void (*g)(void) = 0;
+  int (*g)(int) = f;
 
-  g();
+  g(0);
 }

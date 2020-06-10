@@ -12,13 +12,13 @@ TMPD=$(mktemp -d);
 if [ x"$JS" = x ]; then
     JS=$(which js)
 fi
-if [ x"$ASMJSDIR" = x ]; then
-    ASMJSDIR=$HOME/git/asmjs
+if [ x"$WASMDIR" = x ]; then
+    WASMDIR=$HOME/git/wasm
 fi
 if [ x"$DELAY" = x ]; then
     DELAY=1
 fi
-(echo "var path = \"$1\";"; cat $ASMJSDIR/js/wasm32.js) > $TMP7
+(echo "var path = \"$1\";"; cat $WASMDIR/js/wasm32.js) > $TMP7
 (sleep $DELAY && rm $TMP6 $TMP7) & disown
 chmod u+x $TMP7
 # ./wasmrewrite/wasmsect <(echo "console.log('hi')") >> $TMP8

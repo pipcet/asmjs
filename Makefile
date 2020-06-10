@@ -1,4 +1,4 @@
-all: build/common/spidermonkey.make bin/hexify js/asmjs.js lib/asmjs.o build/asmjs/gcc-final.make build/asmjs/perl.make build/asmjs/emacs.make
+all: build/wasm32/glibc-static.make build/wasm32/glibc.make bin/hexify js/asmjs.js lib/asmjs.o build/asmjs/gcc-final.make build/asmjs/perl.make build/asmjs/emacs.make
 
 MKDIR ?= mkdir
 PWD ?= $(shell pwd)
@@ -50,6 +50,7 @@ build/wasm32/binutils-gdb.configure: src/wasm32/binutils-gdb.dir build/wasm32/bi
 build/wasm32/binutils-gdb.make: build/wasm32/binutils-gdb.dir build/wasm32/binutils-gdb.configure
 	$(MAKE) -C build/wasm32/binutils-gdb
 	$(MAKE) -C build/wasm32/binutils-gdb install
+	(cd bin; ln -sf ../wasm32-unknown-none/bin/wasm32-unknown-none-* .)
 	touch $@
 
 # wasm32 gcc-preliminary
@@ -64,8 +65,9 @@ build/wasm32/gcc-preliminary.configure: src/gcc-preliminary.dir build/wasm32/gcc
 build/wasm32/gcc-preliminary.make: build/wasm32/gcc-preliminary.dir build/wasm32/gcc-preliminary.configure
 	$(MAKE) -C build/wasm32/gcc-preliminary
 	$(MAKE) -C build/wasm32/gcc-preliminary install
-	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc_eh.a
-	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc_s.a
+	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/11.0.0/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/11.0.0/libgcc_eh.a
+	cp wasm32-unknown-none/lib/gcc/wasm32-unknown-none/11.0.0/libgcc.a wasm32-unknown-none/lib/gcc/wasm32-unknown-none/11.0.0/libgcc_s.a
+	(cd bin; ln -sf ../wasm32-unknown-none/bin/wasm32-unknown-none-* .)
 	touch $@
 
 build/common/.dir: build/.dir
@@ -308,7 +310,7 @@ build/wasm32/glibc.configure: src/glibc.dir build/wasm32/glibc.dir | build/wasm3
 	touch $@
 
 build/wasm32/glibc-static.configure: src/glibc.dir build/wasm32/glibc-static.dir | build/wasm32/gcc-preliminary.make
-	(cd build/wasm32/glibc-static; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/glibc/configure CFLAGS="-O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-unknown-none --target=wasm32-unknown-none --enable-hacker-mode --enable-static --disable-shared --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
+	(cd build/wasm32/glibc-static; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/glibc/configure CFLAGS="-O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-unknown-none --target=wasm32-unknown-none --enable-hacker-mode --enable-static --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
 build/asmjs/glibc.make: build/asmjs/glibc.dir build/asmjs/glibc.configure
