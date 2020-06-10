@@ -5,8 +5,8 @@ asm("createsig FdddE");
 asm(".globl __idiv");
 
 asm("defun __idiv FdddE\n\t"
-    "get_local 0\n\t"
-    "get_local 1\n\t"
+    "local.get 0\n\t"
+    "local.get 1\n\t"
     "f64.div\n\t"
     "return\n\t"
     "end\n\t"

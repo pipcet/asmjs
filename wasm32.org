@@ -146,4 +146,4 @@ Dynamic linking is supported (in fact, it's currently the only thing that works)
 ** TODO rename "dyninfo" to "dyninfo.json"
 ** TODO replace hard-coded "/home/pip" path in wasm32.h
 ** TODO set the offset in memory access instructions to -4096, so as to catch NULL pointers.
-
+** TODO clean up interpreter mess

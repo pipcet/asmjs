@@ -8,7 +8,7 @@
         T 1
         .labeldef_internal .L1
         .dpc .L1
-        set_local $dpc
+        local.set $dpc
         T 2
         jump
         end
