@@ -1,0 +1,44 @@
+digraph G {
+  concentrate=true;
+  "C source" -> "gcc";
+  "gcc" -> "ELF executable";
+  "gcc" -> "ELF library";
+  "ELF executable" -> "wasmify-wasm32";
+  "wasmify-wasm32" -> "final WASM";
+
+  "C source" -> "GNU CC";
+  "GNU CC" -> "Assembler source";
+  "Assembler source" -> "GNU as";
+  "GNU as" -> "ELF object file";
+  "ELF object file" -> "GNU ld";
+  "GNU ld" -> "ELF library";
+  "GNU ld" -> "ELF executable";
+  "ELF object file" -> "GNU ld";
+  "ELF library" -> "elfedit";
+  "elfedit" -> "ELF executable";
+  "ELF executable" -> "wasm32.cpp-lds.lds";
+  "wasm32.cpp-lds.lds" -> "ELF intermediate";
+  "ELF intermediate" -> "wasm32-wasmify.lds";
+  "wasm32-wasmify.lds" -> "long WASM";
+  "long WASM" -> "wasmrewrite";
+  "wasmrewrite" -> "short WASM";
+  "short WASM" -> "dyninfo";
+  "dyninfo" -> "final WASM";
+  "ELF intermediate" -> "dyninfo" [color="grey"];
+
+  "gcc" [shape=box];
+  "GNU CC" [shape=box];
+  "GNU as" [shape=box];
+  "GNU ld" [shape=box];
+  "elfedit" [shape=box];
+  "wasm32.cpp-lds.lds" [shape=box];
+  "wasm32-wasmify.lds" [shape=box];
+  "wasmrewrite" [shape=box];
+  "dyninfo" [shape=box];
+  "wasmify-wasm32" [shape=box];
+  "wasm2s" [shape=box, href="https://github.com/pipcet/asmjs/blob/everything/wasm32.org#wasm2s"];
+  "Assembler source" -> "wasm2s" [dir=back];
+  "wasm2s" -> "long WASM" [dir=back];
+  "wasm2s" -> "short WASM" [dir=back];
+  "wasm2s" -> "final WASM" [dir=back];
+}
