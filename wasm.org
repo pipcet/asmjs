@@ -135,8 +135,35 @@ The wasm32 backend uses a number of dummy ELF sections whose only purpose it is 
 * Dynamic Linking
 Dynamic linking is supported (in fact, it's currently the only thing that works) using the WebAssembly module format for libraries and executables.
 
+** Relocations
+*** R_WASM32_NONE
+The canonical do-nothing relocation.
+*** R_WASM32_32
+32-bit absolute.
+*** R_WASM32_REL32
+32-bit relative. Used?
+*** R_WASM32_LEB128
+LEB-128 absolute relocation.
+*** R_WASM32_LEB128_GOT
+LEB-128 GOT offset
+*** R_WASM32_LEB128_PLT
+LEB-128 PLT index. As a special case, this is replaced with five 0x00 bytes for undefined weak symbols.
+*** R_WASM32_PLT_INDEX
+PLT index. Is this LEB-128?
+*** R_WASM32_32_CODE
+32-bit absolute relocation for code. ???
+*** R_WASM32_COPY
+copy relocation. 32 bits. What's this good for again.
+*** R_WASM32_LEB128_GOT_CODE
+*** R_WASM32_CODE_POINTER
+Dummy relocation to pull in code.
+*** R_WASM32_INDEX
+Dummy relocation to pull in function types.
+*** R_WASM32_PLT_SIG
+This is a very special hack: When performing a PLT call, WebAssembly has to know the signature of the called function. We communicate this to the linker by placing a R_WASM32_PLT_SIG relocation right before the R_WASM32_LEB128_PLT relocation; the PLT signature is derived not from the value of the relocation but from the name of the symbol that it is using.
+
 * To-Do List
-** TODO new mnemonics (local.set rather than set_local etc)
+** DONE new mnemonics (local.set rather than set_local etc)
 ** TODO opcode escape (FC)
 ** TODO use non-signalling truncation opcodes
 ** TODO look at WebAssembly 64 state
