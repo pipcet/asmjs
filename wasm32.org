@@ -1,9 +1,14 @@
 * Overview
 This is a port of various GNU utilities to work with or on the WebAssembly "architecture", supported using a JavaScript API by many Web browsers; the compiler used is GCC, which means C and C++ programs (and, in theory, programs in other languages) can be compiled to WebAssembly code that can then be run in a web browser or JavaScript shell.
 
-It's quite slow, partly because of the design of the architecture.
+The first warning is it's quite slow, partly because of the design of
+the architecture.
 
-It was originally based on Emscripten, but no Emscripten code remains at this point; instead, GCC and glibc are used.
+The second warning is that there are legal issues with using GCC to compile software not covered by the GNU General Public License on virtual/emulated architectures. I'm not a legal expert, but the exception in COPYING.RUNTIME seems very clear to me:
+
+	Notwithstanding that, Target Code does not include data in any format that is used as a compiler intermediate representation, or used for producing a compiler intermediate representation.
+
+WebAssembly bytecode is used for producing a compiler intermediate representation. That's what it's for.
 
 * Pipeline
 The stages of building a WebAssembly program are as follows:
@@ -68,7 +73,7 @@ The Makefile rules in this repository require manual intervention to rebuild thi
 
 * Design
 ** Assembler language
-The WebAssembly assemblerg language used is based on a direct encoding of the opcode bytestream into mnemonic opcodes; this means expressions will generally be encoded using Forth-like stack-machine order.
+The WebAssembly assembler language used is based on a direct encoding of the opcode bytestream into mnemonic opcodes; this means expressions will generally be encoded using Forth-like stack-machine order.  The WebAssembly standard has moved towards such an encoding, as well.
 
 ** ELF format
 The wasm32 target uses a variant of the ELF format for intermediate files, even though the files ultimately processed by the web browser or JavaScript shell are in WebAssembly format.
@@ -77,7 +82,7 @@ The wasm32 target uses a variant of the ELF format for intermediate files, even 
 The wasm32 target requires a little-endian VM, and the ELF format is little-endian.
 
 *** machine identifier
-The machine identifier used for the ELF files is 0x534a ("JS" in XXX little-endian notation).
+The machine identifier used for the ELF files is 0xXXXX ("WA" in XXX little-endian notation).
 
 *** 32-bit
 Currently, WebAssembly allows only for 32-bit addresses, and the wasm32 target uses the 32-bit ELF format.
@@ -100,6 +105,7 @@ http://asmjs.org
 ** WebAssembly
 http://webassembly.github.io/
 https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
+https://webassembly.github.io/spec/core/bikeshed/
 
 ** Stack layout
 The wasm32 target port uses the VM stack, a stack in the wasm32 "heap" array buffer /in addition to/ the normal WebAssembly stack. The WebAssembly stack's layout is specific to the JavaScript engine in use and not interesting to us.
@@ -125,3 +131,19 @@ An extra relocation is provided for LEB128 constants.
 
 ** dummy sections
 The wasm32 backend uses a number of dummy ELF sections whose only purpose it is to allocate positions in some index space.
+
+* Dynamic Linking
+Dynamic linking is supported (in fact, it's currently the only thing that works) using the WebAssembly module format for libraries and executables.
+
+* To-Do List
+** TODO new mnemonics (local.set rather than set_local etc)
+** TODO opcode escape (FC)
+** TODO use non-signalling truncation opcodes
+** TODO look at WebAssembly 64 state
+** TODO drop asmjs?
+** TODO look at multi-threading
+** TODO look at signalling, if anything like that exists
+** TODO rename "dyninfo" to "dyninfo.json"
+** TODO replace hard-coded "/home/pip" path in wasm32.h
+** TODO set the offset in memory access instructions to -4096, so as to catch NULL pointers.
+

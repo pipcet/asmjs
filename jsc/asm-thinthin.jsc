@@ -186,7 +186,8 @@ init_syscall(  "getpid",         39);
 init_syscall(  "clone",          56, "u64", "ptr", "ptr", "ptr", "ptr");
 init_syscall(  "fork",           57);
 init_syscall64("execve",         59, "path", "strs", "strs");
-init_syscall(  "exit",           60, "u64");
+//init_syscall(  "exit",           60, "u64");
+init_syscall(  "exit",          231, "u64");
 init_syscall(  "wait4",          61, "u64", "ptr", "u64", "ptr");
 init_syscall(  "kill",           62, "u64", "u64");
 init_syscall(  "fcntl_v",        72, "u64", "u64");
@@ -2762,7 +2763,7 @@ if (typeof(os) !== "undefined" &&
 
         return ret;
     };
-    ThinThin.write = function (fdno, ptr, len) {
+    ThinThin[1] = ThinThin.write = function (fdno, ptr, len) {
         var fd = this.fds[fdno];
 
         if (!fd)
@@ -3179,9 +3180,9 @@ if (typeof(os) !== "undefined" &&
         var env;
         var sizes = {
             tablesize: 65536,
-            memsize: 128 * 1024 * 1024,
+            memsize: 512 * 1024 * 1024,
             stacksize: 1 * 1024 * 1024,
-            stackbottom: 127 * 1024 * 1024,
+            stackbottom: 511 * 1024 * 1024,
         };
 
         return Promise.resolve(ThinThin.openat.call(this, dirfdno, pathptr, 0))

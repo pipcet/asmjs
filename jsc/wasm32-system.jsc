@@ -343,7 +343,7 @@ Wasm32Module.prototype.check_libs = function (thread)
                 }
 
                 if (typeof os !== "undefined") {
-                    var module = new Wasm32Module(thread.process, os.file.readFile(os.getenv("ASMJSDIR") + "/" + lib, "binary"));
+                    var module = new Wasm32Module(thread.process, os.file.readFile(os.getenv("WASMDIR") + "/" + lib, "binary"));
                     return module.load(thread, this.vm).then(() => {
                         var mem = this.vm.%{zp[&zeropage::top_of_sbrk]};
                         var tom = (mem + module.dyninfo.data_end - 0x4000 + 4095)&-4096;
@@ -414,6 +414,7 @@ Wasm32Module.prototype.instantiate = function (thread, vm, mem, recurse)
     this.imports.sys.eh_return = thread.eh_return.bind(thread);
     this.imports.sys.indcall = thread.indcall.bind(thread);
     this.imports.sys.trace = thread.trace.bind(thread);
+    this.imports.sys.truncdfsi = thread.truncdfsi.bind(thread);
     this.imports.sys.null = thread.null_called.bind(thread);
     this.imports.sys.got = mem;
     this.imports.sys.gpo = vm.space_pcs.alloc(this.dyninfo.pc_end);
@@ -431,7 +432,7 @@ Wasm32Module.prototype.instantiate = function (thread, vm, mem, recurse)
             if (this.instance.exports.entry !== undefined) {
                 thread.entry = this.imports.sys.plt + this.instance.exports.entry;
             }
-            //this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
+            this.fill_table(thread, vm, this.imports.sys.got, this.imports.sys.plt);
             this.vm.base_lm.open_dyninfo(this.dyninfo, this.imports, this);
             lastdonetime = this.donetime = Date.now();
 
@@ -461,9 +462,9 @@ function Wasm32Thread(kport, process, threadpage)
 
     var sizes = {
         tablesize: 65536,
-        memsize: 64 * 1024 * 1024,
+        memsize: 512 * 1024 * 1024,
         stacksize: 1 * 1024 * 1024,
-        stackbottom: 63 * 1024 * 1024,
+        stackbottom: 511 * 1024 * 1024,
     };
     let vm = new Wasm32VM(sizes);
 
