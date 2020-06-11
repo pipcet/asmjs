@@ -1,9 +1,11 @@
         .include "wasm32-macros.s"
         .macro section_id name id
         .pushsection .wasm.header_id.\name
+__wasm_header_id_\name:
         rleb128_32 \id
         .popsection
         .pushsection .wasm.header.\name
+	.reloc .,R_WASM32_CODE_POINTER,__wasm_header_id_\name
         .popsection
         .endm
 
@@ -42,41 +44,9 @@ __wasm_\name\()_id_end:
         rleb128_32 65536
         .popsection
 
-        .pushsection .space.import
-        .reloc .,R_WASM32_CODE_POINTER,0f
-        .byte 0x00
-        .popsection
-        .pushsection .wasm.import
-0:      lstring "sys"
-        lstring "got"
-        .byte 3                 ; global
-        .byte 0x7f              ; i32
-        .byte 0                 ; immutable
-        .popsection
-
-        .pushsection .space.import
-        .reloc .,R_WASM32_CODE_POINTER,0f
-        .byte 0x00
-        .popsection
-        .pushsection .wasm.import
-0:      lstring "sys"
-        lstring "plt"
-        .byte 3                 ; global
-        .byte 0x7f              ; i32
-        .byte 0                 ; immutable
-        .popsection
-
-        .pushsection .space.import
-        .reloc .,R_WASM32_CODE_POINTER,0f
-        .byte 0x00
-        .popsection
-        .pushsection .wasm.import
-0:      lstring "sys"
-        lstring "gpo"
-        .byte 3                 ; global
-        .byte 0x7f              ; i32
-        .byte 0                 ; immutable
-        .popsection
+	import_global $got, sys, got, 0
+	import_global $plt, sys, plt, 0
+	import_global $gpo, sys, gpo, 0
 
         .pushsection .space.import
         .reloc .,R_WASM32_CODE_POINTER,0f
@@ -86,7 +56,7 @@ __wasm_\name\()_id_end:
 0:      lstring "sys"
         lstring "table"
         .byte 1                 ; table
-        .byte 0x70
+        .byte 0x70		; funcref
         .byte 1                 ; maximum present
         rleb128_32 65536        ; initial size
         rleb128_32 65536        ; maximum size

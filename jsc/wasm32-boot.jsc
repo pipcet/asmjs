@@ -1,8 +1,8 @@
     var sizes = {
         tablesize: 65536,
-        memsize: 64 * 1024 * 1024,
+        memsize: 512 * 1024 * 1024,
         stacksize: 1 * 1024 * 1024,
-        stackbottom: 63 * 1024 * 1024,
+        stackbottom: 511 * 1024 * 1024,
     };
 var kernel = new Wasm32Kernel();
 var vm = new Wasm32VM(sizes);

@@ -393,10 +393,10 @@ Wasm32Module.prototype.load = function (thread, vm)
         this.module = module;
         this.comtime = Date.now();
         var dyninfo;
-        var cs = WebAssembly.Module.customSections(module, "dyninfo");
+        var cs = WebAssembly.Module.customSections(module, "dyninfo.json");
         for (let c of cs) {
             let s = abtoascii(c);
-            this.dyninfo = eval(s);
+            this.dyninfo = JSON.parse(s);
         }
 
         return this.index;

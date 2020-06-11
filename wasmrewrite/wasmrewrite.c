@@ -254,6 +254,10 @@ long ast(unsigned long len, unsigned long index)
   while (roff < off0 + len) {
     u8 c = mgetchar();
     switch (c) {
+    case 0xfc:
+      mputchar (c);
+      mputchar (mgetchar ());
+      break;
     case 0x01:
       delta += msynch();
       break;

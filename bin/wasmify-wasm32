@@ -5,6 +5,7 @@ if [ x"$JS" = x ]; then
 fi
 if [ x"$WASMDIR" = x ]; then
     WASMDIR=$HOME/git/wasm
+    export WASMDIR
 fi
 if [ x"$DELAY" = x ]; then
     DELAY=1
@@ -12,11 +13,12 @@ fi
 cp "$1" $TMPD/elf
 chmod u+rw $TMPD/elf
 $WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-elfedit $TMPD/elf --output-type=rel
-$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-ld -Map $TMPD/map1 -T $WASMDIR/lds/wasm32.cpp-lds.lds $WASMDIR/lib/wasm32-headers.o $TMPD/elf -o $TMPD/intermediate -N --warn-unresolved-symbols --no-check-sections 2>/dev/null || exit 1
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-ld -Map $TMPD/map0 $TMPD/elf -r -o $TMPD/start -N --warn-unresolved-symbols --no-check-sections 2>/dev/null || exit 1
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-ld -Map $TMPD/map1 -T $WASMDIR/lds/wasm32.cpp-lds.lds $TMPD/elf -o $TMPD/intermediate -N --warn-unresolved-symbols --no-check-sections 2>/dev/null || exit 1
 $WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-ld -Map $TMPD/map2 -E -T $WASMDIR/lds/wasm32-wasmify.lds $TMPD/intermediate -o $TMPD/longwasm 2> /dev/null || exit 1
 # cp $TMPD/longwasm $WASMDIR/tmp-long.wasm
 $WASMDIR/bin/wasmrewrite $TMPD/longwasm > $TMPD/wasm
-perl $WASMDIR/dyninfo/dyninfo.pl $TMPD/elf > $TMPD/dyninfo.js
-$WASMDIR/wasmrewrite/wasmsect $TMPD/dyninfo.js > $TMPD/dyninfo.wass
-cat $TMPD/dyninfo.wass >> $TMPD/wasm
+perl $WASMDIR/dyninfo/dyninfo.pl $TMPD/elf > $TMPD/dyninfo.json
+$WASMDIR/wasmrewrite/wasmsect $TMPD/dyninfo.json > $TMPD/dyninfo.json.wass
+cat $TMPD/dyninfo.json.wass >> $TMPD/wasm
 cat $TMPD/wasm
