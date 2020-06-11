@@ -7,6 +7,7 @@ OPT_ASMJS ?= "-O2"
 
 env:
 	@echo "export ASMJSDIR=$(PWD)"
+	@echo "export WASMDIR=$(PWD)"
 	@echo "export PATH=$(PWD)/common3/bin:$(PWD)/asmjs-unknown-none/bin:$(PWD)/wasm32-unknown-none/bin:$(PWD)/bin:$$PATH"
 	@echo "export LANG=C"
 	@echo "export JSFLAGS=\"--no-threads\""
@@ -70,61 +71,61 @@ build/wasm32/gcc-preliminary.make: build/wasm32/gcc-preliminary.dir build/wasm32
 	(cd bin; ln -sf ../wasm32-unknown-none/bin/wasm32-unknown-none-* .)
 	touch $@
 
-build/common/.dir: build/.dir
-	test -d build/common || $(MKDIR) build/common
-	touch $@
+# build/common/.dir: build/.dir
+# 	test -d build/common || $(MKDIR) build/common
+# 	touch $@
 
-build/common3/.dir: build/.dir
-	test -d build/common3 || $(MKDIR) build/common3
-	touch $@
+# build/common3/.dir: build/.dir
+# 	test -d build/common3 || $(MKDIR) build/common3
+# 	touch $@
 
-build/common3x/.dir: build/.dir
-	test -d build/common3x || $(MKDIR) build/common3x
-	touch $@
+# build/common3x/.dir: build/.dir
+# 	test -d build/common3x || $(MKDIR) build/common3x
+# 	touch $@
 
-build/debug/.dir: build/.dir
-	test -d build/debug || $(MKDIR) build/debug
-	touch $@
+# build/debug/.dir: build/.dir
+# 	test -d build/debug || $(MKDIR) build/debug
+# 	touch $@
 
-build/debug0/.dir: build/.dir
-	test -d build/debug0 || $(MKDIR) build/debug0
-	touch $@
+# build/debug0/.dir: build/.dir
+# 	test -d build/debug0 || $(MKDIR) build/debug0
+# 	touch $@
 
-build/asmjs/.dir: build/.dir
-	test -d build/asmjs || $(MKDIR) build/asmjs
-	touch $@
+# build/asmjs/.dir: build/.dir
+# 	test -d build/asmjs || $(MKDIR) build/asmjs
+# 	touch $@
 
-build/asmjs-cross/.dir: build/.dir
-	test -d build/asmjs-cross || $(MKDIR) build/asmjs-cross
-	touch $@
+# build/asmjs-cross/.dir: build/.dir
+# 	test -d build/asmjs-cross || $(MKDIR) build/asmjs-cross
+# 	touch $@
 
 build/native/.dir: build/.dir
 	test -d build/native || $(MKDIR) build/native
 	touch $@
 
-build/asmjs/binutils-gdb.dir: build/asmjs/.dir
-	test -d build/asmjs/binutils-gdb || $(MKDIR) build/asmjs/binutils-gdb
-	touch $@
+# build/asmjs/binutils-gdb.dir: build/asmjs/.dir
+# 	test -d build/asmjs/binutils-gdb || $(MKDIR) build/asmjs/binutils-gdb
+# 	touch $@
 
 build/native/binutils-gdb.dir: build/native/.dir
 	test -d build/native/binutils-gdb || $(MKDIR) build/native/binutils-gdb
 	touch $@
 
-build/asmjs/gcc-preliminary.dir: build/asmjs/.dir
-	test -d build/asmjs/gcc-preliminary || $(MKDIR) build/asmjs/gcc-preliminary
-	touch $@
+# build/asmjs/gcc-preliminary.dir: build/asmjs/.dir
+# 	test -d build/asmjs/gcc-preliminary || $(MKDIR) build/asmjs/gcc-preliminary
+# 	touch $@
 
 build/native/gcc.dir: build/native/.dir
 	test -d build/native/gcc || $(MKDIR) build/native/gcc
 	touch $@
 
-build/asmjs/glibc.dir: build/asmjs/.dir
-	test -d build/asmjs/glibc || $(MKDIR) build/asmjs/glibc
-	touch $@
+# build/asmjs/glibc.dir: build/asmjs/.dir
+# 	test -d build/asmjs/glibc || $(MKDIR) build/asmjs/glibc
+# 	touch $@
 
-build/asmjs-cross/glibc.dir: build/asmjs-cross/.dir
-	test -d build/asmjs-cross/glibc || $(MKDIR) build/asmjs-cross/glibc
-	touch $@
+# build/asmjs-cross/glibc.dir: build/asmjs-cross/.dir
+# 	test -d build/asmjs-cross/glibc || $(MKDIR) build/asmjs-cross/glibc
+# 	touch $@
 
 build/wasm32/glibc.dir: build/wasm32/.dir
 	test -d build/wasm32/glibc || $(MKDIR) build/wasm32/glibc
@@ -134,9 +135,9 @@ build/wasm32/glibc-static.dir: build/wasm32/.dir
 	test -d build/wasm32/glibc-static || $(MKDIR) build/wasm32/glibc-static
 	touch $@
 
-build/asmjs/gcc-final.dir: build/asmjs/.dir
-	test -d build/asmjs/gcc-final || $(MKDIR) build/asmjs/gcc-final
-	touch $@
+# build/asmjs/gcc-final.dir: build/asmjs/.dir
+# 	test -d build/asmjs/gcc-final || $(MKDIR) build/asmjs/gcc-final
+# 	touch $@
 
 build/wasm32/gcc-final.dir: build/wasm32/.dir
 	test -d build/wasm32/gcc-final || $(MKDIR) build/wasm32/gcc-final
@@ -150,112 +151,112 @@ build/wasm32/musl.configure: build/wasm32/musl.dir src/musl.dir
 	(cd build/wasm32/musl; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/musl/configure LDFLAGS="-Wl,-soname=libc.wasm" --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none --target=wasm32-unknown-none --build=x86_64-pc-linux-gnu --enable-shared --enable-static)
 	touch $@
 
-build/asmjs/ncurses.dir: build/asmjs/.dir
-	test -d build/asmjs/ncurses || $(MKDIR) build/asmjs/ncurses
-	touch $@
+# build/asmjs/ncurses.dir: build/asmjs/.dir
+# 	test -d build/asmjs/ncurses || $(MKDIR) build/asmjs/ncurses
+# 	touch $@
 
 build/wasm32/ncurses.dir: build/wasm32/.dir
 	test -d build/wasm32/ncurses || $(MKDIR) build/wasm32/ncurses
 	touch $@
 
-build/asmjs/emacs.dir: build/asmjs/.dir
-	test -d build/asmjs/emacs || $(MKDIR) build/asmjs/emacs
-	touch $@
+# build/asmjs/emacs.dir: build/asmjs/.dir
+# 	test -d build/asmjs/emacs || $(MKDIR) build/asmjs/emacs
+# 	touch $@
 
 build/wasm32/emacs.dir: build/wasm32/.dir
 	test -d build/wasm32/emacs || $(MKDIR) build/wasm32/emacs
 	touch $@
 
-build/asmjs-cross/ncurses.dir: build/asmjs-cross/.dir
-	test -d build/asmjs-cross/ncurses || $(MKDIR) build/asmjs-cross/ncurses
-	touch $@
+# build/asmjs-cross/ncurses.dir: build/asmjs-cross/.dir
+# 	test -d build/asmjs-cross/ncurses || $(MKDIR) build/asmjs-cross/ncurses
+# 	touch $@
 
-build/asmjs-cross/emacs.dir: build/asmjs-cross/.dir
-	test -d build/asmjs-cross/emacs || $(MKDIR) build/asmjs-cross/emacs
-	touch $@
+# build/asmjs-cross/emacs.dir: build/asmjs-cross/.dir
+# 	test -d build/asmjs-cross/emacs || $(MKDIR) build/asmjs-cross/emacs
+# 	touch $@
 
 build/common/wabt.dir: build/common/.dir
 	test -d build/common/wabt || $(MKDIR) build/common/wabt
 	touch $@
 
-build/common/spidermonkey.dir: build/common/.dir
-	test -d build/common/spidermonkey || $(MKDIR) build/common/spidermonkey
-	touch $@
+# build/common/spidermonkey.dir: build/common/.dir
+# 	test -d build/common/spidermonkey || $(MKDIR) build/common/spidermonkey
+# 	touch $@
 
-build/common3/spidermonkey.dir: build/common3/.dir
-	test -d build/common3/spidermonkey || $(MKDIR) build/common3/spidermonkey
-	touch $@
+# build/common3/spidermonkey.dir: build/common3/.dir
+# 	test -d build/common3/spidermonkey || $(MKDIR) build/common3/spidermonkey
+# 	touch $@
 
-build/common3x/spidermonkey.dir: build/common3x/.dir
-	test -d build/common3x/spidermonkey || $(MKDIR) build/common3x/spidermonkey
-	touch $@
+# build/common3x/spidermonkey.dir: build/common3x/.dir
+# 	test -d build/common3x/spidermonkey || $(MKDIR) build/common3x/spidermonkey
+# 	touch $@
 
-build/debug/spidermonkey.dir: build/debug/.dir
-	test -d build/debug/spidermonkey || $(MKDIR) build/debug/spidermonkey
-	touch $@
+# build/debug/spidermonkey.dir: build/debug/.dir
+# 	test -d build/debug/spidermonkey || $(MKDIR) build/debug/spidermonkey
+# 	touch $@
 
-build/debug0/spidermonkey.dir: build/debug0/.dir
-	test -d build/debug0/spidermonkey || $(MKDIR) build/debug0/spidermonkey
-	touch $@
+# build/debug0/spidermonkey.dir: build/debug0/.dir
+# 	test -d build/debug0/spidermonkey || $(MKDIR) build/debug0/spidermonkey
+# 	touch $@
 
-build/asmjs/bash.dir: build/asmjs/.dir
-	test -d build/asmjs/bash || $(MKDIR) build/asmjs/bash
-	touch $@
+# build/asmjs/bash.dir: build/asmjs/.dir
+# 	test -d build/asmjs/bash || $(MKDIR) build/asmjs/bash
+# 	touch $@
 
-build/wasm32/bash.dir: build/wasm32/.dir
-	test -d build/wasm32/bash || $(MKDIR) build/wasm32/bash
-	touch $@
+# build/wasm32/bash.dir: build/wasm32/.dir
+# 	test -d build/wasm32/bash || $(MKDIR) build/wasm32/bash
+# 	touch $@
 
-build/asmjs/perl.dir: build/asmjs/.dir src/perl.dir
-	test -d build/asmjs/perl || mkdir build/asmjs/perl
-	(cd src/perl; tar c --exclude .git .) | (cd build/asmjs/perl; tar x)
-	touch $@
+# build/asmjs/perl.dir: build/asmjs/.dir src/perl.dir
+# 	test -d build/asmjs/perl || mkdir build/asmjs/perl
+# 	(cd src/perl; tar c --exclude .git .) | (cd build/asmjs/perl; tar x)
+# 	touch $@
 
-build/asmjs-cross/perl.dir: build/asmjs-cross/.dir src/perl.dir
-	test -d build/asmjs-cross/perl || mkdir build/asmjs-cross/perl
-	(cd src/perl; tar c --exclude .git .) | (cd build/asmjs-cross/perl; tar x)
-	touch $@
+# build/asmjs-cross/perl.dir: build/asmjs-cross/.dir src/perl.dir
+# 	test -d build/asmjs-cross/perl || mkdir build/asmjs-cross/perl
+# 	(cd src/perl; tar c --exclude .git .) | (cd build/asmjs-cross/perl; tar x)
+# 	touch $@
 
-build/wasm32/perl.dir: build/wasm32/.dir src/perl.dir
-	test -d build/wasm32/perl || mkdir build/wasm32/perl
-	(cd src/perl; tar c --exclude .git .) | (cd build/wasm32/perl; tar x)
-	touch $@
+# build/wasm32/perl.dir: build/wasm32/.dir src/perl.dir
+# 	test -d build/wasm32/perl || mkdir build/wasm32/perl
+# 	(cd src/perl; tar c --exclude .git .) | (cd build/wasm32/perl; tar x)
+# 	touch $@
 
-build/wasm32-cross/perl.dir: build/wasm32-cross/.dir src/perl.dir
-	test -d build/wasm32-cross/perl || mkdir build/wasm32-cross/perl
-	(cd src/perl; tar c --exclude .git .) | (cd build/wasm32-cross/perl; tar x)
-	touch $@
+# build/wasm32-cross/perl.dir: build/wasm32-cross/.dir src/perl.dir
+# 	test -d build/wasm32-cross/perl || mkdir build/wasm32-cross/perl
+# 	(cd src/perl; tar c --exclude .git .) | (cd build/wasm32-cross/perl; tar x)
+# 	touch $@
 
-build/asmjs/coreutils.dir: build/asmjs/.dir
-	test -d build/asmjs/coreutils || $(MKDIR) build/asmjs/coreutils
-	touch $@
+# build/asmjs/coreutils.dir: build/asmjs/.dir
+# 	test -d build/asmjs/coreutils || $(MKDIR) build/asmjs/coreutils
+# 	touch $@
 
-build/asmjs/graphviz.dir: build/asmjs/.dir
-	test -d build/asmjs/graphviz || $(MKDIR) build/asmjs/graphviz
-	touch $@
+# build/asmjs/graphviz.dir: build/asmjs/.dir
+# 	test -d build/asmjs/graphviz || $(MKDIR) build/asmjs/graphviz
+# 	touch $@
 
-build/wasm32/graphviz.dir: build/wasm32/.dir
-	test -d build/wasm32/graphviz || $(MKDIR) build/wasm32/graphviz
-	touch $@
+# build/wasm32/graphviz.dir: build/wasm32/.dir
+# 	test -d build/wasm32/graphviz || $(MKDIR) build/wasm32/graphviz
+# 	touch $@
 
 build/wasm32/coreutils.dir: build/wasm32/.dir
 	test -d build/wasm32/coreutils || $(MKDIR) build/wasm32/coreutils
 	touch $@
 
-build/asmjs/binutils-gdb.configure: src/binutils-gdb.dir build/asmjs/binutils-gdb.dir
-	(cd src/binutils-gdb/gas; aclocal-1.15; automake-1.15)
-	(cd build/asmjs/binutils-gdb; ../../../src/binutils-gdb/configure --target=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none CFLAGS=$(OPT_NATIVE))
-	touch $@
+# build/asmjs/binutils-gdb.configure: src/binutils-gdb.dir build/asmjs/binutils-gdb.dir
+# 	(cd src/binutils-gdb/gas; aclocal-1.15; automake-1.15)
+# 	(cd build/asmjs/binutils-gdb; ../../../src/binutils-gdb/configure --target=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none CFLAGS=$(OPT_NATIVE))
+# 	touch $@
 
 build/native/binutils-gdb.configure: src/binutils-gdb.dir build/native/binutils-gdb.dir
 	(cd src/binutils-gdb/gas; aclocal-1.15; automake-1.15)
 	(cd build/native/binutils-gdb; ../../../src/binutils-gdb/configure --enable-debug --prefix=$(PWD)/native CFLAGS=$(OPT_NATIVE))
 	touch $@
 
-build/asmjs/binutils-gdb.make: build/asmjs/binutils-gdb.dir build/asmjs/binutils-gdb.configure
-	$(MAKE) -C build/asmjs/binutils-gdb
-	$(MAKE) -C build/asmjs/binutils-gdb install
-	touch $@
+# build/asmjs/binutils-gdb.make: build/asmjs/binutils-gdb.dir build/asmjs/binutils-gdb.configure
+# 	$(MAKE) -C build/asmjs/binutils-gdb
+# 	$(MAKE) -C build/asmjs/binutils-gdb install
+# 	touch $@
 
 build/native/binutils-gdb.make: build/native/binutils-gdb.dir build/native/binutils-gdb.configure
 	$(MAKE) -C build/native/binutils-gdb
@@ -276,20 +277,20 @@ build/%/binutils-gdb.clean: FORCE
 	rm -f build/$*/binutils-gdb.configure
 	rm -f build/$*/binutils-gdb.make
 
-build/asmjs/gcc-preliminary.configure: src/gcc-preliminary.dir build/asmjs/gcc-preliminary.dir | build/asmjs/binutils-gdb.make
-	(cd build/asmjs/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-unknown-none)
-	touch $@
+# build/asmjs/gcc-preliminary.configure: src/gcc-preliminary.dir build/asmjs/gcc-preliminary.dir | build/asmjs/binutils-gdb.make
+# 	(cd build/asmjs/gcc-preliminary; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/asmjs-unknown-none)
+# 	touch $@
 
 build/native/gcc.configure: src/gcc-preliminary.dir build/native/gcc.dir
 	(cd build/native/gcc; ../../../src/gcc-preliminary/configure --enable-optimize=$(OPT_NATIVE) --target=x86_64-pc-linux-gnu --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --enable-languages=c --disable-libssp --prefix=$(PWD)/x86_64-linux-gnu/ --disable-bootstrap)
 	touch $@
 
-build/asmjs/gcc-preliminary.make: build/asmjs/gcc-preliminary.dir build/asmjs/gcc-preliminary.configure
-	$(MAKE) -C build/asmjs/gcc-preliminary
-	$(MAKE) -C build/asmjs/gcc-preliminary install
-	cp asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc.a asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc_eh.a
-	cp asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc.a asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc_s.a
-	touch $@
+# build/asmjs/gcc-preliminary.make: build/asmjs/gcc-preliminary.dir build/asmjs/gcc-preliminary.configure
+# 	$(MAKE) -C build/asmjs/gcc-preliminary
+# 	$(MAKE) -C build/asmjs/gcc-preliminary install
+# 	cp asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc.a asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc_eh.a
+# 	cp asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc.a asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/libgcc_s.a
+# 	touch $@
 
 build/%/gcc-preliminary.clean: FORCE
 	rm -rf build/$*/gcc-preliminary
@@ -297,13 +298,13 @@ build/%/gcc-preliminary.clean: FORCE
 	rm -f build/$*/gcc-preliminary.configure
 	rm -f build/$*/gcc-preliminary.make
 
-build/asmjs/glibc.configure: src/glibc.dir build/asmjs/glibc.dir | build/asmjs/gcc-preliminary.make
-	(cd build/asmjs/glibc; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-unknown-none --target=asmjs-unknown-none --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
-	touch $@
+# build/asmjs/glibc.configure: src/glibc.dir build/asmjs/glibc.dir | build/asmjs/gcc-preliminary.make
+# 	(cd build/asmjs/glibc; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-unknown-none --target=asmjs-unknown-none --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
+# 	touch $@
 
-build/asmjs-cross/glibc.configure: src/glibc.dir build/asmjs-cross/glibc.dir | build/asmjs/gcc-preliminary.make
-	(cd build/asmjs-cross/glibc; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-unknown-none --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
-	touch $@
+# build/asmjs-cross/glibc.configure: src/glibc.dir build/asmjs-cross/glibc.dir | build/asmjs/gcc-preliminary.make
+# 	(cd build/asmjs-cross/glibc; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/glibc/configure --enable-optimize=$(OPT_NATIVE) --host=asmjs-unknown-none --enable-hacker-mode --enable-static --enable-static-nss --disable-shared --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
+# 	touch $@
 
 build/wasm32/glibc.configure: src/glibc.dir build/wasm32/glibc.dir | build/wasm32/gcc-preliminary.make
 	(cd build/wasm32/glibc; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/glibc/configure CFLAGS="-fPIC -O3 -Wno-error=missing-attributes" --enable-optimize=$(OPT_NATIVE) --host=wasm32-unknown-none --target=wasm32-unknown-none --enable-hacker-mode --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
@@ -313,15 +314,15 @@ build/wasm32/glibc-static.configure: src/glibc.dir build/wasm32/glibc-static.dir
 	(cd build/wasm32/glibc-static; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/glibc/configure CFLAGS="-O3" --enable-optimize=$(OPT_NATIVE) --host=wasm32-unknown-none --target=wasm32-unknown-none --enable-hacker-mode --enable-static --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
-build/asmjs/glibc.make: build/asmjs/glibc.dir build/asmjs/glibc.configure
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/glibc
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/glibc install
-	touch $@
+# build/asmjs/glibc.make: build/asmjs/glibc.dir build/asmjs/glibc.configure
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/glibc
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/glibc install
+# 	touch $@
 
-build/asmjs-cross/glibc.make: build/asmjs-cross/glibc.dir build/asmjs-cross/glibc.configure
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc install
-	touch $@
+# build/asmjs-cross/glibc.make: build/asmjs-cross/glibc.dir build/asmjs-cross/glibc.configure
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/glibc install
+# 	touch $@
 
 build/wasm32/glibc.make: build/wasm32/glibc.dir build/wasm32/glibc.configure
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc
@@ -332,10 +333,16 @@ build/wasm32/glibc-static.make: build/wasm32/glibc-static.dir build/wasm32/glibc
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc-static
 	touch $@
 
-build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
-	$(PWD)/wasm32-unknown-none/bin/wasm32-unknown-none-ld -shared --whole-archive lib/wasm32-globals.o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.a --no-whole-archive $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc.a -o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so
+libc.wasm: build/wasm32/glibc.make wasm32-unknown-none/wasm32-unknown-none/lib/libc.so
 	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so > $(PWD)/libc.wasm
-	touch $@
+
+ld.wasm: build/wasm32/glibc.make wasm32-unknown-none/wasm32-unknown-none/lib/ld.so.1
+	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/ld.so.1 > $(PWD)/ld.wasm
+
+# build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
+# 	$(PWD)/wasm32-unknown-none/bin/wasm32-unknown-none-ld -shared --whole-archive lib/wasm32-globals.o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.a --no-whole-archive $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc.a -o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so
+# 	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so > $(PWD)/libc.wasm
+# 	touch $@
 
 build/wasm32/libdl.make: build/wasm32/glibc-semishared.make build/wasm32/gcc-final.make
 	$(MAKE) -C libdl
@@ -358,23 +365,23 @@ build/wasm32/musl.make: build/wasm32/musl.dir build/wasm32/musl.configure
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/musl install
 	touch $@
 
-build/asmjs/gcc-final.configure: src/gcc-final.dir build/asmjs/gcc-final.dir | build/asmjs/glibc.make
-	(cd build/asmjs/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-unknown-none)
-	touch $@
+# build/asmjs/gcc-final.configure: src/gcc-final.dir build/asmjs/gcc-final.dir | build/asmjs/glibc.make
+# 	(cd build/asmjs/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=asmjs-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/asmjs-unknown-none)
+# 	touch $@
 
 build/wasm32/gcc-final.configure: src/gcc-final.dir build/wasm32/gcc-final.dir | build/wasm32/glibc.make
 	(cd build/wasm32/gcc-final; ../../../src/gcc-final/configure --enable-optimize=$(OPT_NATIVE) --target=wasm32-unknown-none --disable-libatomic --disable-libgomp --disable-libquadmath --enable-explicit-exception-frame-registration --disable-libssp --prefix=$(PWD)/wasm32-unknown-none)
 	touch $@
 
-build/asmjs/gcc-final.make: build/asmjs/gcc-final.dir build/asmjs/gcc-final.configure
-	test -d build/asmjs/gcc-final/gcc || $(MKDIR) build/asmjs/gcc-final/gcc
-	cp build/asmjs/gcc-preliminary/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_eh.a
-	cp build/asmjs/gcc-preliminary/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_s.a
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/gcc-final
-	cp build/asmjs/gcc-final/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_eh.a
-	cp build/asmjs/gcc-final/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_s.a
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/gcc-final install
-	touch $@
+# build/asmjs/gcc-final.make: build/asmjs/gcc-final.dir build/asmjs/gcc-final.configure
+# 	test -d build/asmjs/gcc-final/gcc || $(MKDIR) build/asmjs/gcc-final/gcc
+# 	cp build/asmjs/gcc-preliminary/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_eh.a
+# 	cp build/asmjs/gcc-preliminary/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_s.a
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/gcc-final
+# 	cp build/asmjs/gcc-final/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_eh.a
+# 	cp build/asmjs/gcc-final/gcc/libgcc.a build/asmjs/gcc-final/gcc/libgcc_s.a
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/gcc-final install
+# 	touch $@
 
 build/wasm32/gcc-final.make: build/wasm32/gcc-final.dir build/wasm32/gcc-final.configure
 	test -d build/wasm32/gcc-final/gcc || $(MKDIR) build/wasm32/gcc-final/gcc
@@ -386,44 +393,44 @@ build/wasm32/gcc-final.make: build/wasm32/gcc-final.dir build/wasm32/gcc-final.c
 	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/gcc-final install
 	touch $@
 
-build/asmjs/ncurses.configure: src/ncurses.dir build/asmjs/ncurses.dir | build/asmjs/gcc-final.make
-	(cd build/asmjs/ncurses; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
-	touch $@
+# build/asmjs/ncurses.configure: src/ncurses.dir build/asmjs/ncurses.dir | build/asmjs/gcc-final.make
+# 	(cd build/asmjs/ncurses; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
+# 	touch $@
 
 build/wasm32/ncurses.configure: src/ncurses.dir build/wasm32/ncurses.dir | build/wasm32/gcc-final.make
 	(cd build/wasm32/ncurses; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
-build/asmjs/ncurses.make: build/asmjs/ncurses.configure
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/ncurses
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/ncurses install
-	touch $@
+# build/asmjs/ncurses.make: build/asmjs/ncurses.configure
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/ncurses
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/ncurses install
+# 	touch $@
 
 build/wasm32/ncurses.make: build/wasm32/ncurses.configure
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/ncurses
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/ncurses install
 	touch $@
 
-build/asmjs-cross/ncurses.configure: src/ncurses.dir build/asmjs-cross/ncurses.dir | build/asmjs/gcc-final.make
-	(cd build/asmjs-cross/ncurses; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
-	touch $@
+# build/asmjs-cross/ncurses.configure: src/ncurses.dir build/asmjs-cross/ncurses.dir | build/asmjs/gcc-final.make
+# 	(cd build/asmjs-cross/ncurses; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
+# 	touch $@
 
-build/asmjs-cross/ncurses.make: build/asmjs-cross/ncurses.configure
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses install
-	touch $@
+# build/asmjs-cross/ncurses.make: build/asmjs-cross/ncurses.configure
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/ncurses install
+# 	touch $@
 
-build/asmjs/emacs.configure: src/emacs.dir build/asmjs/emacs.dir | build/asmjs/ncurses.make
-	(cd src/emacs; autoreconf -ivf)
-	cp config/config.sub src/emacs/build-aux
-	(cd build/asmjs/emacs; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
-	touch $@
+# build/asmjs/emacs.configure: src/emacs.dir build/asmjs/emacs.dir | build/asmjs/ncurses.make
+# 	(cd src/emacs; autoreconf -ivf)
+# 	cp config/config.sub src/emacs/build-aux
+# 	(cd build/asmjs/emacs; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
+# 	touch $@
 
-build/asmjs-cross/emacs.configure: src/emacs.dir build/asmjs-cross/emacs.dir | build/asmjs-cross/ncurses.make
-	(cd src/emacs; autoreconf -ivf)
-	cp config/config.sub src/emacs/build-aux
-	(cd build/asmjs-cross/emacs; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
-	touch $@
+# build/asmjs-cross/emacs.configure: src/emacs.dir build/asmjs-cross/emacs.dir | build/asmjs-cross/ncurses.make
+# 	(cd src/emacs; autoreconf -ivf)
+# 	cp config/config.sub src/emacs/build-aux
+# 	(cd build/asmjs-cross/emacs; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
+# 	touch $@
 
 build/wasm32/emacs.configure: src/emacs.dir build/wasm32/emacs.dir | build/wasm32/ncurses.make
 	(cd src/emacs; autoreconf -ivf)
@@ -431,23 +438,23 @@ build/wasm32/emacs.configure: src/emacs.dir build/wasm32/emacs.dir | build/wasm3
 	(cd build/wasm32/emacs; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/emacs/configure --enable-optimize=$(OPT_ASMJS) --with-x-toolkit=no --without-x --with-zlib --without-sound --without-all --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
 	touch $@
 
-build/asmjs/emacs.make: build/asmjs/emacs.configure build/asmjs/ncurses.make | build/binfmt_misc.install
-	$(MKDIR) -p $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet
-	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa/inet.h
-	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netdb.h
-	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet/in.h
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
-	touch $@
+# build/asmjs/emacs.make: build/asmjs/emacs.configure build/asmjs/ncurses.make | build/binfmt_misc.install
+# 	$(MKDIR) -p $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet
+# 	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa/inet.h
+# 	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netdb.h
+# 	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet/in.h
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
+# 	touch $@
 
-build/asmjs-cross/emacs.make: build/asmjs-cross/emacs.configure build/asmjs-cross/ncurses.make | build/binfmt_misc.install
-	$(MKDIR) -p $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet
-	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa/inet.h
-	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netdb.h
-	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet/in.h
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs
-	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
-	touch $@
+# build/asmjs-cross/emacs.make: build/asmjs-cross/emacs.configure build/asmjs-cross/ncurses.make | build/binfmt_misc.install
+# 	$(MKDIR) -p $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet
+# 	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/arpa/inet.h
+# 	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netdb.h
+# 	touch $(PWD)/asmjs-unknown-none/asmjs-unknown-none/include/netinet/in.h
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs
+# 	CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/emacs install
+# 	touch $@
 
 build/wasm32/emacs.make: build/wasm32/emacs.configure build/wasm32/ncurses.make | build/binfmt_misc.install
 	$(MKDIR) -p $(PWD)/wasm32-unknown-none/wasm32-unknown-none/include/arpa $(PWD)/wasm32-unknown-none/wasm32-unknown-none/include/netinet
@@ -458,14 +465,14 @@ build/wasm32/emacs.make: build/wasm32/emacs.configure build/wasm32/ncurses.make 
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/emacs install
 	touch $@
 
-build/asmjs/bash.configure: src/bash.dir build/asmjs/bash.dir | build/asmjs/gcc-final.make
-	(cd build/asmjs/bash; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/bash/configure --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none --disable-net-redirections --without-bash-malloc)
-	touch $@
+# build/asmjs/bash.configure: src/bash.dir build/asmjs/bash.dir | build/asmjs/gcc-final.make
+# 	(cd build/asmjs/bash; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/bash/configure --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none --disable-net-redirections --without-bash-malloc)
+# 	touch $@
 
-build/asmjs/bash.make: build/asmjs/bash.configure
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/bash
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/bash install
-	touch $@
+# build/asmjs/bash.make: build/asmjs/bash.configure
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/bash
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/bash install
+# 	touch $@
 
 build/wasm32/bash.configure: src/bash.dir build/wasm32/bash.dir | build/wasm32/gcc-final.make
 	(cd build/wasm32/bash; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/bash/configure --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none --disable-net-redirections --without-bash-malloc)
@@ -476,27 +483,27 @@ build/wasm32/bash.make: build/wasm32/bash.configure
 	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/bash install
 	touch $@
 
-build/asmjs/perl.configure: src/perl.dir build/asmjs/perl.dir | build/asmjs/gcc-final.make
-	test -f build/asmjs/perl/config.sh && mv build/asmjs/perl/config.sh build/asmjs/perl/config.sh.old || true
-	touch build/asmjs/perl/config.sh
-	(cd build/asmjs/perl; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/include' -Dlibpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-unknown-none/asmjs-unknown-none')
-	touch $@
+# build/asmjs/perl.configure: src/perl.dir build/asmjs/perl.dir | build/asmjs/gcc-final.make
+# 	test -f build/asmjs/perl/config.sh && mv build/asmjs/perl/config.sh build/asmjs/perl/config.sh.old || true
+# 	touch build/asmjs/perl/config.sh
+# 	(cd build/asmjs/perl; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH sh ./Configure -der -Uusemymalloc -Dcc=asmjs-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/include' -Dlibpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-unknown-none/asmjs-unknown-none')
+# 	touch $@
 
-build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/perl
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/perl install
-	touch $@
+# build/asmjs/perl.make: build/asmjs/perl.dir build/asmjs/perl.configure
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/perl
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/perl install
+# 	touch $@
 
-build/asmjs-cross/perl.configure: src/perl.dir build/asmjs-cross/perl.dir | build/asmjs/gcc-final.make
-	test -f build/asmjs-cross/perl/config.sh && mv build/asmjs-cross/perl/config.sh build/asmjs-cross/perl/config.sh.old || true
-	touch build/asmjs-cross/perl/config.sh
-	(cd build/asmjs-cross/perl; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/asmjs-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=asmjs-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/include' -Dlibpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-unknown-none/asmjs-unknown-none')
-	touch $@
+# build/asmjs-cross/perl.configure: src/perl.dir build/asmjs-cross/perl.dir | build/asmjs/gcc-final.make
+# 	test -f build/asmjs-cross/perl/config.sh && mv build/asmjs-cross/perl/config.sh build/asmjs-cross/perl/config.sh.old || true
+# 	touch build/asmjs-cross/perl/config.sh
+# 	(cd build/asmjs-cross/perl; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/asmjs-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=asmjs-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/include' -Dlibpth='$(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/include-fixed $(PWD)/asmjs-unknown-none/lib/gcc/asmjs-unknown-none/8.0.0/../../../../asmjs-unknown-none/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='asmjs' -Dprefix='$(PWD)/asmjs-unknown-none/asmjs-unknown-none')
+# 	touch $@
 
-build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.configure
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl install
-	touch $@
+# build/asmjs-cross/perl.make: build/asmjs-cross/perl.dir build/asmjs-cross/perl.configure
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs-cross/perl install
+# 	touch $@
 
 build/wasm32/perl.configure: src/perl.dir build/wasm32/perl.dir | build/wasm32/gcc-final.make build/wasm32/libs.make
 	test -f build/wasm32/perl/config.sh && mv build/wasm32/perl/config.sh build/wasm32/perl/config.sh.old || true
@@ -509,16 +516,16 @@ build/wasm32/perl.make: build/wasm32/perl.dir build/wasm32/perl.configure
 	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/perl install
 	touch $@
 
-build/wasm32-cross/perl.configure: src/perl.dir build/wasm32-cross/perl.dir | build/wasm32/gcc-final.make
-	test -f build/wasm32-cross/perl/config.sh && mv build/wasm32-cross/perl/config.sh build/wasm32-cross/perl/config.sh.old || true
-	touch build/wasm32-cross/perl/config.sh
-	(cd build/wasm32-cross/perl; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/wasm32-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=wasm32-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/include $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/include-fixed $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/../../../../wasm32-unknown-none/include' -Dlibpth='$(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/include-fixed $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/../../../../wasm32-unknown-none/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-unknown-none/wasm32-unknown-none')
-	touch $@
+# build/wasm32-cross/perl.configure: src/perl.dir build/wasm32-cross/perl.dir | build/wasm32/gcc-final.make
+# 	test -f build/wasm32-cross/perl/config.sh && mv build/wasm32-cross/perl/config.sh build/wasm32-cross/perl/config.sh.old || true
+# 	touch build/wasm32-cross/perl/config.sh
+# 	(cd build/wasm32-cross/perl; PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH sh ./Configure -der -Dusecrosscompile -Dtargethost=127.0.1.1 -Dtargetrun='$(PWD)/bin/interpreter' -Dtargetuser=none -Dtargetport=none -Dtargetdir='$(PWD)/build/wasm32-cross/perl/targetdir' -Dtargetfrom=cp -Dtargetto=cp -Uusemymalloc -Dcc=wasm32-unknown-none-gcc -Doptimize="-O3 -fno-strict-aliasing" -Dincpth='$(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/include $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/include-fixed $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/../../../../wasm32-unknown-none/include' -Dlibpth='$(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/include-fixed $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/../../../../wasm32-unknown-none/lib' -Dloclibpth=' ' -Dglibpth=' ' -Dplibpth=' ' -Dldflags=' ' -Uusedl -Dlibs='-lnsl -ldl -lm -lcrypt -lutil' -Dd_u32align=define -Dusedevel -Darchname='wasm32' -Dprefix='$(PWD)/wasm32-unknown-none/wasm32-unknown-none')
+# 	touch $@
 
-build/wasm32-cross/perl.make: build/wasm32-cross/perl.dir build/wasm32-cross/perl.configure
-	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl
-	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl install
-	touch $@
+# build/wasm32-cross/perl.make: build/wasm32-cross/perl.dir build/wasm32-cross/perl.configure
+# 	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl
+# 	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32-cross/perl install
+# 	touch $@
 
 build/common/wabt.cmake: src/wabt.dir build/common/wabt.dir
 	(cd build/common/wabt; cmake ../../../src/wabt -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$(PWD)/common)
@@ -529,77 +536,77 @@ build/common/wabt.make: build/common/wabt.cmake
 	$(MAKE) -C build/common/wabt install
 	touch $@
 
-build/common/spidermonkey.configure: src/spidermonkey.dir build/common/spidermonkey.dir
-	(cd src/spidermonkey/js/src; autoconf2.13)
-	(cd build/common/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/common/spidermonkey --without-system-zlib)
-	touch $@
+# build/common/spidermonkey.configure: src/spidermonkey.dir build/common/spidermonkey.dir
+# 	(cd src/spidermonkey/js/src; autoconf2.13)
+# 	(cd build/common/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize=$(OPT_NATIVE) --disable-debug --disable-tests --prefix=$(PWD)/common/spidermonkey --without-system-zlib)
+# 	touch $@
 
-build/common/spidermonkey.make: build/common/spidermonkey.configure
-	$(MAKE) -C build/common/spidermonkey
-	$(MAKE) -C build/common/spidermonkey install
-	test -L $(PWD)/common/bin/js || ($(MKDIR) -p $(PWD)/common/bin; ln -sf ../spidermonkey/bin/js57 $(PWD)/common/bin/js)
-	touch $@
+# build/common/spidermonkey.make: build/common/spidermonkey.configure
+# 	$(MAKE) -C build/common/spidermonkey
+# 	$(MAKE) -C build/common/spidermonkey install
+# 	test -L $(PWD)/common/bin/js || ($(MKDIR) -p $(PWD)/common/bin; ln -sf ../spidermonkey/bin/js57 $(PWD)/common/bin/js)
+# 	touch $@
 
-build/common3/spidermonkey.configure: src/spidermonkey.dir build/common3/spidermonkey.dir
-	(cd src/spidermonkey/js/src; autoconf2.13)
-	(cd build/common3/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize="-O3" --disable-debug --disable-tests --prefix=$(PWD)/common3/spidermonkey --without-system-zlib)
-	touch $@
+# build/common3/spidermonkey.configure: src/spidermonkey.dir build/common3/spidermonkey.dir
+# 	(cd src/spidermonkey/js/src; autoconf2.13)
+# 	(cd build/common3/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize="-O3" --disable-debug --disable-tests --prefix=$(PWD)/common3/spidermonkey --without-system-zlib)
+# 	touch $@
 
-build/common3x/spidermonkey.configure: src/spidermonkey.dir build/common3x/spidermonkey.dir
-	(cd src/spidermonkey/js/src; autoconf2.13)
-	(cd build/common3x/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize="-O3" --disable-debug --disable-tests --prefix=$(PWD)/common3x/spidermonkey --without-system-zlib)
-	touch $@
+# build/common3x/spidermonkey.configure: src/spidermonkey.dir build/common3x/spidermonkey.dir
+# 	(cd src/spidermonkey/js/src; autoconf2.13)
+# 	(cd build/common3x/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize="-O3" --disable-debug --disable-tests --prefix=$(PWD)/common3x/spidermonkey --without-system-zlib)
+# 	touch $@
 
-build/common3/spidermonkey.make: build/common3/spidermonkey.configure
-	$(MAKE) -C build/common3/spidermonkey
-	$(MAKE) -C build/common3/spidermonkey install
-	test -L $(PWD)/common3/bin/js || ($(MKDIR) -p $(PWD)/common3/bin; ln -sf ../spidermonkey/bin/js57 $(PWD)/common3/bin/js)
-	touch $@
+# build/common3/spidermonkey.make: build/common3/spidermonkey.configure
+# 	$(MAKE) -C build/common3/spidermonkey
+# 	$(MAKE) -C build/common3/spidermonkey install
+# 	test -L $(PWD)/common3/bin/js || ($(MKDIR) -p $(PWD)/common3/bin; ln -sf ../spidermonkey/bin/js57 $(PWD)/common3/bin/js)
+# 	touch $@
 
-build/common3x/spidermonkey.make: build/common3x/spidermonkey.configure
-	$(MAKE) -C build/common3x/spidermonkey
-	$(MAKE) -C build/common3x/spidermonkey install
-	test -L $(PWD)/common3x/bin/js || ($(MKDIR) -p $(PWD)/common3x/bin; ln -sf ../spidermonkey/bin/js57 $(PWD)/common3x/bin/js)
-	touch $@
+# build/common3x/spidermonkey.make: build/common3x/spidermonkey.configure
+# 	$(MAKE) -C build/common3x/spidermonkey
+# 	$(MAKE) -C build/common3x/spidermonkey install
+# 	test -L $(PWD)/common3x/bin/js || ($(MKDIR) -p $(PWD)/common3x/bin; ln -sf ../spidermonkey/bin/js57 $(PWD)/common3x/bin/js)
+# 	touch $@
 
-build/debug/spidermonkey.configure: src/spidermonkey.dir build/debug/spidermonkey.dir
-	(cd src/spidermonkey/js/src; autoconf2.13)
-	(cd build/debug/spidermonkey; ../../../src/spidermonkey/js/src/configure --disable-optimize --enable-debug --disable-tests --prefix=$(PWD)/debug/spidermonkey --without-system-zlib)
-	touch $@
+# build/debug/spidermonkey.configure: src/spidermonkey.dir build/debug/spidermonkey.dir
+# 	(cd src/spidermonkey/js/src; autoconf2.13)
+# 	(cd build/debug/spidermonkey; ../../../src/spidermonkey/js/src/configure --disable-optimize --enable-debug --disable-tests --prefix=$(PWD)/debug/spidermonkey --without-system-zlib)
+# 	touch $@
 
-build/debug/spidermonkey.make: build/debug/spidermonkey.configure
-	$(MAKE) -C build/debug/spidermonkey
-	$(MAKE) -C build/debug/spidermonkey install
-	touch $@
+# build/debug/spidermonkey.make: build/debug/spidermonkey.configure
+# 	$(MAKE) -C build/debug/spidermonkey
+# 	$(MAKE) -C build/debug/spidermonkey install
+# 	touch $@
 
-build/debug0/spidermonkey.configure: src/spidermonkey.dir build/debug0/spidermonkey.dir
-	(cd src/spidermonkey/js/src; autoconf2.13)
-	(cd build/debug0/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize="-O0 -g" --disable-debug --disable-tests --prefix=$(PWD)/debug0/spidermonkey --without-system-zlib)
-	touch $@
+# build/debug0/spidermonkey.configure: src/spidermonkey.dir build/debug0/spidermonkey.dir
+# 	(cd src/spidermonkey/js/src; autoconf2.13)
+# 	(cd build/debug0/spidermonkey; ../../../src/spidermonkey/js/src/configure --enable-optimize="-O0 -g" --disable-debug --disable-tests --prefix=$(PWD)/debug0/spidermonkey --without-system-zlib)
+# 	touch $@
 
-build/debug0/spidermonkey.make: build/debug0/spidermonkey.configure
-	$(MAKE) -C build/debug0/spidermonkey
-	$(MAKE) -C build/debug0/spidermonkey install
-	touch $@
+# build/debug0/spidermonkey.make: build/debug0/spidermonkey.configure
+# 	$(MAKE) -C build/debug0/spidermonkey
+# 	$(MAKE) -C build/debug0/spidermonkey install
+# 	touch $@
 
-build/common/spidermonkey.clean: FORCE
-	rm -f build/common/spidermonkey.make
-	rm -f build/common/spidermonkey.configure
-	rm -f build/common/spidermonkey.dir
-	rm -f src/spidermonkey.dir
-	rm -rf build/common/spidermonkey
-	rm -rf src/spidermonkey
-	touch $@
+# build/common/spidermonkey.clean: FORCE
+# 	rm -f build/common/spidermonkey.make
+# 	rm -f build/common/spidermonkey.configure
+# 	rm -f build/common/spidermonkey.dir
+# 	rm -f src/spidermonkey.dir
+# 	rm -rf build/common/spidermonkey
+# 	rm -rf src/spidermonkey
+# 	touch $@
 
-build/asmjs/coreutils.configure: src/coreutils.dir build/asmjs/coreutils.dir | build/asmjs/gcc-final.make
-	(cd src/coreutils; ./bootstrap --gnulib-srcdir=gnulib --skip-po)
-	(cd build/asmjs/coreutils; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/coreutils/configure --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none --enable-static --disable-shared)
-	touch $@
+# build/asmjs/coreutils.configure: src/coreutils.dir build/asmjs/coreutils.dir | build/asmjs/gcc-final.make
+# 	(cd src/coreutils; ./bootstrap --gnulib-srcdir=gnulib --skip-po)
+# 	(cd build/asmjs/coreutils; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/coreutils/configure --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none --enable-static --disable-shared)
+# 	touch $@
 
-build/asmjs/coreutils.make: build/asmjs/coreutils.configure
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/coreutils
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/coreutils install
-	touch $@
+# build/asmjs/coreutils.make: build/asmjs/coreutils.configure
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/coreutils
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/coreutils install
+# 	touch $@
 
 build/wasm32/coreutils.configure: src/coreutils.dir build/wasm32/coreutils.dir | build/wasm32/gcc-final.make
 	(cd src/coreutils; ./bootstrap --gnulib-srcdir=gnulib --skip-po)
@@ -611,16 +618,16 @@ build/wasm32/coreutils.make: build/wasm32/coreutils.configure
 	PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/coreutils install
 	touch $@
 
-build/asmjs/graphviz.configure: src/graphviz.dir build/asmjs/graphviz.dir | build/asmjs/gcc-final.make
-	(cd src/graphviz; sh autogen.sh NOCONFIG)
-	cp config/config.sub src/graphviz/config/config.sub
-	(cd build/asmjs/graphviz; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/graphviz/configure --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --without-qt --enable-static --disable-shared --disable-ltdl)
-	touch $@
+# build/asmjs/graphviz.configure: src/graphviz.dir build/asmjs/graphviz.dir | build/asmjs/gcc-final.make
+# 	(cd src/graphviz; sh autogen.sh NOCONFIG)
+# 	cp config/config.sub src/graphviz/config/config.sub
+# 	(cd build/asmjs/graphviz; PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/graphviz/configure --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none --without-pangocairo --without-gdk --without-gdk-pixbuf --without-gtk --without-qt --enable-static --disable-shared --disable-ltdl)
+# 	touch $@
 
-build/asmjs/graphviz.make: build/asmjs/graphviz.configure
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/graphviz
-	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/graphviz install
-	touch $@
+# build/asmjs/graphviz.make: build/asmjs/graphviz.configure
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/graphviz
+# 	PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH $(MAKE) -C build/asmjs/graphviz install
+# 	touch $@
 
 build/wasm32/graphviz.configure: src/graphviz.dir build/wasm32/graphviz.dir | build/wasm32/gcc-final.make
 	(cd src/graphviz; sh autogen.sh NOCONFIG)
