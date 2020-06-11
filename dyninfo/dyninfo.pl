@@ -70,12 +70,12 @@ for my $file (@ARGV) {
 	    my ($refaddr, $defaddr) = (hex $1, hex $3);
 
 	    $fixup{$refaddr}{$defaddr} = 1;
-	} elsif (/^([0-9a-f]*) R_WASM32_32_CODE ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
-	    my ($refaddr, $defaddr) = (hex $1, hex $3);
+	} elsif (/^([0-9a-f]*) R_WASM32_(REL)?32_CODE ([@.a-zA-Z0-9_\$]*)\+0x([0-9a-f]*)$/) {
+	    my ($refaddr, $defaddr) = (hex $1, hex $4);
 
 	    $fixupfun{$refaddr}{$defaddr} = 1;
-	} elsif (/^([0-9a-f]*) R_WASM32_32_CODE (\*ABS\*)\+0x([0-9a-f]*)$/) {
-	    my ($refaddr, $defaddr) = (hex $1, hex $3);
+	} elsif (/^([0-9a-f]*) R_WASM32_(REL)?32_CODE (\*ABS\*)\+0x([0-9a-f]*)$/) {
+	    my ($refaddr, $defaddr) = (hex $1, hex $4);
 
 	    $fixupfun{$refaddr}{$defaddr} = 1;
 	} elsif (/^([0-9a-f]*) R_WASM32_(LEB128_)?PLT_INDEX ([@.a-zA-Z0-9_\$]*)$/) {
