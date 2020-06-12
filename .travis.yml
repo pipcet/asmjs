@@ -21,8 +21,6 @@ addons:
             - yasm
 script:
     - git submodule update --init --recursive --depth=50
-    - (CC=clang make -kj3 build/common/spidermonkey.make >/dev/null 2>/dev/null) || CC=clang make -kj3 build/common/spidermonkey.make
-    - make -kj3 build/spidermonkey.clean
     - make -kj3 build/binfmt_misc.install
     - (sleep 5m && echo "I'm not done yet") &
     - (sleep 10m && echo "I'm not done yet") &
@@ -30,15 +28,15 @@ script:
     - (sleep 20m && echo "I'm not done yet") &
     - (sleep 25m && echo "I'm not done yet") &
     - (sleep 30m && echo "I'm not done yet") &
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/asmjs/binutils-gdb.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/binutils-gdb.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/binutils-gdb.make
     - make build/binutils-gdb.clean
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/asmjs/gcc-preliminary.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-preliminary.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-preliminary.make
     - make build/gcc-preliminary.clean
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/asmjs/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/glibc.make
     - make build/glibc.clean
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/asmjs/gcc-final.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-final.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/gcc-final.make
     - make build/gcc-final.clean
-    - make -kj3 build/asmjs/ncurses.make
+    - make -kj3 build/wasm32/ncurses.make
     - make build/ncurses.clean
-    - make -kj3 build/asmjs/emacs.make
+    - make -kj3 build/wasm32/emacs.make
     - make build/emacs.clean
