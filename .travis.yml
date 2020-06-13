@@ -4,6 +4,7 @@ os:
     - linux
 git:
     submodules: false
+compiler: clang
 addons:
     apt:
         packages:
