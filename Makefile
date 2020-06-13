@@ -337,6 +337,8 @@ build/wasm32/glibc.make: build/wasm32/glibc.dir build/wasm32/glibc.configure
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc install
 	touch $@
 
+build/wasm32/glibc.wasm: build/wasm32/glibc.make modules/libc.wasm modules/ld.wasm
+
 build/native/glibc.make: build/native/glibc.dir build/native/glibc.configure
 	$(MAKE) -C build/native/glibc
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc install
@@ -429,6 +431,8 @@ build/wasm32/ncurses.make: build/wasm32/ncurses.configure
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/ncurses
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/ncurses install
 	touch $@
+
+build/wasm32/ncurses.wasm: build/wasm32/ncurses.make modules/ncurses.wasm
 
 # build/asmjs-cross/ncurses.configure: src/ncurses.dir build/asmjs-cross/ncurses.dir | build/asmjs/gcc-final.make
 # 	(cd build/asmjs-cross/ncurses; CC=asmjs-unknown-none-gcc PATH=$(PWD)/asmjs-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=asmjs-unknown-none --prefix=$(PWD)/asmjs-unknown-none/asmjs-unknown-none)
