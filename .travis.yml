@@ -24,7 +24,7 @@ addons:
 script:
     - git submodule update --init --recursive --depth=50
     - mkdir -p build
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/binutils-gdb.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/binutils-gdb.make
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-preliminary.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-preliminary.make
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/glibc.make
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-final.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-final.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/binutils-gdb.make) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/binutils-gdb.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-preliminary.make) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-preliminary.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/glibc.make) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/glibc.make
+    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-final.make) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-final.make
