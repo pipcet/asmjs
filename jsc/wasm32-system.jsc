@@ -66,21 +66,21 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
                 module.symtab[symbol] = addr2;
             }
 
-            delete this.copy[symbol];
+            //delete this.copy[symbol];
 
-            continue;
+            //continue;
         }
         module.symtab[symbol] = addr;
         if ((symbol in this.def ||
              symbol in this.defun) &&
             !symbol.match(/^__(start|stop)_/)) {
-            continue;
+            //continue;
         }
         this.def[symbol] = addr;
 
         if (this.ref[symbol]) {
             let ref = this.ref[symbol];
-            delete this.ref[symbol];
+            //delete this.ref[symbol];
 
             for (let [addr2, module] of ref) {
                 vm.HEAPU32[addr2>>2] = addr;
@@ -145,10 +145,45 @@ Wasm32LM.prototype.open_dyninfo = function (dyninfo, imports, module)
     }
 
     for (let [symbol, addr, size] of dyninfo.copy) {
+	addr -= 0x4000;
+	addr += imports.sys.got;
         if (!this.copy[symbol])
             this.copy[symbol] = [];
 
         this.copy[symbol].push([addr, size]);
+    }
+
+    for (let [symbol, addr] of dyninfo.def) {
+        addr = addr - 0x4000 + imports.sys.got;
+        if (this.copy[symbol]) {
+            for (let [addr2, size] of this.copy[symbol]) {
+                for (let i = 0; i < size; i++) {
+                    vm.HEAPU8[addr2+i] = vm.HEAPU8[addr+i];
+                }
+                module.symtab[symbol] = addr2;
+            }
+
+            //delete this.copy[symbol];
+
+            //continue;
+        }
+        module.symtab[symbol] = addr;
+        if ((symbol in this.def ||
+             symbol in this.defun) &&
+            !symbol.match(/^__(start|stop)_/)) {
+            //continue;
+        }
+        this.def[symbol] = addr;
+
+        if (this.ref[symbol]) {
+            let ref = this.ref[symbol];
+            //delete this.ref[symbol];
+
+            for (let [addr2, module] of ref) {
+                vm.HEAPU32[addr2>>2] = addr;
+                module.symtab[symbol] = addr;
+            }
+        }
     }
 
     for (let lib of dyninfo.libs) {
@@ -393,7 +428,7 @@ Wasm32Module.prototype.load = function (thread, vm)
         this.module = module;
         this.comtime = Date.now();
         var dyninfo;
-        var cs = WebAssembly.Module.customSections(module, "dyninfo.json");
+        var cs = WebAssembly.Module.customSections(module, "dyninfo" /* + ".json" */);
         for (let c of cs) {
             let s = abtoascii(c);
             this.dyninfo = JSON.parse(s);
@@ -423,7 +458,7 @@ Wasm32Module.prototype.instantiate = function (thread, vm, mem, recurse)
     this.imports.sys.memory = vm.memory;
 
     return WebAssembly.instantiate(this.module, this.imports)
-        .then((instance) => {
+        .then(instance => {
             this.instance = instance;
             this.instime = Date.now();
             thread.exports = this.instance.exports;
@@ -436,6 +471,7 @@ Wasm32Module.prototype.instantiate = function (thread, vm, mem, recurse)
             this.vm.base_lm.open_dyninfo(this.dyninfo, this.imports, this);
             lastdonetime = this.donetime = Date.now();
 
+	    this.instance = instance;
             if (recurse)
                 return this.check_libs(thread);
             else
@@ -793,6 +829,8 @@ Wasm32Thread.prototype.truncdfsi = function (v)
 
 Wasm32Thread.prototype.null_called = function ()
 {
+    console.log("NULL called!");
+    while (1);
     throw "NULL called!";
 };
 

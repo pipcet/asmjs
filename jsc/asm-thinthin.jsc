@@ -2706,7 +2706,9 @@ if (typeof(os) !== "undefined" &&
 
         return 0;
     };
-    ThinThin.isatty = function () { return 1 };
+    ThinThin.isatty = function () {
+	return 1;
+    };
     ThinThin.restart = function (dst, src, len, entry)
     {
         return this.restart(dst, src, len, entry);
