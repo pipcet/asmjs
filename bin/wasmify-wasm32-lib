@@ -1,22 +1,31 @@
 #!/bin/bash
-TMPD=$(mktemp -d);
+TMPD=$(mktemp -d --tmpdir wasmify.XXXXXXXXXX);
 if [ x"$JS" = x ]; then
     JS=$(which js)
 fi
-if [ x"$ASMJSDIR" = x ]; then
-    ASMJSDIR=$HOME/git/asmjs
+if [ x"$WASMDIR" = x ]; then
+    WASMDIR=$HOME/git/wasm
+    export WASMDIR
 fi
 if [ x"$DELAY" = x ]; then
     DELAY=1
 fi
-wasm32-unknown-none-ld -shared "$1" lib/wasm32-globals.o -o $TMPD/elf || exit 1
+cp "$1" $TMPD/elf
 chmod u+rw $TMPD/elf
-wasm32-unknown-none-elfedit $TMPD/elf --output-type=exec
-wasm32-unknown-none-ld -Map $TMPD/map1 -T $ASMJSDIR/lds/wasm32.cpp-lds.lds $ASMJSDIR/lib/wasm32-headers.o $TMPD/elf -o $TMPD/intermediate -N --warn-unresolved-symbols --no-check-sections 2>/dev/null || exit 1
-wasm32-unknown-none-ld -Map $TMPD/map2 -E -T $ASMJSDIR/lds/wasm32-wasmify.lds $TMPD/intermediate -o $TMPD/longwasm 2> /dev/null || exit 1
-# cp $TMPD/longwasm $ASMJSDIR/tmp-long.wasm
-$ASMJSDIR/bin/wasmrewrite $TMPD/longwasm > $TMPD/wasm
-perl $ASMJSDIR/dyninfo/dyninfo.pl $TMPD/elf > $TMPD/dyninfo.js
-$ASMJSDIR/wasmrewrite/wasmsect $TMPD/dyninfo.js > $TMPD/dyninfo.wass
-cat $TMPD/dyninfo.wass >> $TMPD/wasm
+perl $WASMDIR/dyninfo/dyninfo.pl $TMPD/elf > $TMPD/dyninfo.json || exit 1
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-elfedit $TMPD/elf --output-type=rel
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-objdump -hTRtrsj.data $TMPD/elf > $TMPD/dump0
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-objcopy --remove-relocations=.data --remove-relocations=.got -R .dynamic -R .dynsym -R .dynstr -R .rela.dyn -R .got.plt $TMPD/elf $TMPD/elf2
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-objdump -htrsj.data $TMPD/elf2 > $TMPD/dump2
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-objdump -htrsj.data $TMPD/elf2 > $TMPD/dump3
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-elfedit $TMPD/elf2 --output-type=rel
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-objcopy --remove-relocations=.got --remove-relocations=.data -R .dynamic -R .dynsym -R .dynstr -R .rela.dyn -R .got.plt $TMPD/elf2 $TMPD/elf3
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-objdump -htrsj.data $TMPD/elf3 > $TMPD/dump1
+#$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-ld -Map $TMPD/map0 $TMPD/elf2 -r -o $TMPD/start -N --warn-unresolved-symbols --no-check-sections 2>/dev/null || exit 1
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-ld -nostdlibs -Map $TMPD/map1 -T $WASMDIR/lds/wasm32.cpp-lds.lds $TMPD/elf3 -o $TMPD/intermediate -N --warn-unresolved-symbols --no-check-sections 2>/dev/null || exit 1
+$WASMDIR/wasm32-unknown-none/bin/wasm32-unknown-none-ld -Map $TMPD/map2 -E -T $WASMDIR/lds/wasm32-wasmify.lds $TMPD/intermediate -o $TMPD/longwasm 2> /dev/null || exit 1
+# cp $TMPD/longwasm $WASMDIR/tmp-long.wasm
+$WASMDIR/bin/wasmrewrite $TMPD/longwasm > $TMPD/wasm || exit 1
+$WASMDIR/wasmrewrite/wasmsect $TMPD/dyninfo.json > $TMPD/dyninfo.json.wass || exit 1
+cat $TMPD/dyninfo.json.wass >> $TMPD/wasm
 cat $TMPD/wasm
