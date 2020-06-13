@@ -99,14 +99,16 @@ for my $file (@ARGV) {
 		warn "undefined version for lazy symbol $symbol";
 		$flag_lazy = 0;
 	    }
-	} elsif (/^([0-9a-f]*) R_WASM32_COPY ([a-zA-Z0-9_\$]*)$/) {
+	} elsif (/^([0-9a-f]*) R_WASM32_COPY ([a-zA-Z0-9_\$\@\.]*)$/) {
 	    my ($refaddr, $symbol) = (hex $1,$2);
 	    $symbol =~ s/@+.*//;
 
 	    $copy{$symbol}{$refaddr} = $cachedsize{$symbol};
+	} elsif (/^([0-9a-f]*) R_WASM32_LEB128 (\*ABS\*)\+0x([0-9a-fA-F]*)$/) {
+	    #die "absolute relocation in dynamic object!"
 	} elsif (/^00000000 R_WASM32_NONE /) {
 	} else {
-	    #warn("unhandled dynreloc " . $_);
+	    warn("unhandled dynreloc " . $_);
 	}
     }
 
@@ -230,6 +232,7 @@ print "    ],\n";
 print "    \"copy\": [\n";
 my @l;
 for my $symbol (sort { $a cmp $b } keys %copy) {
+    warn "copying $symbol";
     for my $addr (sort { $a <=> $b } keys %{$copy{$symbol}}) {
         push @l, "\t[\"$symbol\", $addr, $copy{$symbol}{$addr}]";
     }

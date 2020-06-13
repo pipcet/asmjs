@@ -239,5 +239,5 @@ SECTIONS
   SECTION_SPACE(code)
   SECTION_SPACE(data)
   SECTION_SPACE_NAME(name)
-  /DISCARD/ : { *(.asmjs.term) *(.got.plt) *(.dynamic) }
+  /DISCARD/ : { *(.asmjs.term) *(.dynamic) }
 }

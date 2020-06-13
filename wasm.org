@@ -175,3 +175,4 @@ This is a very special hack: When performing a PLT call, WebAssembly has to know
 ** TODO set the offset in memory access instructions to -4096, so as to catch NULL pointers.
 ** TODO clean up interpreter mess
 ** TODO hunt down "asmjs" references, such as in the linker script
+** TODO re-enable gdb support

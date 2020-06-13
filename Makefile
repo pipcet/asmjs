@@ -71,9 +71,9 @@ build/wasm32/gcc-preliminary.make: build/wasm32/gcc-preliminary.dir build/wasm32
 	(cd bin; ln -sf ../wasm32-unknown-none/bin/wasm32-unknown-none-* .)
 	touch $@
 
-# build/common/.dir: build/.dir
-# 	test -d build/common || $(MKDIR) build/common
-# 	touch $@
+build/common/.dir: build/.dir
+	test -d build/common || $(MKDIR) build/common
+	touch $@
 
 # build/common3/.dir: build/.dir
 # 	test -d build/common3 || $(MKDIR) build/common3
@@ -131,6 +131,10 @@ build/wasm32/glibc.dir: build/wasm32/.dir
 	test -d build/wasm32/glibc || $(MKDIR) build/wasm32/glibc
 	touch $@
 
+build/native/glibc.dir: build/native/.dir
+	test -d build/native/glibc || $(MKDIR) build/native/glibc
+	touch $@
+
 build/wasm32/glibc-static.dir: build/wasm32/.dir
 	test -d build/wasm32/glibc-static || $(MKDIR) build/wasm32/glibc-static
 	touch $@
@@ -177,6 +181,10 @@ build/wasm32/emacs.dir: build/wasm32/.dir
 
 build/common/wabt.dir: build/common/.dir
 	test -d build/common/wabt || $(MKDIR) build/common/wabt
+	touch $@
+
+build/common/binaryen.dir: build/common/.dir
+	test -d build/common/binaryen || $(MKDIR) build/common/binaryen
 	touch $@
 
 # build/common/spidermonkey.dir: build/common/.dir
@@ -329,15 +337,26 @@ build/wasm32/glibc.make: build/wasm32/glibc.dir build/wasm32/glibc.configure
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc install
 	touch $@
 
+build/native/glibc.make: build/native/glibc.dir build/native/glibc.configure
+	$(MAKE) -C build/native/glibc
+	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc install
+	touch $@
+
 build/wasm32/glibc-static.make: build/wasm32/glibc-static.dir build/wasm32/glibc-static.configure
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/glibc-static
 	touch $@
 
+modules/libc.wasm: libc.wasm
+	cp $^ $@
+
+modules/ld.wasm: ld.wasm
+	cp $^ $@
+
 libc.wasm: build/wasm32/glibc.make wasm32-unknown-none/wasm32-unknown-none/lib/libc.so
-	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so > $(PWD)/libc.wasm
+	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so > $(PWD)/libc.wasm || rm $(PWD)/libc.wasm
 
 ld.wasm: build/wasm32/glibc.make wasm32-unknown-none/wasm32-unknown-none/lib/ld.so.1
-	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/ld.so.1 > $(PWD)/ld.wasm
+	$(PWD)/bin/wasmify-wasm32 $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/ld.so.1 > $(PWD)/ld.wasm || rm $(PWD)/ld.wasm
 
 # build/wasm32/glibc-semishared.make: build/wasm32/glibc.make
 # 	$(PWD)/wasm32-unknown-none/bin/wasm32-unknown-none-ld -shared --whole-archive lib/wasm32-globals.o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.a --no-whole-archive $(PWD)/wasm32-unknown-none/lib/gcc/wasm32-unknown-none/8.0.0/libgcc.a -o $(PWD)/wasm32-unknown-none/wasm32-unknown-none/lib/libc.so
@@ -534,6 +553,17 @@ build/common/wabt.cmake: src/wabt.dir build/common/wabt.dir
 build/common/wabt.make: build/common/wabt.cmake
 	$(MAKE) -C build/common/wabt
 	$(MAKE) -C build/common/wabt install
+	(cd bin; ln -sf ../common/bin/* .)
+	touch $@
+
+build/common/binaryen.cmake: src/binaryen.dir build/common/binaryen.dir
+	(cd build/common/binaryen; cmake ../../../src/binaryen -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$(PWD)/common)
+	touch $@
+
+build/common/binaryen.make: build/common/binaryen.cmake
+	$(MAKE) -C build/common/binaryen
+	$(MAKE) -C build/common/binaryen install
+	(cd bin; ln -sf ../common/bin/* .)
 	touch $@
 
 # build/common/spidermonkey.configure: src/spidermonkey.dir build/common/spidermonkey.dir
@@ -731,6 +761,11 @@ src/spidermonkey.dir: src/.dir
 src/wabt.dir: src/.dir
 	test -d src/wabt || mkdir src/wabt
 	(cd subrepos/wabt; tar c --exclude .git .) | (cd src/wabt; tar x)
+	touch $@
+
+src/binaryen.dir: src/.dir
+	test -d src/binaryen || mkdir src/binaryen
+	(cd subrepos/binaryen; tar c --exclude .git .) | (cd src/binaryen; tar x)
 	touch $@
 
 src/perl.dir: src/.dir

@@ -24,7 +24,7 @@ digraph G {
   "wasmrewrite" -> "short WASM";
   "short WASM" -> "dyninfo";
   "dyninfo" -> "final WASM";
-  "ELF intermediate" -> "dyninfo" [color="grey"];
+  "ELF executable" -> "dyninfo" [color="grey"];
 
   "gcc" [shape=box];
   "GNU CC" [shape=box];
