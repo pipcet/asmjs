@@ -968,26 +968,26 @@ update-wabt:
 # 	cat js/wasm64-system.jsc.js js/wasm64-thinthin.jsc.js js/wasm64-vt100.jsc.js js/wasm64-main.jsc.js >> $@.new
 # 	mv $@.new $@
 
-1: FORCE
+1binutils: FORCE
 	rm -rf build/wasm32/binutils-gdb* src/wasm32/binutils-gdb*
 	make -kj10 build/wasm32/binutils-gdb.make
 
-2: FORCE
+1wasms: FORCE
 	rm -f libc.wasm ld.wasm
 	make libc.wasm ld.wasm
 
-3: FORCE
+1awasm: FORCE
 	./bin/wasm32-unknown-none-gcc tests/194-conftest/194-conftest.c
 	./bin/wasm32-unknown-none-gcc -S tests/194-conftest/194-conftest.c
 	./bin/wasmify-wasm32 a.out > a.wasm
 
-4: FORCE
+1objd: FORCE
 	./bin/wasm-objdump -d libc.wasm > libc.wasm.objdump-d
 	./bin/wasm-objdump -d ld.wasm > ld.wasm.objdump-d
 
-6: FORCE
+1aobjd: FORCE
 	./bin/wasm-objdump -dx a.wasm > a.wasm.objdump-d
 
-5: FORCE
+1glibc: FORCE
 	rm -f build/wasm32/glibc.make
 	make build/wasm32/glibc.make
