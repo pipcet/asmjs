@@ -419,7 +419,7 @@ build/wasm32/gcc-final.make: build/wasm32/gcc-final.dir build/wasm32/gcc-final.c
 # 	touch $@
 
 build/wasm32/ncurses.configure: src/ncurses.dir build/wasm32/ncurses.dir | build/wasm32/gcc-final.make
-	(cd build/wasm32/ncurses; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none)
+	(cd build/wasm32/ncurses; CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH ../../../src/ncurses/configure --enable-optimize=$(OPT_ASMJS) --build=x86_64-pc-linux-gnu --host=wasm32-unknown-none --prefix=$(PWD)/wasm32-unknown-none/wasm32-unknown-none --disable-stripping)
 	touch $@
 
 # build/asmjs/ncurses.make: build/asmjs/ncurses.configure
