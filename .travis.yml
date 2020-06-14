@@ -42,5 +42,3 @@ script:
     - make build/wasm32/gcc-preliminary.clean
     - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/glibc.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/glibc.make
     - make build/wasm32/glibc.clean
-    - (PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-final.make >/dev/null 2>/dev/null) || PATH=/usr/local/bin:/usr/bin:/bin make -kj3 build/wasm32/gcc-final.make
-    - make build/wasm32/gcc-final.clean
