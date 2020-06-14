@@ -381,6 +381,13 @@ build/glibc.clean: FORCE
 	rm -f build/glibc.configure
 	rm -f build/glibc.make
 
+build/%/glibc.clean: FORCE
+	rm -rf build/$*/glibc src/glibc
+	rm -f build/$*/glibc.dir
+	rm -f src/glibc.dir
+	rm -f build/$*/glibc.configure
+	rm -f build/$*/glibc.make
+
 build/wasm32/musl.make: build/wasm32/musl.dir build/wasm32/musl.configure
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/musl
 	CC=wasm32-unknown-none-gcc PATH=$(PWD)/wasm32-unknown-none/bin:$$PATH $(MAKE) -C build/wasm32/musl install
@@ -974,11 +981,11 @@ update-wabt:
 
 1binutils: FORCE
 	rm -rf build/wasm32/binutils-gdb* src/wasm32/binutils-gdb*
-	make -kj10 build/wasm32/binutils-gdb.make
+	+make -kj10 build/wasm32/binutils-gdb.make
 
 1wasms: FORCE
 	rm -f libc.wasm ld.wasm
-	make libc.wasm ld.wasm
+	+make libc.wasm ld.wasm
 
 1awasm: FORCE
 	./bin/wasm32-unknown-none-gcc tests/194-conftest/194-conftest.c
@@ -986,12 +993,22 @@ update-wabt:
 	./bin/wasmify-wasm32 a.out > a.wasm
 
 1objd: FORCE
-	./bin/wasm-objdump -d libc.wasm > libc.wasm.objdump-d
-	./bin/wasm-objdump -d ld.wasm > ld.wasm.objdump-d
+	./bin/wasm-objdump -dx libc.wasm > libc.wasm.objdump-d
+	./bin/wasm-objdump -dx ld.wasm > ld.wasm.objdump-d
 
 1aobjd: FORCE
 	./bin/wasm-objdump -dx a.wasm > a.wasm.objdump-d
 
 1glibc: FORCE
 	rm -f build/wasm32/glibc.make
-	make build/wasm32/glibc.make
+	+make build/wasm32/glibc.make
+
+1gcc: FORCE
+	rm -f build/wasm32/gcc-preliminary.make
+	+make build/wasm32/gcc-preliminary.make
+
+watch: FORCE
+	inotifywait -m -r -e close_write -e delete -e create subrepos/ | while read PATH ACTION REST; do echo $$PATH; done | perl -pe 's/^subrepos\///; s/\/.*//;' | while read DIR; do rm -f build/$$DIR build/$$DIR-*; done
+
+1test: FORCE
+	WASMDIR=. JS=/home/pip/jsshell-nightly-20200606/js ./bin/interpreter-wasm ./a.wasm
